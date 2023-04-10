@@ -168,3 +168,12 @@ TestFragment fragment = TestFragment.newInstance("初始参数");
 ```
 
 当这种方式创建的TestFragment实例被添加到界面上时，其内部能够获取到我们传入的初始化参数，文本框内容将会显示为“初始参数”。
+
+# FragmentManager
+FragmentManager类负责对页面中的Fragment执行一些操作，例如添加、移除或替换，以及将它们添加到返回堆栈。
+
+在 Activity 中访问
+每个 FragmentActivity 及其子类（如 AppCompatActivity）都可以通过 getSupportFragmentManager() 方法访问 FragmentManager。
+
+在 Fragment 中访问
+Fragment也能够托管一个或多个子 Fragment。在Fragment内，您可以通过 getChildFragmentManager() 获取对管理 Fragment 子级的 FragmentManager 的引用。如果您需要访问其宿主 FragmentManager，可以使用 getParentFragmentManager()。
