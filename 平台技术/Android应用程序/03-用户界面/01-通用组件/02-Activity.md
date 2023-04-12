@@ -71,7 +71,7 @@ AndroidManifest.xml:
 </manifest>
 ```
 
-上述代码片段是Android Studio生成的MainActivity的注册信息，其中IntentFilter配置表示这是本应用程序的“启动Activity”，系统会在启动器内生成图标，用户点击图标后程序启动并加载MainActivity。
+上述代码片段是Android Studio生成的MainActivity的注册信息，其中IntentFilter配置表示这是本应用程序的LaunchActivity，系统会在启动器内生成图标，用户点击图标后程序启动并加载LaunchActivity。如果我们将多个Activity配置为入口，启动器内也会对应的生成多个图标。
 
 我们必须为每个Activity声明 `android:name` 属性，填写Activity的完全限定类名。 `<manifest>` 标签的"package"属性指定了默认的前缀，"MainActivity.java"位于"net.bi4vmr.study"包中，与默认前缀是一致的，此时"name"属性可以省略包名，用"."代替。如果某个Activity所在的包名与默认前缀不同，此时"name"属性必须填写完整的路径，例如我们有一个TestActivity位于"com.demo.test"包中，则"name"属性需要申明为"com.demo.test.TestActivity"。
 
@@ -511,6 +511,44 @@ TaskAffinity属性的值至少要含有一个点号(".")，否则APK编译时将
 
 当用户按下Home键或打开最近任务视图时，Task之间的关联就会被解除。用户重新选择Task之后，回退栈保持与此Task一致，如果连续按下返回键，当前Task清空后就会回到启动器，不会再回到之前的Task。
 
+## 常用API
+### ActivityManager
+ActivityManager是系统提供的工具，可以获取Task、进程、内存等信息，此处我们只使用Task相关的功能。
+
+我们可以在Activity的 `onCreate()` 阶段使用Context的 `getSystemService()` 方法获取ActivityManager实例，以便后续进行使用。
+
+```java
+// 获取ActivityManager实例
+ActivityManager am = getSystemService(ActivityManager.class);
+```
+
+🔷 获取任务列表
+
+我们可以使用ActivityManager的 `getRunningTasks(int num)` 方法获取最近任务信息，参数是希望系统返回的最大任务数量，返回值是 `List<ActivityManager.RunningTaskInfo>` ，RunningTaskInfo即Task状态对象，常用的属性见下文：
+
+- "id"即Task的ID，系统新创建的TaskID值保持线性增长。
+- "taskId"也是Task的ID，是Android 10新增的属性，此版本开始我们应当使用该属性，而不是"id"属性。
+- "isRunning"是布尔值，是Android 10新增的属性，表示Task是否正在运行。“运行”是指Task是否被回收，而不是前台与后台。
+- "topActivity"是ComponentName形式的对象，描述栈顶的Activity信息。
+
+`getRunningTasks(int num)` 方法自从Android 5.0开始被标记为过时的方法，因为应用程序直接获取所有Task信息可能导致用户隐私泄漏。目前系统应用仍然可以使用该方法获取全部Task，但是第三方应用只能获取自身以及Launcher等少数程序的Task。
+
+如果第三方应用仅需管理自身的Task信息，可以使用 `getAppTasks()` 方法进行操作；如果第三方应用需要管理全局的Task信息，则应当使用UsageStatsManager，此功能需要用户授权才能使用。
+
+<!-- TODO 后续需要添加链接：UsageStatsManager  文档暂时没有编写。 -->
+
+🔷 将后台任务移动至前台
+
+ActivityManager的 `moveTaskToFront(int taskID, int flags)` 方法可以把后台Task移动到前台，参数"taskID"即目标Task的ID；参数"flags"是标志位，每个值的含义见下文：
+
+🔺 MOVE_TASK_WITH_HOME
+
+设置此标志位时，将使用目标Task替换回退栈内容，用户连续按下返回键将直接回到启动器；不设置此标志位时，目标Task将被移至回退栈栈顶，用户连续按下返回键可以跳转回旧的Task。
+
+🔺 MOVE_TASK_NO_USER_ACTION
+
+设置此标志位时，当前界面的 `onUserLeaveHint()` 回调不会触发；不设置此标志位时，当前界面的 `onUserLeaveHint()` 回调正常触发。
+
 ## 启动模式属性
 ### 简介
 启动模式属性用于控制Activity实例的复用方式，以及Task的创建与显示行为。
@@ -858,3 +896,8 @@ startActivity(intent);
 ```
 
 真正执行Activity跳转之前，我们还需要请求登出接口、清空用户Token或Session信息，此处省略相关操作。
+
+# 疑难解答
+## 从启动器图标进入应用导致二级页面被关闭
+如果我们将LaunchActivity设置为SingleTask或SingleInstance，当我们操作应用程序一段时间（打开一些二级页面）后，回到启动器再点击图标重新进入应用程序，会发现LaunchActivity显示了，其上层的二级页面都会被关闭。
+
