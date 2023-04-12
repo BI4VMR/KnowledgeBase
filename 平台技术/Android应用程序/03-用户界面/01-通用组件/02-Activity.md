@@ -393,10 +393,6 @@ Activity由不可见状态回到可见状态时，会先调用该方法再调用
 
 `onCreate()` 方法是Activity的生命周期方法，它的参数Bundle可能为空，在此处读取数据前需要进行空值判断；而 `onRestoreInstanceState()` 方法仅在有数据需要恢复时才会触发，在此处读取数据不必进行空值判断。
 
-🔵 示例五
-<br />
-尝试通过视图数据保持机制，确保视图状态不会因屏幕旋转而丢失。
-
 此处我们在Activity上放置一个ToggleButton，尝试在界面重建时保存ToggleButton的状态，并在界面重建时进行恢复。
 
 首先我们在Activity中重写 `onSaveInstanceState()` 方法存入数据，Activity拥有两个同名方法，我们应当选择拥有一个参数的方法。
