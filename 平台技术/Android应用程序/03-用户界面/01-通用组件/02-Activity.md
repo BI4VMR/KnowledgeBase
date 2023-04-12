@@ -239,21 +239,21 @@ Android系统使用返回栈(Back Stack)来管理Activity，新开启的Activity
 ## 状态机
 Activity共有四种状态机。
 
-🔷 运行状态
+🔷 `Running`
 <br />
-Activity位于返回栈栈顶时的状态，此时界面在前台面向用户服务，资源不会被回收。
+Activity位于Task栈顶时的状态，此时界面在前台面向用户服务，通常资源不会被系统回收。
 
-🔷 暂停状态
+🔷 `Paused`
 <br />
-当Activity被其它非全屏UI组件覆盖时，进入暂停状态，此时部分界面仍然可见，系统仅在资源非常紧张时才可能回收其资源。
+当Activity被其它非全屏UI组件覆盖时的状态，此时部分界面仍然可见，系统仅在资源非常紧张时才可能回收其资源。
 
-🔷 停止状态
+🔷 `Stopped`
 <br />
-当Activity被覆盖且完全不可见时，进入停止状态，系统会为其保持状态，但资源不足时有较大概率被回收。
+当Activity被覆盖且完全不可见时的状态，系统会为其保持视图状态，但资源不足时有较大概率被回收。
 
-🔷 销毁状态
+🔷 `Destroyed`
 <br />
-当Activity出栈时就会进入销毁状态，意味着此组件不再被用户需要，系统会优先回收这部分资源。
+当Activity从Task出栈时就会进入销毁状态，意味着此组件不再被用户需要，系统会优先回收这部分资源。
 
 ## 回调方法
 Activity类提供了七个生命周期回调方法，它们之间的关系如下图所示：
@@ -489,15 +489,33 @@ TaskAffinity属性的值至少要含有一个点号(".")，否则APK编译时将
 当Activity启动时，TaskAffinity属性不一定生效，这取决于Activity的启动模式与Intent标志位，详情请参考后文。
 
 ### 回退栈
-回退栈记录着用户进行的系列操作流程，其中可以包含多个Task，当用户点击返回键时，能够按照一定顺序回退至前级页面并在需要时切换Task。
+回退栈用于记录用户的系列操作流程，其中可以包含多个Task，当用户点击返回键时，就会按照一定顺序回退至前级页面并在需要时切换Task。
+
+当前系统中有两个Task正在运行，TaskA正在前台，TaskB的ActivityN具有SingleTask属性，此时回退栈的内容与TaskA栈是相同的。
+
+<div align="center">
 
 **插入图片插入图片插入图片插入图片插入图片插入图片插入图片插入图片**
+
+</div>
+
+我们此时从TaskA的Activity2启动ActivityN，由于实例已经存在，系统将TaskB移动至前台，此时回退栈的内容为：
+
+<div align="center">
+
+**插入图片插入图片插入图片插入图片插入图片插入图片插入图片插入图片**
+
+</div>
+
+如果我们连续按下返回键，Activity的出栈顺序为"ActivityN -> ActivityM -> Activity2 -> Activity1"。
+
+当用户按下Home键或打开最近任务视图时，Task之间的关联就会被解除。用户重新选择Task之后，回退栈保持与此Task一致，如果连续按下返回键，当前Task清空后就会回到启动器，不会再回到之前的Task。
 
 ## 启动模式属性
 ### 简介
 启动模式属性用于控制Activity实例的复用方式，以及Task的创建与显示行为。
 
-我们可以在Manifest文件中为 `<activity>` 标签添加属性 `android:launchMode=[启动模式]` 进行配置。
+我们可以在Manifest文件中为 `<activity>` 标签添加属性 `android:launchMode="[启动模式]"` 进行配置。
 
 ```xml
 <application ...>
@@ -786,7 +804,7 @@ Display #0 (activities from top to bottom):
 ### 简介
 "Intent.FLAG_ACTIVITY"系列标志位用于控制Activity以及Task的创建与显示行为。
 
-"FLAG_ACTIVITY"系列标志位是使用16进制表示的，有些属性可以并存，我们可以通过或运算连接多个标志位。当我们向Intent中添加配置项时，可以通过 `setFlags()` 方法或 `addFlags()` 方法，前者会清除现有标志位并以当前传入的参数为准；后者会将参数追加到现有标志位中。
+"FLAG_ACTIVITY"系列标志位是使用16进制表示的，部分标志位可以并存，我们可以通过或运算连接多个标志位。当我们向Intent中添加配置项时，可以通过 `setFlags()` 方法或 `addFlags()` 方法，前者会清除现有标志位并以当前传入的参数为准；后者会将参数追加到现有标志位中。
 
 ```java
 // 创建Intent实例并指定启动目标
@@ -798,35 +816,45 @@ startActivity(intent);
 ```
 
 ### FLAG_ACTIVITY_SINGLE_TOP
-等同于 TODO ......
+等同于SingleTop启动模式。
 
 ### FLAG_ACTIVITY_CLEAR_TOP
-CLEAR_TOP 在单独使用时，如果想要的任务栈中已经存在待启动的 Activity 的实例，则会将该 Activity 实例之上的其他 Activity 弹出，把自己放到栈顶，并回调 onNewIntent 。但这是有前提的，就是待启动的 Activity 的 launchMode 不能是 standard 。
-如果是 standard ，则会把自己及之上的所有 Activity 全部弹出，新建一个实例放入。
+当我们使用此标志位启动Activity时，如果目标Activity已经存在实例且Task已在前台，则会将其顶部覆盖的Activity出栈销毁，然后回调现有实例的 `onNewIntent()` 方法更新数据。
+
+如果目标Activity已经存在实例但Task不在前台，此时则需要根据其他条件进行判定：
+
+若目标Activity的启动模式是默认值且未添加FLAG_ACTIVITY_SINGLE_TOP标志位，则现有实例将被销毁并重新创建；若目标Activity的启动模式不是默认值或已添加FLAG_ACTIVITY_SINGLE_TOP标志位，那么首先将Task移至前台，然后将实例顶部覆盖的Activity出栈销毁，再回调实例的 `onNewIntent()` 方法更新数据。
 
 ### FLAG_ACTIVITY_NEW_TASK
-该标志位需要配合与默认值不同的TaskAffinity属性使用，仅设置该标志位或仅配置TaskAffinity属性是无效的。
+当我们使用此标志位启动Activity时，系统首先判断目标Activity在所有Task中是否已有实例，若未找到，则创建Task以及Activity实例，然后进行跳转；若找到目标实例，则将该Task移动至前台，并触发 `onNewIntent()` 回调方法更新界面。该标志位的行为与SingleTask模式是类似的，区别是通过标志位将现有Activity实例及Task移至前台时，如果其被其他Activity覆盖着，系统并不会自动将它们出栈销毁，而是保持原状。
 
-当TaskAffinity属性与标志位配置正确时，系统首先判断目标Activity在所有Task中是否已有实例，若未找到，则创建Task以及Activity，然后进行跳转；若找到目标实例，则将该Task移动至前台，并触发 `onNewIntent()` 回调方法更新界面。该标志位的行为与SingleTask模式是类似的，但将现有实例所在Task移动至前台后，如果其顶部有其他Activity，并不会自动将它们清空。
+该标志位需要配合与默认值不同的TaskAffinity属性使用，才会创建新的Task，如果目标Activity的TaskAffinity属性与应用程序相同，系统只会将新的Activity实例放入现有Task顶端。
 
-有时我们需要从非Activity的Context（例如Service、Broadcast、Application）启动一个Activity，这种操作会导致AndroidRuntimeException异常，因为AMS在默认配置下需要获取指令发起者所在的Task，但这些组件没有Task相关的句柄，AMS不知道应该把新的Activity放置在哪个Task中。
+### FLAG_ACTIVITY_CLEAR_TASK
+此标志位只能与FLAG_ACTIVITY_NEW_TASK同时使用，作用是清空目标Task中的现有Activity实例，使得目标Task中只有目标Activity一个实例。
+
+### FLAG_ACTIVITY_NO_HISTORY
+不保留目标Activity实例，只要其所在的Task转至后台，Activity实例就会立刻出栈销毁。
+
+这种Activity在最近任务视图中，仍会显示退出之前的缩略图，当我们选中其所在的Task时，若此Activity不是Task的唯一Activity，则会显示前一个Activity；若此Activity是Task的唯一Activity，则会重建一个新的实例。
+
+这种Activity销毁时不会返回操作结果给启动者，所以我们不应该用 `startActivityForResult()` 方式启动它们。
+
+### 实际应用
+#### 从非Activity环境启动一个Activity
+有时我们需要从非Activity的Context（例如：Service、Broadcast或Application）启动一个Activity，这种操作会导致系统抛出AndroidRuntimeException异常，因为AMS在默认配置下需要获取指令发起者所在的Task，但这些组件并没有Task相关的句柄，AMS不知道应该把新的Activity实例放置在哪个Task中。
 
 此时我们可以添加FLAG_ACTIVITY_NEW_TASK标志位，使AMS根据目标Activity的TaskAffinity属性决定需要放置的Task，不必关心指令发起者所在的Task。
 
-### 实际应用
-首先解释两个东西:
+#### 实现退出登录功能
+应用程序的退出登录按钮通常在二级页面，用户一旦退出登录，就只能重新登录，不能通过返回键再回到应用内页面。
 
-(1)FLAG_ACTIVITY_CLEAR_TASK :如果在调用Context.startActivity时传递这个标记，将会导致任何用来放置该activity的已经存在的task里面的已经存在的activity先清空，然后该activity再在该task中启动，也就是说，这个新启动的activity变为了这个空tas的根activity.所有老的activity都结束掉。该标志必须和FLAG_ACTIVITY_NEW_TASK一起使用.
+此时我们可以联用FLAG_ACTIVITY_NEW_TASK与FLAG_ACTIVITY_CLEAR_TASK标志位，清空当前Task，然后启动登录界面。
 
-(2)FLAG_ACTIVITY_NEW_TASK: 首先会查找是否存在和被启动的Activity具有相同的亲和性的任务栈（即taskAffinity，注意同一个应用程序中的activity的亲和性一样，所以下面的a情况会在同一个栈中，前面这句话有点拗口，请多读几遍），如果有，刚直接把这个栈整体移动到前台，并保持栈中的状态不变，即栈中的activity顺序不变，如果没有，则新建一个栈来存放被启动的activity.
-
-
-实现账号注销后,一般都是跳转到用户登录界面:
-
-Intent intent=new Intent(SetUserInfoActivity.this,LoginActivity.class);
-intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
+```java
+Intent intent = new Intent(this, LoginActivity.class);
+intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
 startActivity(intent);
+```
 
-//之所以要clear之前的task,是因为如果不创建一个新的...那按返回键岂不是要返回到上一个界面了
-
-//喏...就这么两行代码,另外在跳转之前删除一下保存的用户登录信息,或者其它操作...
+真正执行Activity跳转之前，我们还需要请求登出接口、清空用户Token或Session信息，此处省略相关操作。
