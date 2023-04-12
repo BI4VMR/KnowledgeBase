@@ -491,11 +491,11 @@ TaskAffinity属性的值至少要含有一个点号(".")，否则APK编译时将
 ### 回退栈
 回退栈用于记录用户的系列操作流程，其中可以包含多个Task，当用户点击返回键时，就会按照一定顺序回退至前级页面并在需要时切换Task。
 
-当前系统中有两个Task正在运行，TaskA正在前台，TaskB的ActivityN具有SingleTask属性，此时回退栈的内容与TaskA栈是相同的。
+当前系统中有两个Task正在运行，TaskB的ActivityN具有SingleTask属性，TaskA正在前台，用户依次开启Activity1与Activity2，此时回退栈的内容与TaskA栈是相同的。
 
 <div align="center">
 
-**插入图片插入图片插入图片插入图片插入图片插入图片插入图片插入图片**
+![初始状态](./Assets-Activity/回退栈-初始状态.jpg)
 
 </div>
 
@@ -503,7 +503,7 @@ TaskAffinity属性的值至少要含有一个点号(".")，否则APK编译时将
 
 <div align="center">
 
-**插入图片插入图片插入图片插入图片插入图片插入图片插入图片插入图片**
+![Task间跳转](./Assets-Activity/回退栈-Task间跳转.jpg)
 
 </div>
 
