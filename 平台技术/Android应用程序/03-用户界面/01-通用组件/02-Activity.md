@@ -892,8 +892,3 @@ startActivity(intent);
 ```
 
 真正执行Activity跳转之前，我们还需要请求登出接口、清空用户Token或Session信息，此处省略相关操作。
-
-# 疑难解答
-## 从启动器图标进入应用导致二级页面被关闭
-如果我们将LaunchActivity设置为SingleTask或SingleInstance，当我们操作应用程序一段时间（打开一些二级页面）后，回到启动器再点击图标重新进入应用程序，会发现LaunchActivity显示了，其上层的二级页面都会被关闭。
-
