@@ -115,8 +115,25 @@ btBase.setOnClickListener(new View.OnClickListener() {
 </div>
 
 # 疑难解答
-## 设置背景后未生效
-Button样式会受到APP主题的影响，如果APP的主题继承自"Theme.MaterialComponents.DayNight.DarkActionBar"，将会给Button带来颜色和点击涟漪效果，我们可以将主题改为"Theme.MaterialComponents.DayNight.DarkActionBar.Bridge"等，避免主题改写按钮的样式。
+## 索引
+
+<div align="center">
+
+|       序号        |                摘要                |
+| :---------------: | :--------------------------------: |
+| [案例一](#案例一) | 设置按钮背景后，实际运行时不生效。 |
+
+</div>
+
+## 案例一
+### 问题描述
+设置按钮背景后，实际运行时不生效。
+
+### 问题分析
+Button样式会受到APP主题的影响，如果APP的主题继承自"Theme.MaterialComponents.DayNight.DarkActionBar"，将会给Button带来颜色和点击涟漪效果。
+
+### 解决方案
+我们可以将主题改为"Theme.MaterialComponents.DayNight.DarkActionBar.Bridge"等，避免主题改写按钮的样式。
 
 ```xml
 <resources>
