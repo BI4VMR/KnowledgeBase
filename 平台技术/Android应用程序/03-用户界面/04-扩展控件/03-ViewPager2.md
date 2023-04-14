@@ -96,18 +96,6 @@ viewPager2.setAdapter(adapter);
 
 </div>
 
-# 功能概览(TODO)
-## 常用属性
-
-## 常用方法
-
-## 监听器
-🔴 页面滑动监听器
-<br />
-ViewPager2的页面滑动监听器与ViewPager一致，使用"registerOnPageChangeCallback()"方法进行设置，此处省略相关功能的描述。
-
-与ViewPager不同的是，ViewPager2的页面滑动监听器是抽象类，我们可以按需实现其中的方法，不必全部实现。
-
 # 外观定制
 ## 页面排列方向
 ViewPager2默认将页面按水平方向排列，它提供了简单易用的方向变更API，调整页面排列方向十分方便。
@@ -155,6 +143,12 @@ if (rv instanceof RecyclerView) {
     rv.setOverScrollMode(View.OVER_SCROLL_NEVER);
 }
 ```
+
+# 监听器
+## 页面滑动监听器
+ViewPager2的页面滑动监听器与ViewPager一致，使用 `registerOnPageChangeCallback()` 方法进行设置，此处省略相关描述。
+
+与ViewPager不同的是，ViewPager2的页面滑动监听器是抽象类，我们可以按需实现其中的方法，不必全部实现。
 
 # 预加载
 ViewPager2可以预加载可见页面两侧的页面，以提升切换时画面的连续性。ViewPager2的"setOffscreenPageLimit()"方法用于控制预加载的页面数量，默认值为"-1"，即不进行预加载。当该数值设为"N"时，将会预加载可见页面两侧的N个页面，使它们的生命周期达到"onStart()"。
