@@ -1,6 +1,20 @@
 # 简介
 
 # 基本应用
+我们可以在Activity的布局文件中放置一个Chip组件：
+
+```xml
+<com.google.android.material.chip.Chip
+    android:id="@+id/chipAction"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="ActionChip" />
+```
+
+这样
+
+
+
 
 # 外观定制
 ## 基本样式
@@ -143,4 +157,40 @@ chipgroupSingle.setOnCheckedStateChangeListener((group, checkedIds) -> {
 ## 动态增减表项
 我们有时需要从服务器动态获取数据并通过Chip展示，由于ChipGroup的封装程度不够高，我们需要通过ViewGroup的相关接口进行操作。
 
+```java
+/* 获取所有表项 */
+List<View> viewList = new ArrayList<>();
+int childCount = chipgroup.getChildCount();
+for (int i = 0; i < childCount; i++) {
+    viewList.add(chipgroup.getChildAt(i));
+}
 
+/* 获取选中表项 */
+List<Integer> idList = chipgroup.getCheckedChipIds();
+for (int id : idList) {
+    View item = chipgroup.findViewById(id);
+    if (item instanceof Chip) {
+        Chip chip = (Chip) item;
+        Log.i("myapp", "Text:" + chip.getText());
+    }
+}
+
+/* 添加表项 */
+Chip chip = new Chip(this);
+chip.setText(genRandomID());
+chip.setCloseIconVisible(true);
+chip.setOnCloseIconClickListener(btnClose -> {
+    /* 当关闭按钮被点击时，从容器中移除自身。 */
+    chipgroup.removeView(chip);
+});
+chip.setCheckable(true);
+chipgroup.addView(chip);
+
+/* 移除指定的表项（此处以移除最后一项为例） */
+int itemCount = chipgroup.getChildCount();
+if (itemCount == 0) {
+    return;
+}
+// 移除最后一个子View
+chipgroup.removeViewAt(itemCount - 1);
+```

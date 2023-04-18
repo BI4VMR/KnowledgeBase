@@ -19,7 +19,12 @@
 - [ ] 用户界面 - Fragment
 - [ ] 用户界面 - 基础控件
 - [ ] 用户界面 - 扩展控件
-- [ ] 用户界面 - Material控件
+- [ ] 用户界面 - Material控件 - MaterialButton
+- [ ] 用户界面 - Material控件 - TextInputEditText
+- [ ] 用户界面 - Material控件 - ShapeableImageView
+- [ ] 用户界面 - Material控件 - Slider
+- [ ] 用户界面 - Material控件 - TabLayout
+- [ ] 用户界面 - Material控件 - Chip
 - [ ] 系统组件 - Intent
 - [ ] 系统组件 - Context
 - [ ] 系统组件 - Application
@@ -48,7 +53,7 @@ msg=$(uuidgen | awk '{print toupper($0)}'); git add .; git commit -m "$msg"; git
 通用章节：
 
 ## 疑难解答
-本节用于记录实际运用过程中遇到的问题，提供解决思路。
+本节用于记录技术在实际运用过程中遇到的问题，提供解决问题的思路与经验。
 
 <!--
 
