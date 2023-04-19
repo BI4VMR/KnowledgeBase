@@ -1,7 +1,10 @@
 # 简介
+Chip是一种标签样式的文本展示控件，配合ChipGroup可以实现流式标签布局，通常用于展示博客文章的分类标签、电子邮件的收件人列表等。
+
+Chip类继承自AppCompatCheckBox，它是一种具有选中状态的控件，配合ChipGroup能够实现单选或多选功能。
 
 # 基本应用
-我们可以在Activity的布局文件中放置一个Chip组件：
+我们可以在布局文件中静态声明一个Chip组件：
 
 ```xml
 <com.google.android.material.chip.Chip
@@ -11,29 +14,151 @@
     android:text="ActionChip" />
 ```
 
-这样
+此时界面上将会出现一个文本内容为"ActionChip"的Chip控件。
 
+上述代码片段中，我们通过静态声明方式展示Chip控件的常用属性。在实际应用中，标签通常是从服务端动态获取的，此时我们需要在代码中创建Chip实例并添加至ChipGroup中。
 
+Chip有四种预设样式，它们的外观与特点见下文图片与列表。
 
+<div align="center">
+
+**插入图片插入图片插入图片插入图片插入图片插入图片插入图片插入图片插入图片插入图片插入图片**
+
+<!-- ![TabLayout示例](./Assets-TabLayout/基本应用-TabLayout示例.gif) -->
+
+</div>
+
+🔷 ActionChip
+<br />
+添加 `style="@style/Widget.MaterialComponents.Chip.Action"` 属性可应用该样式，这是Chip的默认样式，不可选中、无选中图标、无关闭按钮。
+
+🔷 FilterChip
+<br />
+添加 `style="@style/Widget.MaterialComponents.Chip.Filter"` 属性可应用该样式，可被选中、有选中图标、无关闭按钮。
+
+🔷 EntryChip
+<br />
+添加 `style="@style/Widget.MaterialComponents.Chip.Entry"` 属性可应用该样式，可被选中、有选中图标、有关闭按钮。
+
+🔷 ChoiceChip
+<br />
+添加 `style="@style/Widget.MaterialComponents.Chip.Choice"` 属性可应用该样式，可被选中、无选中图标、无关闭按钮，但选中后背景颜色将发生改变。
 
 # 外观定制
 ## 基本样式
-
-
-🔷 `app:tabTextAppearance=[样式ID]`
+🔷 `android:text="[文本内容]"`
 <br />
-设置Tab中文字的样式。
+设置文本内容。
 
+🔷 `android:textColor="[颜色]"`
+<br />
+设置文本颜色。
 
+🔷 `android:textAppearance="[样式]"`
+<br />
+设置文本样式。
 
+🔷 `android:checkable="[true|false]"`
+<br />
+设置按钮是否可以被选中。
 
+🔷 `app:chipCornerRadius="[尺寸]"`
+<br />
+设置圆角半径。
+
+默认值为最大弧度；设置为"0dp"则显示为矩形。
+
+🔷 `app:chipBackgroundColor="[颜色]"`
+<br />
+设置背景颜色。
+
+此处可以直接填写颜色值，也可以使用颜色选择器，设置不同选中状态下的颜色。
+
+🔷 `app:rippleColor="[颜色]"`
+<br />
+设置点击时的涟漪动效颜色。
+
+如果我们不需要动效，可以将此属性设置为"@null"。
+
+🔷 `app:chipStrokeColor="[颜色]"`
+<br />
+设置边框的颜色。
+
+🔷 `app:chipStrokeWidth="[尺寸]"`
+<br />
+设置边框的粗细。
+
+🔷 `app:chipStartPadding="[尺寸]"`
+<br />
+设置Chip内容（包括首部图标）距离控件起始端的距离。
+
+🔷 `app:chipEndPadding="[尺寸]"`
+<br />
+设置Chip内容（包括尾部图标）距离控件终止端的距离。
+
+## 状态图标
+Chip的起始端拥有选中状态指示图标，终止端拥有关闭图标，这些图标的实际功能与样式可以由开发者自行定制。
+
+🔶 `app:chipIconVisible="[true|false]"`
+<br />
+设置是否显示选中图标。
+
+🔶 `app:chipIcon="[图像素材]"`
+<br />
+设置选中图标素材。
+
+🔶 `app:chipIconSize="[尺寸]"`
+<br />
+设置选中图标尺寸。
+
+选中图标的尺寸不影响Chip背景的尺寸，如果此处数值过大，图标将会超出Chip背景。
+
+🔶 `app:chipIconTint="[颜色]"`
+<br />
+设置选中图标着色效果。
+
+🔶 `app:iconStartPadding="[尺寸]"`
+<br />
+设置选中图标到Chip起始端的距离。
+
+🔶 `app:iconEndPadding="[尺寸]"`
+<br />
+设置选中图标与文本之间的间距。
+
+🔶 `app:closeIconVisible="[true|false]"`
+<br />
+设置是否显示关闭图标。
+
+🔶 `app:closeIcon="[图像素材]"`
+<br />
+设置关闭图标素材。
+
+🔶 `app:closeIconSize="[图像素材]"`
+<br />
+设置关闭图标尺寸。
+
+关闭图标的尺寸不影响Chip背景的尺寸，如果此处数值过大，图标将会超出Chip背景。
+
+🔶 `app:closeIconTint="[颜色]"`
+<br />
+设置关闭图标着色效果。
+
+🔶 `app:closeIconStartPadding="[尺寸]"`
+<br />
+设置关闭图标与文本之间的间距。
+
+🔶 `app:closeIconEndPadding="[尺寸]"`
+<br />
+设置关闭图标到Chip终止端的距离。
 
 # 监听器
 ## 控件点击事件监听器
 Chip每次被点击都会触发点击事件，这与其他控件是类似的，此处省略相关描述。
 
 ## 选中状态监听器
-Chip具有“已选中/未选中”两种自锁状态，每当被用户点击时，都会切换为相反的状态并保持。如果一个Chip的"checkable"属性为"true"，我们就可以通过注册OnCheckedChangeListener监听Chip选中状态的变化。
+Chip具有“已选中/未选中”两种自锁状态，每当被用户点击时，都会切换为相反的状态并保持。
+
+如果一个Chip的"checkable"属性为"true"，我们就可以通过注册OnCheckedChangeListener监听Chip选中状态的变化。
 
 ```java
 // 注册选中状态监听器
@@ -43,7 +168,7 @@ chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
 });
 ```
 
-该监听器只有一个 `onCheckedChanged(CompoundButton buttonView, boolean isChecked)` 回调方法，每当按钮选中状态发生改变时触发，其中参数"buttonView"表示被点击的控件实例；参数"isChecked"表示Chip被点击后的选中状态。
+该监听器只有一个 `onCheckedChanged(CompoundButton buttonView, boolean isChecked)` 回调方法，每当按钮选中状态发生改变时触发，参数"buttonView"表示被点击的控件实例；参数"isChecked"表示Chip被点击后的选中状态。
 
 ## 关闭按钮点击事件监听器
 如果一个Chip的"closeIconVisible"属性为"true"，我们就可以注册OnCloseIconClickListener监听关闭按钮的点击事件。
@@ -57,7 +182,7 @@ chipEntry.setOnCloseIconClickListener(v -> {
 
 # ChipGroup
 ## 简介
-ChipGroup是用于容纳多个Chip控件的容器，可以控制Chip的排布方式，也可以实现单选与多选的控制逻辑。
+ChipGroup是用于容纳多个Chip控件的容器，它可以控制Chip的排布方式，也可以实现单选与多选的控制逻辑。
 
 > ⚠️ 警告
 >
