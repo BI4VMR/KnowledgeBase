@@ -56,7 +56,9 @@ public class TestFragment extends Fragment {
 
 > ⚠️ 警告
 >
-> 我们只能在具有Fragment管理能力的Activity中使用Fragment，这种Activity都是FragmentActivity的子类，例如AppCompatActivity。如果我们在不支持Fragment的Activity中使用Fragment，则加载XML时会出现UnsupportedOperationException。
+> 我们只能在具有Fragment管理能力的Activity中使用Fragment，这种Activity都是FragmentActivity的子类，例如AppCompatActivity。
+> 
+> 如果我们在不支持Fragment的Activity中使用Fragment，则加载XML时会出现UnsupportedOperationException。
 
 ### 静态引用Fragment
 在布局XML文件中，我们可以使用 `<fragment>` 标签静态加载Fragment到固定的位置。对于较新的版本，官方推荐使用 `<FragmentContainerView>` 作为Fragment容器。
@@ -169,11 +171,56 @@ TestFragment fragment = TestFragment.newInstance("初始参数");
 
 当这种方式创建的TestFragment实例被添加到界面上时，其内部能够获取到我们传入的初始化参数，文本框内容将会显示为“初始参数”。
 
-# FragmentManager
-FragmentManager类负责对页面中的Fragment执行一些操作，例如添加、移除或替换，以及将它们添加到返回堆栈。
+# 管理Fragment
+## FragmentManager
+FragmentManager类负责对页面中的Fragment执行管理操作，例如添加、移除或替换，以及维护Fragment的回退栈。
 
-在 Activity 中访问
-每个 FragmentActivity 及其子类（如 AppCompatActivity）都可以通过 getSupportFragmentManager() 方法访问 FragmentManager。
+Activity与Fragment都有自己的FragmentManager，我们可以在各组件中使用合适的方法获取FragmentManager实例。
 
-在 Fragment 中访问
-Fragment也能够托管一个或多个子 Fragment。在Fragment内，您可以通过 getChildFragmentManager() 获取对管理 Fragment 子级的 FragmentManager 的引用。如果您需要访问其宿主 FragmentManager，可以使用 getParentFragmentManager()。
+<div align="center">
+
+**添加图片添加图片添加图片添加图片添加图片添加图片**
+
+</div>
+
+在FragmentActivity中，我们可以通过 `getSupportFragmentManager()` 方法获取Activity级别的FragmentManager，以便管理页面上的Fragment。
+
+在Fragment中，我们可以通过 `getChildFragmentManager()` 方法获取当前Fragment级别的FragmentManager。Fragment需要嵌入在Activity或另一个Fragment中使用，我们可以通过 `getParentFragmentManager()` 方法获取其父级的FragmentManager。
+
+FragmentManager拥有以下常用方法，用于获取当前界面中的Fragment实例：
+
+`Fragment findFragmentById(int id)`
+
+根据控件ID查找Fragment实例，未找到时将返回空值。
+
+此方法通常用于获取布局文件中静态引入的Fragment。
+
+
+`Fragment findFragmentByTag(String tag)`
+
+根据Tag查找Fragment实例，未找到时将返回空值。
+
+Tag是我们为Fragment设置的属性，用于给特定类型的Fragment做标记，以便通过此方法获取这种实例。多个Fragment实例可能拥有相同的Tag，该方法将会优先返回较新的Fragment实例。
+
+`List<Fragment> getFragments()`
+
+获取当前页面中的所有Fragment实例，没有实例时将返回空列表。
+
+## FragmentTransaction
+
+
+add(int containerViewId, Fragment fragment, String tag)：将一个Fragment实例添加到Activity的最上层 。
+
+remove(Fragment fragment)：将一个Fragment实例从Activity的Fragment队列中删除。
+
+replace(int containerViewId, Fragment fragment)：替换containerViewId中的Fragment实例。注意，它首先把containerViewId中所有Fagment删除，然后再add进去当前的Fragment 实例。
+
+hide(Fragment fragment)：隐藏当前的Fragment，仅仅是设为不可见，并不会销毁。
+
+show(Fragment fragment)：显示之前隐藏的Fragment。
+
+detach(Fragment fragment)：会将view从UI中移除，和remove()不同，此时Fragment的状态依然由FragmentManager维护。
+
+attach(Fragment fragment)：重建view视图，附加到UI上并显示。
+
+commit()：提交一个事务。
