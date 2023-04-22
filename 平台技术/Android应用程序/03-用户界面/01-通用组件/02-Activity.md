@@ -519,7 +519,7 @@ ActivityManager am = getSystemService(ActivityManager.class);
 ```
 
 🔷 获取任务列表
-
+<br />
 我们可以使用ActivityManager的 `getRunningTasks(int num)` 方法获取最近任务信息，参数是希望系统返回的最大任务数量，返回值是 `List<ActivityManager.RunningTaskInfo>` ，RunningTaskInfo即Task状态对象，常用的属性见下文：
 
 - "id"即Task的ID，系统新创建的TaskID值保持线性增长。
@@ -534,7 +534,7 @@ ActivityManager am = getSystemService(ActivityManager.class);
 <!-- TODO 后续需要添加链接：UsageStatsManager  文档暂时没有编写。 -->
 
 🔷 将后台任务移动至前台
-
+<br />
 ActivityManager的 `moveTaskToFront(int taskID, int flags)` 方法可以把后台Task移动到前台，参数"taskID"即目标Task的ID；参数"flags"是标志位，每个值的含义见下文：
 
 🔺 MOVE_TASK_WITH_HOME
