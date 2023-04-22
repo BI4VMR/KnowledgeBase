@@ -200,7 +200,7 @@ Activity类提供了七个生命周期回调方法，它们之间的关系如下
 
 <div align="center">
 
-**添加图片添加图片添加图片添加图片添加图片添加图片**
+![Fragment的生命周期](./Assets-Fragment/生命周期-Fragment的生命周期.jpg)
 
 </div>
 
