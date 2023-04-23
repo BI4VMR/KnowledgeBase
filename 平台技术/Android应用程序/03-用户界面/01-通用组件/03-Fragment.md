@@ -460,15 +460,13 @@ Back Stack:
 
 Fragment本身不是Context，它需要依附于Activity或其他Context。通常情况下Fragment的父容器是Activity，此时两种方法是相同的；如果父容器不是Activity，我们只能使用名称含有"Context"的方法。
 
-当Context不存在时，"get"方法将返回空值，而"require"方法将抛出异常。"get"方法适用于可选操作，没有Context时可以忽略本次操作；"require"方法适用于必选操作，没有Context时抛出异常暴露问题，以便开发者进行后续处理。我们应当根据业务类型进行选择，不应该无视实际需要使用"get"方法与空值判断掩盖问题。
+当Context不存在时，"get"方法将返回空值，而"require"方法将抛出异常。"get"方法适用于可选操作，没有Context时可以忽略本次操作；"require"方法适用于必选操作，没有Context时抛出异常暴露问题，以便开发者进行后续处理。我们应当根据业务类型进行选择，不应该无视实际需要而使用"get"方法与空值判断掩盖问题。
 
-当我们在异步回调中使用上述方法时，一定要注意空值的判断与异常处理。
+当我们在异步回调中使用上述方法时，一定要注意空值的判断与异常处理，因为回调触发时Fragment可能已经从父容器中分离了，此时获取不到Context对象。
 
 对于Service、Toast等不依赖Theme的对象，我们可以在Fragment的 `void onAttach(Context context)` 生命周期中提前创建；对于Dialog等依赖Theme的对象，我们可以在Fragment的 `onCreate()` 等方法中使用 `requireActivity()` 提前创建，这些时刻Context必然是存在的，当异步方法返回时可以直接显示Dialog或Toast。对于必须在异步方法中使用Context的场景，我们可以使用 `getContext()` 方法并进行空值判断，若无Context对象则不再继续操作。
 
-下文将以实际场景展示获取Context的正确方法。
-
-我们在一个可被关闭的Fragment中执行联网获取数据的操作，当结果返回时显示Toast告知用户。
+此处将以一个实际场景展示获取Context的正确方法：我们在一个可被用户关闭的Fragment中联网获取数据，并在结果返回时显示Toast告知用户。
 
 以下是一种错误示范：
 
@@ -494,27 +492,34 @@ public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle sa
 
 上述示例代码中，当Fragment显示5秒后回调方法被执行，若此时Fragment已经被用户关闭（从Activity中分离）， `requireContext()` 方法就会导致异常："IllegalStateException: Fragment not attached to a context."，现象为应用程序突然无故关闭。
 
-对于上述情况，我们应当在 `onCreateView()` 方法中提前初始化Toast，此时Context是存在的，不会出现异常。当回调方法触发时，再调用 `show()` 方法显示Toast即可。
+对于这种情况，我们应当在 `onAttach()` 方法中保存应用程序的Context，当回调方法触发时，使用该Context显示Toast即可。
 
 ```java
-@Override
-public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+public class TestFragment extends Fragment {
 
-    /* 省略部分代码 */
+    private Context mContext;
 
-    // 获取Context
-    Context ctx = requireContext();
-    // 初始化Toast，但先不进行显示。
-    Toast toast = Toast.makeText(ctx, "Test", Toast.LENGTH_SHORT);
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        // 此处可以保存Application的Context以便后续使用。
+        mContext = context.getApplicationContext();
+    }
 
-    Handler handler = new Handler(Looper.getMainLooper());
-    // 延时5秒执行，模拟耗时操作。
-    handler.postDelayed(() -> {
-        // 异步方法触发，显示Toast。
-        toast.show();
-    }, 5000L);
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-    return view;
+        /* 省略部分代码 */
+
+        Handler handler = new Handler(Looper.getMainLooper());
+        // 延时5秒执行，模拟耗时操作。
+        handler.postDelayed(() -> {
+            // 使用 "onAttach()" 方法中保存的Context，显示Toast。
+            Toast.makeText(mContext, "Test", Toast.LENGTH_SHORT)
+                    .show();
+        }, 5000L);
+        return view;
+    }
 }
 ```
 
