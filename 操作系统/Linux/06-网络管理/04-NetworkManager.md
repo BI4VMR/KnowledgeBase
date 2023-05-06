@@ -20,19 +20,19 @@ DEVICE列表示设备名称；TYPE列表示设备类型；CONNECTION列表示当
 STATE列表示设备的状态，共有以下四种取值：
 
 🔷 `connected`
-<br />
+
 已被NM管理，已激活连接。
 
 🔷 `disconnected`
-<br />
+
 已被NM管理，未激活连接。
 
 🔷 `unmanaged`
-<br />
+
 不允许NM管理此设备。
 
 🔷 `unavailable`
-<br />
+
 设备不可用，例如链路状态为Down时。
 
 执行 `nmcli device show {设备名称}` 可以查看指定设备的详细信息：

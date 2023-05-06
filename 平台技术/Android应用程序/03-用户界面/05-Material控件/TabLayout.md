@@ -41,35 +41,35 @@ tabLayout.addTab(tab3);
 # 外观定制
 ## 基本样式
 🔷 `app:tabTextAppearance=[样式ID]`
-<br />
+
 设置Tab中文字的样式。
 
 可以在Style中声明字号与颜色等属性，并在此引用。
 
 🔷 `app:tabTextColor="[颜色]"`
-<br />
+
 设置Tab中的文字颜色。
 
 配置此属性后系统默认的 `app:tabSelectedTextColor` 属性将会失效，选中Tab的文字颜色也会变成此处设置的值。
 
 🔷 `app:tabSelectedTextColor="[颜色]"`
-<br />
+
 设置当前选中Tab的文字颜色。
 
 🔷 `app:tabRippleColor="[颜色]"`
-<br />
+
 设置点击Tab时产生的涟漪效果颜色。
 
 如果我们希望移除该效果，可以将此属性设置为"@null"。
 
 🔷 `app:tabMode="[fixed|scrollable|auto]"`
-<br />
+
 设置TabLayout的布局模式。
 
 取值为"fixed"时所有Tab平分TabLayout的宽度，这是默认值。取值为"scrollable"时，如果总宽度超过TabLayout，则可以横向滚动。取值为"auto"时根据Tab总宽度自动选择布局模式。
 
 🔷 `app:tabGravity="[center|start|fill]"`
-<br />
+
 设置Tab的对齐方式。
 
 取值为"center"时居中排列，取值为"start"时从容器起始端开始排列，取值为"fill"时，尝试平分父容器的宽度。
@@ -78,39 +78,39 @@ tabLayout.addTab(tab3);
 我们可以通过以下属性配置指示线的外观。
 
 🔷 `app:tabIndicator="[图形资源ID]"`
-<br />
+
 设置指示线的样式。
 
 🔷 `app:tabIndicatorColor="[颜色]"`
-<br />
+
 设置指示线的颜色。
 
 🔷 `app:tabIndicatorHeight="[长度]"`
-<br />
+
 设置指示线的高度。
 
 如果我们希望不显示指示线，可以将此属性设为"0dp"。
 
 🔷 `app:tabIndicatorFullWidth="[true|false]"`
-<br />
+
 设置指示线宽度是否充满整个Tab。
 
 取值为"true"时，指示线与Tab等宽；取值为"false"时，指示线与Tab中的文字等宽。
 
 🔷 `app:tabIndicatorGravity="[top|bottom|center|stretch]"`
-<br />
+
 设置指示线在垂直方向的位置。
 
 取值为"top"表示位于Tab顶部；取值为"bottom"表示位于Tab底部，是默认值；取值为"center"表示位于Tab中间；取值为"stretch"表示将指示线高度拉伸至整个Tab。
 
 🔷 `app:tabIndicatorAnimationMode="[linear|elastic|fade]"`
-<br />
+
 设置指示线动画类型。
 
 "linear"表示线性移动，是默认值；"elastic"表示拉伸移动；"fade"表示从旧位置逐渐消失，再逐渐出现在新位置。
 
 🔷 `app:tabIndicatorAnimationDuration="[时间(ms)]"`
-<br />
+
 设置指示线切换动画的持续时间，单位为毫秒。
 
 ## 分隔线

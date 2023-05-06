@@ -22,7 +22,7 @@ EditText在XML文件中的典型配置如下文所示：
 
 # 常用属性
 🔷 `android:inputType="[文本类型]"`
-<br />
+
 设置EditText可接受的数据类型，用户点击时输入法会自动打开相应的输入模式。
 
 此属性的常见取值及含义见下表：
@@ -58,29 +58,29 @@ edittext.setInputType(inputType);
 ```
 
 🔷 `android:hint="[提示信息]"`
-<br />
+
 设置控件在初始状态下的提示文字，用于告知用户此处要输入的内容。
 
 🔷 `android:textColorHint="[颜色]"`
-<br />
+
 设置提示文字的颜色。
 
 🔷 `android:digits="[字符列表]"`
-<br />
+
 设置控件可接受的字符列表。
 
 不在该列表内的字符无法输入，多个字符之间不需要分隔符。例如取值为"ABC"时，控件只接受A、B、C三个大写字母组成的字符串。
 
 🔷 `android:cursorVisible="[true|false]"`
-<br />
+
 设置编辑光标的可见性。
 
 🔷 `android:textColorHighlight="[颜色]"`
-<br />
+
 设置长按选择文本时，被选中字符的背景颜色。
 
 🔷 `android:autofillHints="[文本类型]"`
-<br />
+
 设置自动填充功能允许填入的文本类型。
 
 此功能类似于网页表单的自动补全提示。若我们不设置此属性，Android Studio将会发出警告，我们可以添加 `tools:ignore="Autofill"` 将其忽略，或者设置 `android:importantForAutofill="no"` 属性关闭该功能。

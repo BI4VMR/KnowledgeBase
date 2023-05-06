@@ -321,11 +321,11 @@ FragmentTransaction对象可以通过FragmentManager的 `beginTransaction()` 方
 
 异步方法，将当前事务提交至任务队列，不检查Activity的界面状态是否已保存。
 
-FragmentActivity在执行 `onSaveInstanceState()` 时，也会记录FragmentManager的状态；当FragmentActivity恢复时，再将所有Fragment重新显示出来。如果我们在 `onSaveInstanceState()` 之后执行了 `commit()` 方法，系统就会抛出异常："IllegalStateException: Can not perform this action after onSaveInstanceState"，这种情况往往是异步回调引起的，例如FragmentActivity已经被其他Activity覆盖，异步回调触发，我们在其中进行了 `commit()` 操作。
+FragmentActivity在执行 `onSaveInstanceState()` 时，也会记录FragmentManager的状态；当FragmentActivity恢复时，再将其中的Fragment显示出来。如果我们在 `onSaveInstanceState()` 之后执行了 `commit()` 方法，系统就会抛出异常："IllegalStateException: Can not perform this action after onSaveInstanceState"，这种情况往往是异步回调引起的，例如FragmentActivity已经被其他Activity覆盖，异步回调触发，我们又在其中执行了 `commit()` 操作。
 
-如果我们并不需要确保当前事务的状态被记录，可以调用 `commitAllowingStateLoss()` 方法，该方法不会抛出上述异常。
+如果我们并不需要确保当前事务的状态被记录，可以调用 `commitAllowingStateLoss()` 方法，该方法不会检查状态并抛出异常。
 
-如果我们需要确保当前事务的状态被记录，可以在提交前先调用FragmentManager的 `isStateSaved()` 方法进行判断，如果Activity的界面状态已经被保存，可以等到Activity的 `onResumeFragments()` 或 `onResume()` 回调时再进行提交。
+如果我们需要确保当前事务的状态被记录，可以在提交前先调用FragmentManager的 `isStateSaved()` 方法进行判断，如果Activity的界面状态已经被保存，应当等到Activity的 `onResumeFragments()` 或 `onResume()` 回调时再进行提交。
 
 🔶 `void commitNowAllowingStateLoss()`
 

@@ -23,28 +23,28 @@ ToggleButton在XML文件中的典型配置如下：
 
 # 常用属性
 🔷 `android:textOn="[文本]"`
-<br />
+
 设置按钮在选中状态的文字，默认为"ON"。
 
 🔷 `android:textOff="[文本]"`
-<br />
+
 设置按钮在未选中状态的文字，默认为"OFF"。
 
 🔷 `android:checked="[true|false]"`
-<br />
+
 设置按钮的初始状态，默认为“未选中”。
 
 # 常用方法
 🔶 `boolean isChecked()`
-<br />
+
 获取当前按钮的选中状态。
 
 🔶 `void setChecked(boolean state)`
-<br />
+
 设置按钮的选中状态。
 
 🔶 `void toggle()`
-<br />
+
 反转当前选中状态。
 
 # 监听器

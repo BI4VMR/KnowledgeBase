@@ -24,47 +24,47 @@ ONBOOT=yes
 
 ## 常用字段
 🔷 `TYPE`
-<br />
+
 接口类型。常见的以太网卡为"Ethernet"，虚拟设备为"Bridge"、"Bond"等。
 
 🔷 `BOOTPROTO`
-<br />
+
 动态地址获取协议。取值为"none"表示禁用；"static"表示仅使用静态地址；"bootp"表示使用BOOTP协议；"dhcp"表示使用DHCP协议。
 
 🔷 `ONBOOT`
-<br />
+
 开机是否自动加载。取值为"yes"或"no"。
 
 🔷 `DEFROUTE`
-<br />
+
 是否生成默认路由。取值为"yes"或"no"。
 
 🔷 `PEERDNS`
-<br />
+
 是否将DNS同步写入"/etc/resolv.conf"中。取值为"yes"或"no"，自动获取、手工配置的服务器地址均可作为有效值被写入"resolv.conf"。
 
 🔷 `USERCTL`
-<br />
+
 普通用户是否有权控制该网卡。取值为"yes"或"no"，默认为"no"。
 
 🔷 `NM_CONTROLLED`
-<br />
+
 是否允许该网卡被NetworkManager管理。取值为"yes"或"no"。
 
 🔷 `DEVICE`
-<br />
+
 设备名称。此字段与"/dev"下的设备文件名对应，NAME参数值应与其保持一致。
 
 🔷 `UUID`
-<br />
+
 设备标识。同一台机器上的网卡ID不可冲突，复制虚拟机后必须重新生成该参数。
 
 🔷 `HWADDR`
-<br />
+
 硬件MAC地址。此字段仅供管理员查看配置所用，取值必须和硬件MAC地址保持一致，否则会导致配置无法成功应用。
 
 🔷 `MACADDR`
-<br />
+
 自定义MAC地址。此字段可以覆盖硬件MAC地址，网卡通信时采用此处设置的值。
 
 ## 设置IPv4地址

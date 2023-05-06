@@ -6,30 +6,30 @@ SharedPreferences的数据实际上存储在XML文件中，路径位于"/data/da
 SharedPreferences具有以下特点，我们需要在合适的场合使用它。
 
 🔷 效率较低
-<br />
+
 即使我们只修改文件中的一个键值对，系统也要把完整的内容向外存储器写入一遍，因此不适合存取较大规模的数据。
 
 🔷 进程不安全
-<br />
+
 SharedPreferences没有跨进程的锁，因此程序拥有多个进程时应谨慎使用，以防数据出现错误。
 
 🔷 不支持加密存储
-<br />
+
 SharedPreferences没有加密机制，设备Root后可以被随意读取，所以不要用于存储敏感信息。
 
 # 存入数据
 若要使用SharedPreferences，首先需要获取SharedPreferences实例，系统提供了以下几种方式供开发者使用：
 
 🔷 Context类的 `getSharedPreferences()` 方法
-<br />
+
 需要传入XML文件名称和存取模式参数。文件名参数不需要包含后缀".xml"，若指定的文件不存在，系统将自动创建空文件；存取模式必须为"Context.MODE_PRIVATE"，其它值均已被废弃。
 
 🔷 Activity类的 `getPreferences()` 方法
-<br />
+
 将自动以当前Activity类名为文件名，只需要传入存取模式参数即可。
 
 🔷 PreferenceManager类的 `getDefaultSharedPreferences()` 方法
-<br />
+
 以"preferences"为文件名，目前已被废弃，不建议再使用。
 
 写入数据前，需要先获取Editor实例，然后通过"put"系列方法，存入键名和对应类型的值，最后使用 `apply()` 或 `commit()` 方法提交，持久化存储数据。

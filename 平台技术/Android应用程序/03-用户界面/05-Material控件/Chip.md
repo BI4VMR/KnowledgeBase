@@ -27,126 +27,126 @@ Chip有四种预设样式，它们的外观与特点见下文图片与列表。
 </div>
 
 🔷 ActionChip
-<br />
+
 添加 `style="@style/Widget.MaterialComponents.Chip.Action"` 属性可应用该样式，这是Chip的默认样式，不可选中、无选中图标、无关闭按钮。
 
 🔷 FilterChip
-<br />
+
 添加 `style="@style/Widget.MaterialComponents.Chip.Filter"` 属性可应用该样式，可被选中、有选中图标、无关闭按钮。
 
 🔷 EntryChip
-<br />
+
 添加 `style="@style/Widget.MaterialComponents.Chip.Entry"` 属性可应用该样式，可被选中、有选中图标、有关闭按钮。
 
 🔷 ChoiceChip
-<br />
+
 添加 `style="@style/Widget.MaterialComponents.Chip.Choice"` 属性可应用该样式，可被选中、无选中图标、无关闭按钮，但选中后背景颜色将发生改变。
 
 # 外观定制
 ## 基本样式
 🔷 `android:text="[文本内容]"`
-<br />
+
 设置文本内容。
 
 🔷 `android:textColor="[颜色]"`
-<br />
+
 设置文本颜色。
 
 🔷 `android:textAppearance="[样式]"`
-<br />
+
 设置文本样式。
 
 🔷 `android:checkable="[true|false]"`
-<br />
+
 设置按钮是否可以被选中。
 
 🔷 `app:chipCornerRadius="[尺寸]"`
-<br />
+
 设置圆角半径。
 
 默认值为最大弧度；设置为"0dp"则显示为矩形。
 
 🔷 `app:chipBackgroundColor="[颜色]"`
-<br />
+
 设置背景颜色。
 
 此处可以直接填写颜色值，也可以使用颜色选择器，设置不同选中状态下的颜色。
 
 🔷 `app:rippleColor="[颜色]"`
-<br />
+
 设置点击时的涟漪动效颜色。
 
 如果我们不需要动效，可以将此属性设置为"@null"。
 
 🔷 `app:chipStrokeColor="[颜色]"`
-<br />
+
 设置边框的颜色。
 
 🔷 `app:chipStrokeWidth="[尺寸]"`
-<br />
+
 设置边框的粗细。
 
 🔷 `app:chipStartPadding="[尺寸]"`
-<br />
+
 设置Chip内容（包括首部图标）距离控件起始端的距离。
 
 🔷 `app:chipEndPadding="[尺寸]"`
-<br />
+
 设置Chip内容（包括尾部图标）距离控件终止端的距离。
 
 ## 状态图标
 Chip的起始端拥有选中状态指示图标，终止端拥有关闭图标，这些图标的实际功能与样式可以由开发者自行定制。
 
 🔶 `app:chipIconVisible="[true|false]"`
-<br />
+
 设置是否显示选中图标。
 
 🔶 `app:chipIcon="[图像素材]"`
-<br />
+
 设置选中图标素材。
 
 🔶 `app:chipIconSize="[尺寸]"`
-<br />
+
 设置选中图标尺寸。
 
 选中图标的尺寸不影响Chip背景的尺寸，如果此处数值过大，图标将会超出Chip背景。
 
 🔶 `app:chipIconTint="[颜色]"`
-<br />
+
 设置选中图标着色效果。
 
 🔶 `app:iconStartPadding="[尺寸]"`
-<br />
+
 设置选中图标到Chip起始端的距离。
 
 🔶 `app:iconEndPadding="[尺寸]"`
-<br />
+
 设置选中图标与文本之间的间距。
 
 🔶 `app:closeIconVisible="[true|false]"`
-<br />
+
 设置是否显示关闭图标。
 
 🔶 `app:closeIcon="[图像素材]"`
-<br />
+
 设置关闭图标素材。
 
 🔶 `app:closeIconSize="[图像素材]"`
-<br />
+
 设置关闭图标尺寸。
 
 关闭图标的尺寸不影响Chip背景的尺寸，如果此处数值过大，图标将会超出Chip背景。
 
 🔶 `app:closeIconTint="[颜色]"`
-<br />
+
 设置关闭图标着色效果。
 
 🔶 `app:closeIconStartPadding="[尺寸]"`
-<br />
+
 设置关闭图标与文本之间的间距。
 
 🔶 `app:closeIconEndPadding="[尺寸]"`
-<br />
+
 设置关闭图标到Chip终止端的距离。
 
 # 监听器
