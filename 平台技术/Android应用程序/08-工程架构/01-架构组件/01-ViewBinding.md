@@ -29,6 +29,7 @@ ui_demo_base.xml:
 
 ```groovy
 android {
+
     // 省略其他内容...
 
     viewBinding {
@@ -75,7 +76,97 @@ protected void onCreate(Bundle savedInstanceState) {
 
 视图绑定类的 `getRoot()` 方法将返回根布局View对象，我们将其传入Activity的 `setContentView()` 方法以展示界面。然后我们通过"binding"对象中各控件的引用，访问控件属性并设置监听器，实现界面逻辑。
 
-# 其他应用场景
+# 常见应用场景
+## Fragment
+当我们在Fragment中使用视图绑定时，可以在 `onCreateView()` 生命周期中获取视图绑定对象并初始化变量，然后在 `onDestroyView()` 方法中将其置空，使得系统能够及时回收View占用的资源。
+
+TestFragment.java:
+
+```java
+public class TestFragment extends Fragment {
+
+    private LoginFragmentBinding binding;
+
+    public static TestFragment newInstance() {
+        return new TestFragment();
+    }
+
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        // 使用生命周期方法提供的"inflater"和父容器获取视图绑定对象
+        binding = LoginFragmentBinding.inflate(inflater, container, false);
+
+        /* 初始化控件 */
+        binding.tvTitle.setText("请输入登录信息");
+        binding.btnLogin.setOnClickListener(v -> {
+            // 访问用户名与密码输入控件，获取当前内容。
+            String name = binding.etUsername.getText().toString();
+            String pwd = binding.etPassword.getText().toString();
+            Toast.makeText(requireContext(), "名称: " + name + " ;密码: " + pwd, Toast.LENGTH_SHORT)
+                    .show();
+        });
+
+        // 返回View给系统
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        // 将视图绑定对象置空，防止内存泄漏。
+        binding = null;
+    }
+}
+```
+
+在实际使用中，我们也可以创建一个可空内部变量"_binding"用于获取与置空，然后使用非空断言创建另一个"binding"对象以供访问控件，避免使用过程中每次都要进行空值判断。
+
+## RecyclerView
+我们可以在表项的ViewHolder中使用视图绑定，以消除ViewHolder类首部的大量控件全局变量。
+
+MyAdapter.java:
+
+```java
+
+public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
+
+    /* 此处省略部分变量与方法... */
+
+    @NonNull
+    @Override
+    public MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        LayoutInflater inflater = LayoutInflater.from(mContext);
+        // 获取Item布局文件对应的视图绑定类实例
+        ListItemSimpleBinding itemBinding = ListItemSimpleBinding.inflate(inflater, parent, false);
+        // 创建ViewHolder实例，并传入视图绑定对象。
+        return new MyViewHolder(itemBinding);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull MyViewHolder holder, int position) {
+        holder.bindData();
+    }
+
+    class MyViewHolder extends RecyclerView.ViewHolder {
+
+        // 只需要保存视图绑定对象即可，不需要再保存每个控件的引用。
+        private final ListItemSimpleBinding binding;
+
+        public MyViewHolder(@NonNull ListItemSimpleBinding binding) {
+            super(binding.getRoot());
+            // 保存视图绑定对象
+            this.binding = binding;
+        }
+
+        public void bindData() {
+            // 获取当前项的数据
+            SimpleVO vo = dataSource.get(getAdapterPosition());
+            // 将数据设置到控件中
+            binding.tvTitle.setText(vo.getTitle());
+        }
+    }
+}
+```
 
 # 特殊标签用法
 ## "include"标签
@@ -181,7 +272,7 @@ protected void onCreate(Bundle savedInstanceState) {
 }
 ```
 
-当被引用的布局为 `<merge>` 标签时，我们不能通过定义ID的方式进行访问，此时需要通过布局绑定类的 `bind()` 方法，获取Merge布局对应的视图绑定对象，然后通过该对象访问其中的控件。
+当被引用的布局根标签为 `<merge>` 标签时，我们不能通过定义ID的方式进行访问，此时需要通过布局绑定类的 `bind()` 方法，获取Merge布局对应的视图绑定对象，然后通过该对象访问其中的控件。
 
 # 忽略指定的布局文件
 默认情况下，所有布局XML文件都会生成对应的视图绑定类，有些文件我们可能不需要用于视图绑定，此时可以在其根布局上添加 `tools:viewBindingIgnore="true"` 属性。
