@@ -49,7 +49,6 @@ Make完成后，我们就可以在Activity代码中使用视图绑定类了。
 DemoBaseUI.java:
 
 ```java
-@Override
 protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     // 获取当前页面的ViewBinding对象
@@ -202,7 +201,6 @@ ui_demo_include.xml:
 DemoIncludeUI.java:
 
 ```java
-@Override
 protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     UiDemoIncludeBinding binding = UiDemoIncludeBinding.inflate(getLayoutInflater());
@@ -253,7 +251,6 @@ ui_demo_merge.xml:
 DemoMergeUI.java:
 
 ```java
-@Override
 protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     UiDemoMergeBinding binding = UiDemoMergeBinding.inflate(getLayoutInflater());

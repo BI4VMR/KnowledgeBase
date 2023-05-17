@@ -57,7 +57,6 @@ public class MyViewModel extends ViewModel {
 DemoBaseUI.java:
 
 ```java
-@Override
 protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.ui_demo_base);
@@ -81,7 +80,6 @@ protected void onCreate(Bundle savedInstanceState) {
 TestFragment.java:
 
 ```java
-@Override
 public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     // 获取Activity对应的ViewModel实例
