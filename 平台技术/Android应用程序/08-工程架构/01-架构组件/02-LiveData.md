@@ -1,7 +1,7 @@
 # 简介
-LiveData是一种可被观察的数据容器，当数据发生改变时，将会通知所有观察者变更事件。
+LiveData是一种可被观察的数据容器，观察者可以注册回调，每当容器内的数据发生改变时，LiveData将会通知所有观察者数值变更。
 
-LiveData与普通的观察者模式工具相比，支持生命周期感知功能，它只会通告消息给当前状态为活跃的观察者，并且会自动注销非活跃观察者的回调方法，使用更加便捷。
+LiveData与其他观察者模式工具相比，新增了生命周期感知功能，它只会通告消息给状态为活跃的观察者，并且会自动注销非活跃观察者的回调，使用起来更加便捷。
 
 # 基本应用
 我们首先创建一个ViewModel类，用来承载LiveData。
@@ -78,9 +78,7 @@ protected void onCreate(Bundle savedInstanceState) {
 
 <div align="center">
 
-<!-- TODO
-
-![执行Make生成视图绑定类](./Assets-ViewBinding/基本应用-执行Make生成视图绑定类.jpg) -->
+![基本应用示例演示](./Assets-LiveData/基本应用示例演示.gif)
 
 </div>
 
@@ -128,9 +126,7 @@ public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle sa
 
 <div align="center">
 
-<!-- TODO
-
-![执行Make生成视图绑定类](./Assets-ViewBinding/基本应用-执行Make生成视图绑定类.jpg) -->
+![数据共享示例演示](./Assets-LiveData/数据共享示例演示.gif)
 
 </div>
 

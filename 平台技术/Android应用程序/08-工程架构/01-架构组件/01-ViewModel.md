@@ -7,7 +7,7 @@ ViewModel的生命周期从我们调用创建方法的时刻开始（通常是Ac
 
 <div align="center">
 
-![ViewModel的生命周期](./Assets-ViewBinding/简介-ViewModel的生命周期.jpg)
+![ViewModel的生命周期](./Assets-ViewModel/ViewModel的生命周期.jpg)
 
 </div>
 
@@ -120,7 +120,7 @@ ViewModel实例在容器中以键值对的形式存储，键为ViewModel的Class
 
 <div align="center">
 
-![ViewModel实例的创建与复用](./Assets-ViewBinding/ViewModel实例的创建与复用-ViewModel实例的创建与复用.jpg)
+![ViewModel实例的创建与复用](./Assets-ViewModel/ViewModel实例的创建与复用.jpg)
 
 </div>
 

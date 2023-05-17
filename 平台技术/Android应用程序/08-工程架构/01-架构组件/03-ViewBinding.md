@@ -40,7 +40,7 @@ android {
 
 <div align="center">
 
-![执行Make生成视图绑定类](./Assets-ViewBinding/基本应用-执行Make生成视图绑定类.jpg)
+![执行Make任务](./Assets-ViewBinding/执行Make任务.jpg)
 
 </div>
 
