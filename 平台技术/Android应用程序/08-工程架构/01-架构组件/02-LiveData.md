@@ -137,9 +137,9 @@ LiveData具有生命周期感知功能，只会将新数据发送给当前生命
 
 当我们注册观察者时， `observe()` 方法的第一个参数LifecycleOwner指定了该回调需要绑定的生命周期，在Activity中，我们通常传入"this"，当Activity活跃时可以接受更新，而销毁时将会自动注销回调。
 
-在Fragment中，我们可以传入Activity、Fragment或Fragment的LifecycleOwner三种对象，传入Activity则表明绑定Activity的生命周期；Fragment的 `getViewLifecycleOwner()` 方法对应Fragment中View的生命周期，Fragment与其View的生命周期有时并不一致。当我们使用新Fragment替换旧Fragment并开启回退栈时，旧Fragment只会销毁View，而不会销毁整个实例。
+在Fragment中，我们可以传入Activity、Fragment或Fragment的LifecycleOwner三种对象，传入Activity则表明绑定Activity的生命周期；Fragment的 `getViewLifecycleOwner()` 方法对应Fragment中View的生命周期，Fragment与其View的生命周期有时并不一致，例如：当我们使用新Fragment替换旧Fragment并启用回退栈时，旧Fragment只会销毁View，而不会销毁整个实例。
 
-大部分情况下我们使用 `getViewLifecycleOwner()` 方法即可，因为LiveData通常都是用来更新界面的，应当将其与View绑定。
+大部分情况下我们在Fragment中使用 `getViewLifecycleOwner()` 方法即可，因为LiveData通常都是用来更新界面的，应当将其与View绑定。
 
 # 数据倒灌
 前文示例中，当我们首次进入测试页面时，变量"num"初始值为"0"，但界面上并不会收到回调显示该数值。这是因为我们使用无参构造方法创建了LiveData对象，此时其中封装的Integer变量是空值，观察者注册时不会立刻收到回调。
@@ -157,6 +157,114 @@ private final MutableLiveData<Integer> numberData = new MutableLiveData<>(num);
 
 此时我们运行示例程序，再进入一次测试页面，此时控件显示了LiveData的初始值。
 
-每当我们注册观察者回调时，如果LiveData中封装的变量值不为空，就会立刻触发一次 `onChanged()` 回调方法，这种特性被称为“数据倒灌”。
+上述结果表明，每当我们注册观察者时，如果LiveData中封装的变量值不为空，就会立刻触发一次 `onChanged()` 回调方法，这种特性被称为“数据倒灌”。有时我们并不希望产生数据倒灌，因为当界面重新加载时可能收到较旧的数据。此时我们可以根据情况添加标志位，判断是否要接受倒灌的数据；或者使用不会发生数据倒灌的 [UnPeekLiveData](https://github.com/KunMinX/UnPeek-LiveData) 等工具替换LiveData。
 
-有时我们不希望产生数据倒灌，因为当界面重新加载时可能收到较旧的数据。此时我们可以根据情况添加标志位，判断是否要接受现有数据；也可以使用不会发生倒灌的 [UnPeekLiveData](https://github.com/KunMinX/UnPeek-LiveData) 等工具替换LiveData。
+# 数据转换
+## 映射LiveData
+部分数据之间存在一定的关联，例如学生的“年龄”可以由“出生年份”与当前年份计算得出，Jetpack中的Transformations工具类提供了一些方法处理此类数据，便于我们将相关逻辑封装在ViewModel中，而不必写在界面组件中，进一步实现数据与界面的解耦。
+
+我们在前文示例中新增一个LiveData变量"squaredData"，使用Transformations的 `map()` 方法与"numberData"联动，一旦"numberData"数值改变，就将其平方值更新到"squaredData"中。
+
+```java
+public class MyViewModel extends ViewModel {
+
+    /* 此处省略部分变量与方法... */
+
+    private int num = 0;
+    public final MutableLiveData<Integer> numberData = new MutableLiveData<>(num);
+
+    // 自"numberData"转换而来的LiveData，每当"numberData"改变时，它的值自动变为"numberData"的平方根。
+    public final LiveData<Integer> squaredData = Transformations.map(numberData, new Function<Integer, Integer>() {
+        @Override
+        public Integer apply(Integer input) {
+            // 计算平方根并返回结果
+            return squared(input);
+        }
+    });
+
+    // 计算平方值
+    private int squared(int raw) {
+        return raw * raw;
+    }
+}
+```
+
+`map()` 方法的第一参数是需要关联的原始LiveData变量；第二参数是数据映射规则。当原始LiveData的值发生改变时，回调方法 `apply()` 触发，原始LiveData的值通过"input"参数传入，经过处理后结果通过返回值设置给映射后的LiveData。
+
+我们在测试Activity中分别设置两个LiveData的观察者，在 `onChanged()` 回调方法中打印日志并更新界面，此处省略相关内容，详见示例代码。
+
+运行示例程序并点击“新增数值”按钮，观察日志输出。
+
+```text
+# 第一次点击新增按钮
+2023-05-25 16:02:31.661 8287-8287/net.bi4vmr.study I/myapp: Number LiveData数值改变：10
+2023-05-25 16:02:31.665 8287-8287/net.bi4vmr.study I/myapp: Squared LiveData数值改变：100
+
+# 第二次点击新增按钮
+2023-05-25 16:02:33.530 8287-8287/net.bi4vmr.study I/myapp: Number LiveData数值改变：20
+2023-05-25 16:02:33.531 8287-8287/net.bi4vmr.study I/myapp: Squared LiveData数值改变：400
+```
+
+从上述日志可以观察到，当我们首次点击按钮时，"numberData"的值变为"10"，"squaredData"触发 `apply()` 回调方法，经过计算得到数值"100"并通知了观察者。
+
+上述示例中的数据映射方法 `squared()` 返回基本类型数据，可以直接用于更新数据，此时我们使用 `map()` 方法即可。对于部分场景，数据映射方法返回LiveData类型数据，并且每次调用都是新的实例，无法被界面观察，此时需要使用Transformations提供的 `switchMap()` 方法；它的用法与 `map()` 方法类似，区别在于 `apply()` 回调方法返回值类型为LiveData，一旦建立关联后，每当源LiveData的值改变，Transformations生成的LiveData值也会改变，便于界面进行观察。
+
+## 聚合LiveData
+MediatorLiveData用于侦听多个LiveData的变化，当任意一个监听目标发生变化时，都会收到回调事件，我们可以进行数据处理，例如统计数据之和等。
+
+我们在前文示例中新增一个"mediatorData"变量，每当原始数值或平方数值任意一个LiveData发生改变时，都将它们累加到"mediatorData"自身。
+
+```java
+public class MyViewModel extends ViewModel {
+
+    /* 此处省略部分变量与方法... */
+
+    // 聚合LiveData，当上文的两个LiveData其中之一数值改变时，都将他们的数值叠加到自身。
+    public final MediatorLiveData<Integer> mediatorData = new MediatorLiveData<>();
+
+    {
+        // 设置初始值为0
+        mediatorData.setValue(0);
+        // 注册事件源，每当"numberData"的值改变时触发。
+        mediatorData.addSource(numberData, new Observer<Integer>() {
+            @Override
+            public void onChanged(Integer integer) {
+                // 此处为了演示方便已经初始化MediatorLiveData，实际使用时需要添加空值判断逻辑。
+                assert mediatorData.getValue() != null;
+                int current = mediatorData.getValue();
+                // 当前数值加上"numberData"的数值。
+                mediatorData.setValue(current + integer);
+            }
+        });
+
+        // 注册事件源，每当"squaredData"的值改变时触发。
+        mediatorData.addSource(squaredData, new Observer<Integer>() {
+            @Override
+            public void onChanged(Integer integer) {
+                assert mediatorData.getValue() != null;
+                int current = mediatorData.getValue();
+                // 当前数值加上"squaredData"的数值。
+                mediatorData.setValue(current + integer);
+            }
+        });
+    }
+}
+```
+
+我们在测试Activity中注册"mediatorData"的观察者后，运行示例程序并点击“增加数值”按钮，观察日志输出。
+
+```text
+# 第一次点击增加数值按钮
+2023-05-25 16:33:59.909 8568-8568/net.bi4vmr.study I/myapp: Number LiveData数值改变：10
+2023-05-25 16:33:59.909 8568-8568/net.bi4vmr.study I/myapp: Squared LiveData数值改变：100
+2023-05-25 16:33:59.909 8568-8568/net.bi4vmr.study I/myapp: Mediator LiveData数值改变：100
+2023-05-25 16:33:59.909 8568-8568/net.bi4vmr.study I/myapp: Mediator LiveData数值改变：110
+
+# 第二次点击增加数值按钮
+2023-05-25 16:34:03.077 8568-8568/net.bi4vmr.study I/myapp: Number LiveData数值改变：20
+2023-05-25 16:34:03.078 8568-8568/net.bi4vmr.study I/myapp: Squared LiveData数值改变：400
+2023-05-25 16:34:03.078 8568-8568/net.bi4vmr.study I/myapp: Mediator LiveData数值改变：510
+2023-05-25 16:34:03.079 8568-8568/net.bi4vmr.study I/myapp: Mediator LiveData数值改变：530
+```
+
+从上述日志信息可以发现，首次点击增加数值按钮时，MediatorLiveData首先收到了平方数值改变事件，从"0"变为"100"；然后收到了原始数值改变事件，最终变为"110"。
