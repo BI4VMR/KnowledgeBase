@@ -1,5 +1,5 @@
 # 概述
-当前我们最常用的链路层协议是以太网，在以太网中，主机和路由器用物理地址(MAC)来标识自身；在网络层中，主机和路由器用逻辑地址(IP)来标识自身。某个节点已知通信目标的IP地址，就可以完成网络层数据包的封装，此时还需要知道对方的链路层地址，才能封装数据帧并通过网卡发送到网络中。因此我们需要通过一种机制，将逻辑地址和物理地址之间进行映射。
+当前最常用的链路层协议是以太网，在以太网中，主机和路由器用物理地址（MAC地址）来标识自身；在网络层中，主机和路由器用逻辑地址（IP地址）来标识自身。某个节点已知通信目标的IP地址，能够完成网络层数据包的封装，此时还需要知道对方的链路层地址，才能封装数据帧并通过网卡发送到网络中。因此该节点需要通过一种机制，将逻辑地址和物理地址之间进行映射。
 
 地址解析协议(Address Resolution Protocol, ARP)是IPv4的一个辅助协议，负责以太网环境下逻辑地址与物理地址的动态映射，将IP地址转换为物理地址。
 
@@ -10,37 +10,47 @@ ARP协议报文封装在链路层帧内，其报文结构如下图所示：
 
 <div align="center">
 
-![ARP报文结构](./Assets-ARP/报文格式-ARP报文结构.jpg)
+![ARP报文结构](./Assets-ARP/ARP报文结构.jpg)
 
 </div>
 
 🔷 HW Type
 
-硬件类型，取值为"1"时表示以太网。
+硬件类型，长度2字节。
+
+使用以太网作为链路层协议时，取值固定为"1"。
 
 🔷 Protocol
 
-网络层协议类型，使用IPv4协议时值为"0x0800"。
+网络层协议类型，长度2字节。
+
+使用IPv4协议时，取值固定为"0x0800"。
 
 🔷 HW.Addr.Length
 
-硬件地址的长度，单位为字节。MAC地址的长度为6字节，因此此处的值通常为"6"。
+硬件地址的长度，长度1字节。
+
+计数单位为字节。使用以太网作为链路层协议时，MAC地址的长度为6字节，此时取值固定为"6"。
 
 🔷 Protocol.Addr.Length
 
-网络层地址的长度，单位为字节。IPv4地址的长度为4字节，因此此处的值通常为"4"。
+网络层地址的长度，长度1字节。
+
+计数单位为字节。IPv4地址的长度为4字节，因此取值固定为"4"。
 
 🔷 OP
 
-操作类型。此字段共有四种取值：ARP请求、ARP应答、RARP请求、RARP应答。
+操作类型，长度2字节。
+
+此字段共有四种取值：ARP请求、ARP应答、RARP请求、RARP应答。
 
 🔷 S.MAC
 
-发送者的硬件地址。
+发送节点的硬件地址。
 
 🔷 S.IP
 
-发送者的IPv4地址。
+发送节点的IPv4地址。
 
 🔷 D.MAC
 
@@ -51,28 +61,28 @@ ARP协议报文封装在链路层帧内，其报文结构如下图所示：
 目标节点IPv4地址。
 
 # 报文类型
-🔶 ARP请求报文
+## ARP请求报文
 
-源主机向目的主机请求其MAC地址，OP字段为1。
+源主机向目的主机请求其MAC地址，OP字段为"1"。
 
-🔶 ARP应答报文
+## ARP应答报文
 
-目的主机收到MAC请求报文后进行回应，OP字段为2。
+目的主机收到MAC请求报文后进行回应，OP字段为"2"。
 
-🔶 RARP请求报文
+## RARP请求报文
 
-用于源主机向目的主机请求其IP地址，OP字段为3。
+用于源主机向目的主机请求其IP地址，OP字段为"3"。
 
-🔶 RARP应答报文
+## RARP应答报文
 
-用于目的主机收到IP请求报文后进行回应，OP字段为4。
+用于目的主机收到IP请求报文后进行回应，OP字段为"4"。
 
 # 工作流程
 当PC1要给PC2发送报文时，首先查找自身的ARP缓存，如果缓存中没有相关条目，就会以广播方式发送ARP请求报文，网段内其它节点都会接收该请求，但只有PC2持有与请求报文中相同的IP地址，它会回复ARP应答报文，其它节点发现报文中所请求的IP地址与自身不同，将丢弃该报文。
 
 <div align="center">
 
-![ARP请求报文](./Assets-ARP/工作流程-ARP请求报文.jpg)
+![ARP请求报文](./Assets-ARP/ARP请求报文.jpg)
 
 </div>
 
@@ -80,91 +90,26 @@ PC2的应答报文中包含它的IP地址和MAC地址，PC1收到该报文后将
 
 <div align="center">
 
-![ARP应答报文](./Assets-ARP/工作流程-ARP应答报文.jpg)
+![ARP应答报文](./Assets-ARP/ARP应答报文.jpg)
 
 </div>
 
 终端设备的ARP缓存有效时间通常为300秒，后续只要收到对方的链路层帧就会重新倒计时，若倒计时结束都没有收到对方的帧，则将对应的表项删除。
 
-# 相关配置
-## 查看ARP缓存
-🔵 Cisco设备
-
-我们可以使用以下命令查看设备上的ARP缓存信息：
-
-```text
-Cisco#show arp {dynamic|static} {接口ID}
-```
-
-参数说明：
-
-🔷 `dynamic|static`
-
-该参数可以筛选动态学习( `dynamic` )或静态配置( `static` )的ARP表项，不指定时将显示所有类型的表项。
-
-🔷 `接口ID`
-
-该参数可以筛选指定接口学习到的表项，不指定时将显示所有接口的表项。
-
-示例：
-
-此处有一个路由器R1，请查看它的所有ARP表项。
-
-```text
-R1#show arp
-Protocol  Address          Age (min)  Hardware Addr   Type   Interface
-Internet  192.168.1.1             -   aabb.cc00.2000  ARPA   Ethernet0/0
-Internet  192.168.1.2            20   5000.0001.0000  ARPA   Ethernet0/0
-Internet  192.168.1.100           -   d0ef.abab.0101  ARPA  
-```
-
-输出结果中的 `Age` 列为表项被缓存的时间，单位为分钟，标记为 `-` 时说明该项是一个静态表项。
-
-🔴 华为设备
-
-华为设备可以通过以下命令查看ARP缓存，其参数的含义与Cisco设备一致：
-
-```text
-[Huawei]display arp {dynamic|static} {interface [接口ID]}
-```
-
-## 配置ARP有效时间
-🔵 Cisco设备
-
-Cisco设备的默认ARP有效时间是4小时，我们可以通过以下命令调整某个接口的有效时间：
-
-```text
-Cisco(config-if)#arp timeout [有效时间/秒]
-```
-
-🔴 华为设备
-
-华为设备的默认ARP有效时间是20分钟，我们可以通过以下命令调整所有接口的有效时间：
-
-```text
-# 配置ARP有效时间
-[Huawei] arp expire-time [有效时间/秒]
-# 恢复ARP有效时间为默认值
-[Huawei] undo arp expire-time
-```
-
-该命令也可以在特定接口上使用，配置后覆盖全局数值。
-
 # 代理ARP
 代理ARP就是某个节点代替真正持有IP地址的节点进行ARP应答的过程。
 
-## 工作流程
 如果一台计算机没有配置默认网关，并且要和其它网段中的计算机通信，就会发送ARP报文询问对方的MAC地址；路由器收到这种ARP请求后，会使用自己的MAC地址与目标计算机的IP地址对源计算机进行应答，这样源计算机就可以完成帧的封装，并将帧转交给路由器，路由器再转交给目的计算机。
 
 <div align="center">
 
-![主机发送ARP请求报文](./Assets-ARP/代理ARP-主机发送ARP请求报文.jpg)
+![主机发送ARP请求报文](./Assets-ARP/主机发送ARP请求报文.jpg)
 
 </div>
 
 <div align="center">
 
-![路由器代替真正的主机回复ARP请求](./Assets-ARP/代理ARP-路由器代替真正的主机回复ARP请求.jpg)
+![路由器代替真正的主机回复ARP请求](./Assets-ARP/路由器代替真正的主机回复ARP请求.jpg)
 
 </div>
 
@@ -176,29 +121,14 @@ Cisco(config-if)#arp timeout [有效时间/秒]
 2. 路由器在请求者网络中的接口已经开启代理ARP功能。
 3. 路由器拥有被请求者所在网段的路由条目。
 
-## 配置方法
-🔵 Cisco设备
-
-Cisco设备默认启用代理ARP，可以通过以下命令打开或关闭该功能：
-
-```text
-Cisco(config-if)#{no} ip proxy-arp
-```
-
-🔴 华为设备
-
-华为设备的默认禁用代理ARP，可以通过以下命令打开或关闭该功能：
-
-```text
-[Huawei-INAME] {undo} arp-proxy enable
-```
-
 # 无故ARP
-有时网络节点会使用自己的IP地址作为目标地址发送ARP请求报文，这种行为就是无故ARP(Gratuitous ARP, GARP)，也称为免费ARP。无故ARP主要有以下两个用途：
+有时网络节点会使用自己的IP地址作为目标地址发送ARP请求报文，这种行为就是无故ARP(Gratuitous ARP, GARP)，也称为免费ARP。
+
+无故ARP主要有以下两个用途：
 
 🔶 检查重复地址
 
-如果发送者收到ARP响应，则说明广播域内存在重复地址，并且响应报文中含有对方的MAC地址，可以在操作系统中显示消息以提示用户。
+如果发送者收到ARP响应，则说明广播域内存在重复地址，并且响应报文中含有对方的MAC地址，可以在操作系统中显示消息以提醒用户。
 
 🔶 通告地址变更
 
@@ -212,23 +142,113 @@ Cisco(config-if)#{no} ip proxy-arp
 RARP机制需要提前预知各主机的MAC地址并手工记录，使用起来比较麻烦，目前已被DHCP协议取代。
 
 # ARP静态绑定
-为了防止攻击者冒用IP地址进行攻击，我们可以在通信设备上将重要的IP地址和MAC地址进行静态绑定。当攻击者冒用IP地址时，由于网卡MAC地址和通信设备ARP表中的记录不一致，其发送的数据包都会被丢弃。
+为了防止攻击者冒用IP地址进行攻击，我们可以在通信设备上将重要设备的IP地址和MAC地址进行静态绑定。
 
-🔵 Cisco设备
+当攻击者冒用IP地址时，由于网卡MAC地址和通信设备ARP表中的记录不一致，其发送的数据包都会被丢弃。
 
-我们可以使用以下命令向设备的ARP缓存中添加静态ARP条目：
+# 命令列表
+## Cisco设备
+### 基本配置
+🔷 配置ARP超时时间
+
+Cisco设备的默认ARP超时时间一般是4小时，我们可以通过以下命令调整某个接口的有效时间：
 
 ```text
-Cisco(config)#arp [IP地址] [MAC地址] arpa
+Cisco(config-if)# arp timeout <超时时间/秒>
 ```
 
-🔴 华为设备
+🔷 开启/关闭代理ARP功能
 
-在华为设备上，我们可以使用以下命令配置ARP静态绑定：
+Cisco设备默认启用代理ARP，可以通过以下命令打开或关闭该功能：
+
+```text
+Cisco(config-if)# {no} ip proxy-arp
+```
+
+🔷 配置ARP静态绑定
+
+我们可以使用以下命令向设备中添加静态ARP条目：
+
+```text
+Cisco(config)# arp <IP地址> <MAC地址> arpa
+```
+
+若要删除已添加的条目，只需要在该命令前加上"no"。
+
+### 调试工具
+🔶 查看ARP缓存
+
+我们可以使用以下命令查看设备上的ARP缓存信息：
+
+```text
+Cisco# show arp {dynamic | static} {<接口名称>}
+```
+
+参数说明：
+
+🔺 `dynamic | static`
+
+该参数可以筛选动态学习( `dynamic` )或静态配置( `static` )的ARP表项，不指定时将显示所有类型的表项。
+
+🔺 `接口名称`
+
+该参数可以筛选指定接口的ARP表项，不指定时将显示所有接口的表项。
+
+我们可以不添加任何选项，直接使用该命令查看设备上的所有ARP表项：
+
+```text
+R1# show arp
+Protocol  Address          Age (min)  Hardware Addr   Type   Interface
+Internet  192.168.1.1             -   aabb.cc00.2000  ARPA   Ethernet0/0
+Internet  192.168.1.2            20   5000.0001.0000  ARPA   Ethernet0/0
+Internet  192.168.1.100           -   d0ef.abab.0101  ARPA  
+```
+
+输出结果中的 `Age` 列为表项被缓存的时间，单位为分钟，标记为 `-` 时说明该项是一个静态表项。
+
+## 华为设备
+### 基本配置
+🔷 配置ARP超时时间
+
+华为设备的默认ARP超时时间一般是20分钟，我们可以通过以下命令调整所有接口的超时时间：
+
+```text
+# 配置ARP超时时间
+[Huawei] arp expire-time <超时时间/秒>
+
+# 恢复ARP超时时间为默认值
+[Huawei] undo arp expire-time
+```
+
+该命令也可以在特定接口上使用，配置后将覆盖全局数值。
+
+🔷 开启/关闭代理ARP功能
+
+华为设备默认禁用代理ARP，可以通过以下命令打开或关闭该功能：
+
+```text
+[Huawei-INAME] {undo} arp-proxy enable
+```
+
+🔷 配置ARP静态绑定
+
+我们可以使用以下命令向设备中添加静态ARP条目：
 
 ```text
 # 配置ARP绑定关系，对指定VLAN生效。
-arp static [IP地址] [MAC地址] vid [VLAN ID] interface [接口ID]
-# 配置ARP绑定关系，对全局生效。
-arp static [IP地址] [MAC地址] interface [接口ID]
+[Huawei] arp static <IP地址> <MAC地址> vid <VLAN ID> interface <接口名称>
+
+# 配置ARP绑定关系，对指定接口生效。
+[Huawei] arp static <IP地址> <MAC地址> interface <接口名称>
 ```
+
+### 调试工具
+🔶 查看ARP缓存
+
+华为设备可以通过以下命令查看ARP缓存：
+
+```text
+[Huawei] display arp {dynamic | static} {interface <接口名称>}
+```
+
+该命令的含义与Cisco设备一致，此处省略具体描述。
