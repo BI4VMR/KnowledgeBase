@@ -196,12 +196,111 @@ DHCP报文封装在UDP协议中，服务器使用67端口，客户端使用68端
 </div>
 
 # 基本应用
-TODO
+## 场景描述
+本实验将通过DHCP协议，实现终端设备IP地址的自动配置。
+
+本实验的拓扑如下图所示：
+
+<div align="center">
+
+![DHCP实验拓扑](./Assets-DHCP/DHCP实验拓扑.jpg)
+
+</div>
+
+主机PC1与PC2在VLAN 10中，PC3在VLAN 20中；我们在三层交换机S1上配置针对VLAN 10的DHCP服务，为PC1和PC2分发IP地址与网关等信息。
+
+## 配置步骤
+我们首先在S1上全局启用DHCP服务：
+
+```text
+S1(config)# service dhcp
+```
+
+接着创建一个地址池，网段为：192.168.1.0/24；网关指向VLAN 10的SVI；主要和次要DNS分别指向223.5.5.5和180.76.76.76。
+
+```text
+# 创建名为"Pool_VLAN10"的地址池，并进入配置菜单。
+S1(config)# ip dhcp pool Pool_VLAN10
+
+# 配置地址池对应的网段信息
+S1(dhcp-config)# network 192.168.1.0 255.255.255.0
+
+# 配置默认网关地址
+S1(dhcp-config)# default-router 192.168.1.254
+
+# 配置DNS服务器地址
+S1(dhcp-config)# dns-server 223.5.5.5 180.76.76.76
+
+# 退出地址池配置菜单
+S1(dhcp-config)# exit
+```
+
+此时S1就成为VLAN 10中的DHCP服务器了，每当收到对应网段客户端发来的地址请求，服务器就会在相应的地址池中选择可用地址，并回复给客户端。
+
+我们将PC1和PC2的接口都配置为通过DHCP获取地址，此处以PC1为例：
+
+```text
+# 将接口地址获取方式设置为DHCP
+PC1> ip dhcp
+DORA IP 192.168.1.1/24 GW 192.168.1.254
+
+# 查看接口地址信息
+PC1> show ip
+NAME        : PC1[1]
+IP/MASK     : 192.168.1.1/24
+GATEWAY     : 192.168.1.254
+DNS         : 223.5.5.5  180.76.76.76
+DHCP SERVER : 192.168.1.254
+DHCP LEASE  : 86370, 86400/43200/75600
+MAC         : 00:50:79:66:68:02
+MTU         : 1500
+```
+
+通过控制台输出的消息，我们可以知晓IP地址已经申请成功，并且服务器下发了网关与DNS地址等配置。
+
+## 功能验证
+我们在PC1上进行Ping测试，目标为PC2申请的IP地址：
+
+```text
+PC1> ping 192.168.1.2
+
+84 bytes from 192.168.1.2 icmp_seq=1 ttl=64 time=0.316 ms
+84 bytes from 192.168.1.2 icmp_seq=2 ttl=64 time=0.442 ms
+84 bytes from 192.168.1.2 icmp_seq=3 ttl=64 time=0.455 ms
+84 bytes from 192.168.1.2 icmp_seq=4 ttl=64 time=0.489 ms
+```
+
+此时PC1与PC2能够双向通信，说明DHCP服务工作正常。
+
+我们可以在S1上使用 `show ip dhcp binding` 命令查看已经分发的地址信息：
+
+```text
+S1# show ip dhcp binding
+Bindings from all pools not associated with VRF:
+IP address       Client-ID               Lease expiration        Type       State      Interface
+192.168.1.1      0100.5079.6668.02       May 30 2023 02:56 PM    Automatic  Active     Vlan10
+192.168.1.2      0100.5079.6668.03       May 30 2023 03:26 PM    Automatic  Active     Vlan10
+```
 
 # DHCP静态绑定
-有时我们需要给一些客户端设置固定的地址，但又不想在客户端上写入静态配置，例如：Windows笔记本电脑只能针对网卡配置固定地址，当我们切换至公共网络中时，需要删除静态地址并改为DHCP，操作非常麻烦。
+## 简介
+有时我们需要给一些客户端设置固定的地址，但又不想在客户端上写入静态配置，例如：Windows笔记本电脑只能针对网卡配置固定地址，我们在私有WiFi网络中配置了固定IP地址，当我们切换至公共WiFi网络时，需要删除静态地址并改为DHCP模式，操作非常繁琐。
 
-我们可以在服务器上手动建立客户端与IP地址的映射关系，客户端可以保持DHCP方式获取地址，每次客户端接入该网络时，服务器总是会分配预设的IP地址，实现固定IP。
+针对这种场景，我们可以在私有网络的服务器上预先建立客户端与IP地址的映射关系，客户端可以保持使用DHCP方式获取地址；每当客户端接入本网络时，服务器总是会分配预设的IP地址，实现固定IP配置。
+
+## 配置示例
+此处对前文示例进行更改，我们为PC2设置固定的DHCP地址。
+
+```text
+
+1.为每个静态映射关系创建单独的地址池。
+Cisco(config)#ip dhcp pool [静态地址池名称]
+2.设置需要分配给客户端的IP地址。
+Cisco(dhcp-config)#host [网络ID] /[前缀长度]
+3.绑定客户端标识符或MAC地址。
+Cisco(dhcp-config)#client-identifier [客户端标识符]
+Cisco(dhcp-config)#hardware-address [MAC地址]
+Cisco设备优先识别客户端标识符。
 
 # DHCP中继代理
 DHCP依赖广播机制运作，DHCP客户端与服务器在同一物理网段时，可以正常工作；若不在同一网段，广播包无法传递给服务器，此时需要配置DHCP中继代理(Relay Agent)。
