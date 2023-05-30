@@ -508,3 +508,10 @@ Cisco(config-if)#ip dhcp snooping limit rate [数量/个] -->
 
 
 <!-- 
+S1#show ip dhcp binding    
+Bindings from all pools not associated with VRF:
+IP address      Client-ID/              Lease expiration        Type       State      Interface
+                Hardware address/
+                User name
+192.168.1.4      0100.5079.6668.02       May 31 2023 02:43 PM    Automatic  Active     Vlan10
+192.168.1.222    0100.5079.6668.03       Infinite                Manual     Active     Unknown
