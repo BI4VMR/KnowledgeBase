@@ -1,3 +1,5 @@
+<!--
+
         2.4   DHCPv6
             2.4.1   概述
 IPv6动态主机配置协议(Dynamic Host Configuration Protocol for IPv6,DHCPv6)是为运行IPv6协议的主机分配IPv6地址、前缀和其他配置参数的协议。
@@ -96,3 +98,6 @@ Cisco#show ipv6 dhcp pool
 Cisco#show ipv6 dhcp interface [接口ID]
     • 查看客户端与地址映射关系
 Cisco#show ipv6 dhcp binding
+
+
+-->
