@@ -92,7 +92,7 @@ viewPager2.setAdapter(adapter);
 
 <div align="center">
 
-![ViewPager2的基本应用](./03-Assets/基本应用-01-ViewPager2的基本应用.gif)
+![ViewPager2示例](./Assets-ViewPager2/基本应用-ViewPager2示例.gif)
 
 </div>
 
@@ -116,7 +116,7 @@ ViewPager2.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
 
 <div align="center">
 
-![纵向布局](./03-Assets/外观定制-01-纵向布局.gif)
+![纵向布局](./Assets-ViewPager2/外观定制-纵向布局.gif)
 
 </div>
 
