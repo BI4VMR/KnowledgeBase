@@ -405,7 +405,7 @@ Cisco(config-if)# exit
 Cisco(config)# {no} service dhcp
 ```
 
-🔷 创建地址池
+🔷 创建地址池并进行配置
 
 ```text
 # 进入地址池配置菜单
@@ -430,7 +430,8 @@ Cisco(dhcp-config)# domain-name <域名>
 Cisco(dhcp-config)# option <选项代码> <数据类型> <数据值>
 ```
 
-🔷 添加排除地址
+### 可选配置
+🔶 添加排除地址
 
 ```text
 Cisco(config)# ip dhcp excluded-address <起始地址> {结束地址}
@@ -438,37 +439,60 @@ Cisco(config)# ip dhcp excluded-address <起始地址> {结束地址}
 
 仅需排除单个地址时将其填入起始地址即可，结束地址不用填写。
 
-## 参数调整
+### 调试工具
+🔷 查看地址池配置
 
-🔶 清除DHCP绑定关系
+```text
+Cisco# show ip dhcp pool
+```
+
+🔷 查看客户端与地址的绑定关系
+
+```text
+Cisco# show ip dhcp binding
+```
+
+我们可以使用此命令查看当前已建立的绑定关系：
+
+```text
+S1# show ip dhcp binding
+Bindings from all pools not associated with VRF:
+IP address      Client-ID/              Lease expiration        Type       State      Interface
+                Hardware address/
+                User name
+192.168.1.4      0100.5079.6668.02       May 31 2023 02:43 PM    Automatic  Active     Vlan10
+192.168.1.222    0100.5079.6668.03       Infinite                Manual     Active     Unknown
+```
+
+🔷 查看DHCP报文统计信息
+
+```text
+Cisco# show ip dhcp server statistics
+```
+
+🔷 清除DHCP绑定关系
 
 ```text
 Cisco# clear ip dhcp binding *
 ```
 
-# 客户端配置
+### 客户端配置
 网络设备的三层接口可以作为DHCP客户端，从服务器获取地址。
 
 ```text
 Cisco(config-if)# ip address dhcp
 ```
 
-                • 查询相关信息
-    • 查看地址池配置
-Cisco#show ip dhcp pool
-    • 查看客户端与地址映射关系
-Cisco#show ip dhcp binding
-    • 查看DHCP报文统计信息
-Cisco#show ip dhcp server statistics
+<!-- TODO
 
+### 配置静态绑定
+🔶 设置需要分配给客户端的IP地址
 
-
-### 调试工具
-
- -->
-
-<!-- 
-
+```text
+Cisco(config)#ip dhcp pool [静态地址池名称]
+2.设置需要分配给客户端的IP地址。
+Cisco(dhcp-config)#host [网络ID] /[前缀长度]
+```
 
 ## DHCP静态绑定配置方法
 1.为每个静态映射关系创建单独的地址池。
@@ -480,10 +504,9 @@ Cisco(dhcp-config)#client-identifier [客户端标识符]
 Cisco(dhcp-config)#hardware-address [MAC地址]
 Cisco设备优先识别客户端标识符。
 
- -->
 
 
-<!-- TODO
+
 1.全局开启DHCP Snooping功能。
 Cisco(config)#ip dhcp snooping
 2.配置要开启DHCP Snooping功能的VLAN。
@@ -508,10 +531,4 @@ Cisco(config-if)#ip dhcp snooping limit rate [数量/个] -->
 
 
 <!-- 
-S1#show ip dhcp binding    
-Bindings from all pools not associated with VRF:
-IP address      Client-ID/              Lease expiration        Type       State      Interface
-                Hardware address/
-                User name
-192.168.1.4      0100.5079.6668.02       May 31 2023 02:43 PM    Automatic  Active     Vlan10
-192.168.1.222    0100.5079.6668.03       Infinite                Manual     Active     Unknown
+
