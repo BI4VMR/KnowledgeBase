@@ -34,7 +34,7 @@ tabLayout.addTab(tab3);
 
 <div align="center">
 
-![TabLayout示例](./Assets-TabLayout/基本应用-TabLayout示例.gif)
+![TabLayout的基本应用](./Assets-TabLayout/TabLayout的基本应用.gif)
 
 </div>
 
@@ -145,7 +145,7 @@ TabLayout的默认Tab具有长按事件，被长按时会弹出悬浮文字：
 
 <div align="center">
 
-![工具提示](./Assets-TabLayout/外观定制-工具提示.gif)
+![工具提示](./Assets-TabLayout/工具提示.gif)
 
 </div>
 

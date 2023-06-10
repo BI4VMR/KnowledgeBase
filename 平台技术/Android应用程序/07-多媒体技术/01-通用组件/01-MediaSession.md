@@ -7,7 +7,7 @@ MediaSession的体系结构如下图所示：
 
 <div align="center">
 
-![MediaSession架构](./Assets-MediaSession/概述-MediaSession架构.jpg)
+![MediaSession架构](./Assets-MediaSession/MediaSession架构.jpg)
 
 </div>
 

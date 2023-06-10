@@ -22,7 +22,7 @@ Chip有四种预设样式，它们的外观与特点见下文图片与列表。
 
 <div align="center">
 
-![Chip的预设样式](./Assets-Chip/基本应用-Chip的预设样式.gif)
+![Chip的预设样式](./Assets-Chip/Chip的预设样式.gif)
 
 </div>
 
@@ -191,7 +191,7 @@ ChipGroup是用于容纳多个Chip控件的容器，它可以控制Chip的排布
 
 <div align="center">
 
-![多行显示](./Assets-Chip/ChipGroup-多行显示.jpg)
+![ChipGroup之多行显示](./Assets-Chip/ChipGroup之多行显示.jpg)
 
 </div>
 
@@ -226,7 +226,7 @@ ChipGroup是用于容纳多个Chip控件的容器，它可以控制Chip的排布
 
 <div align="center">
 
-![单行显示](./Assets-Chip/ChipGroup-单行显示.gif)
+![单行显示](./Assets-Chip/ChipGroup之单行显示.gif)
 
 </div>
 
