@@ -263,6 +263,8 @@ mediaSession.setPlaybackState(playbackState);
 
 具有三个参数的 `setState()` 方法分别接收播放状态、进度与速度参数，其中播放状态可以设为PlaybackState类中的"STATE_X"系列常量：
 
+<div align="center">
+
 |         STATE         |      含义      |
 | :-------------------: | :------------: |
 |      STATE_NONE       | 无曲目可供播放 |
@@ -273,6 +275,8 @@ mediaSession.setPlaybackState(playbackState);
 |    STATE_REWINDING    |    快退播放    |
 |    STATE_BUFFERING    |    正在缓冲    |
 |      STATE_ERROR      |    播放错误    |
+
+</div>
 
 "STATE_NONE"一般用于初始化状态，用户未选择任何媒体资源。"STATE_BUFFERING"表示播放远程资源时，加载速度低于回放速度，缓冲完毕后应当恢复播放。"STATE_ERROR"表示播放错误，通告此状态时应当同时调用构造器的 `setErrorMessage()` 方法，设置具体的错误信息。
 
@@ -315,6 +319,8 @@ MediaMetadata的配置项通过"put()"系列方法进行设置，第一个参数
 
 常用的配置项可参考下表：
 
+<div align="center">
+
 |      METADATA_KEY      |  含义   |
 | :--------------------: | :-----: |
 |   METADATA_KEY_TITLE   |  标题   |
@@ -324,6 +330,8 @@ MediaMetadata的配置项通过"put()"系列方法进行设置，第一个参数
 |    METADATA_KEY_ART    |  图片   |
 |  METADATA_KEY_ART_URI  | 图片URI |
 | METADATA_KEY_MEDIA_URI | 媒体URI |
+
+</div>
 
 设置"METADATA_KEY_ART"属性时应传入图片的Bitmap对象，如果图片体积较大，也可以使用"METADATA_KEY_ART_URI"属性，传入图片URI字符串，让客户端自行获取并显示图片。
 
