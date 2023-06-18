@@ -130,7 +130,8 @@ Cisco(config-if)#ipv6 nd reachable-time [时间/毫秒]
 Cisco(config-if)#ipv6 nd ns-interval [时间/毫秒]
     • 配置NS重传次数
 Cisco(config-if)#ipv6 nd nud retry [1-3]
-            2.3.6   重复地址检测
+
+# 重复地址检测机制
 重复地址检测(Duplicate Address Detection,DAD)使用NS和NA报文实现。设备接口配置新的IPv6地址后，将会发送一个NS报文，源地址为"::"，目的地址为自身的被请求节点组播地址，ICMP报文中目标字段为自身IPv6地址。正常情况下，只有本节点会监听自己的被请求节点组播地址，不应该收到NA报文；若已有节点使用该地址，将回复NA报文，源地址为IPv6地址，目的地址为FF02::1，这样就可以得知发生了地址冲突。
 我们可以修改接口发送的DAD探测报文数量：
 Cisco(config-if)#ipv6 nd dad attempts [探测报文数量]
@@ -155,7 +156,8 @@ Cisco(config-if)#ipv6 nd ra lifetime [时间/秒]
 Cisco(config-if)#ipv6 nd ra interval [时间/秒]
     • 配置RA报文分发的默认路由优先级
 Cisco(config-if)#ipv6 nd router-preference [High|Medium|Low]
-            2.3.8   路径MTU侦测
+
+# 路径MTU侦测
 IPv6不支持中间节点分片，当节点要发送数据时，先通过路径MTU侦测(Path MTU Discovery,PMD)机制，探测路径上的最小MTU，然后以最小MTU分片并发送数据报文。
 发送数据的节点首先假设路径MTU为数据包出站接口的MTU，发送数据包；若路径上有MTU较小的链路，中间节点会发送ICMPv6 Type 2报文给始发节点，通知其数据包过大，并告知应使用的MTU值；始发节点再使用中间节点通告的MTU值分片并发送数据包，直到能够抵达目标节点为止，此时使用的MTU值即路径MTU值。
 需要注意的是，数据包来回路径不一定相同，因此路径MTU是单向的，对方发送回复报文时要重新进行侦测。
@@ -164,6 +166,3 @@ IPv6不支持中间节点分片，当节点要发送数据时，先通过路径M
 一般情况下，链路的MTU值将自动协商，我们也可以手动指定接口的MTU值，最小值规定为1280字节，最大值由链路类型决定。
 Cisco(config-if)#ipv6 mtu [MTU值/字节]
 
-
-
--->
