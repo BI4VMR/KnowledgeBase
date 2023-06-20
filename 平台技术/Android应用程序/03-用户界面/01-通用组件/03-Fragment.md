@@ -438,6 +438,10 @@ Back Stack:
       Op #1: ADD TestFragment{8a6f726} (176dc82a-4a47-4039-b15f-e304a92acd48 id=0x7f08008c)
 ```
 
+> 🚩 提示
+>
+> 该命令只能获取前台应用的Fragment信息，如果我们需要查看Launcher中的Fragment，应当使用命令： `dumpsys activity <Launcher包名>` 。
+
 ## 出栈方法
 当我们需要在代码中控制页面返回时，可以使用以下方法：
 
