@@ -453,6 +453,33 @@ protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
 
 从上述日志可知，当手机屏幕方向发生改变时，Activity将会重建，ToggleButton的状态得以保持。存入数据的方法 `onSaveInstanceState()` 会在 `onPause()` 与 `onStop()` 之间被调用，而读出数据的方法 `OnRestoreInstanceState()` 会在 `onStart()` 与 `onResume()` 之间被调用。
 
+# 处理配置变更
+当设备环境发生变更时，系统将会销毁旧的Activity，并使用新配置重建Activity，以适应新的环境，例如：屏幕方向旋转、分辨率改变、系统语言改变、深色主题开启与关闭等。
+
+对于某些特定的事件，我们也可以使用逻辑代码自行处理，而不使用系统的自动重建机制。例如：当主题发生改变时，我们可以手动调整控件的颜色，避免重建导致表单数据丢失以及界面闪烁，提升用户体验。
+
+TODO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 任务管理
 ## 简介
 我们可以点击短信APP内的邮箱链接转到邮件APP的撰写邮件Activity，此时观察最近任务视图，会发现只有短信APP的缩略图，并没有邮件APP，而且撰写邮件Activity显示在短信APP中。
@@ -885,12 +912,14 @@ startActivity(intent);
 这种Activity销毁时不会返回操作结果给启动者，所以我们不应该用 `startActivityForResult()` 方式启动它们。
 
 ### 实际应用
-#### 从非Activity环境启动一个Activity
+🔴 从非Activity环境启动一个Activity
+
 有时我们需要从非Activity的Context（例如：Service、Broadcast或Application）启动一个Activity，这种操作会导致系统抛出AndroidRuntimeException异常，因为AMS在默认配置下需要获取指令发起者所在的Task，但这些组件并没有Task相关的句柄，AMS不知道应该把新的Activity实例放置在哪个Task中。
 
 此时我们可以添加FLAG_ACTIVITY_NEW_TASK标志位，使AMS根据目标Activity的TaskAffinity属性决定需要放置的Task，不必关心指令发起者所在的Task。
 
-#### 实现退出登录功能
+🟠 实现退出登录功能
+
 应用程序的退出登录按钮通常在二级页面，用户一旦退出登录，就只能重新登录，不能通过返回键再回到应用内页面。
 
 此时我们可以联用FLAG_ACTIVITY_NEW_TASK与FLAG_ACTIVITY_CLEAR_TASK标志位，清空当前Task，然后启动登录界面。
