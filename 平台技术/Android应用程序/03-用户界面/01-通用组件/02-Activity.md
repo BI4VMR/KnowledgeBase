@@ -22,7 +22,9 @@ public class MainActivity extends AppCompatActivity {
 }
 ```
 
-MainActivity重写了父类的 `onCreate()` 方法，这是Activity生命周期的第一个方法，负责初始化操作。 `setContentView()` 方法的参数是布局文件的ID，这里的参数"R.layout.activity_main"对应"res/layout/activity_main.xml"，其中的内容为：
+MainActivity重写了父类的 `onCreate()` 方法，这是Activity生命周期的第一个方法，负责初始化操作。
+
+`setContentView()` 方法的参数是布局文件的ID，这里的参数"R.layout.activity_main"对应"res/layout/activity_main.xml"，其中的内容为：
 
 activity_main.xml:
 
@@ -73,7 +75,7 @@ AndroidManifest.xml:
 
 上述代码片段是Android Studio生成的MainActivity的注册信息，其中IntentFilter配置表示这是本应用程序的LaunchActivity，系统会在启动器内生成图标，用户点击图标后程序启动并加载LaunchActivity。如果我们将多个Activity配置为入口，启动器内也会对应的生成多个图标。
 
-我们必须为每个Activity声明 `android:name` 属性，填写Activity的完全限定类名。 `<manifest>` 标签的"package"属性指定了默认的前缀，"MainActivity.java"位于"net.bi4vmr.study"包中，与默认前缀是一致的，此时"name"属性可以省略包名，用"."代替。如果某个Activity所在的包名与默认前缀不同，此时"name"属性必须填写完整的路径，例如我们有一个TestActivity位于"com.demo.test"包中，则"name"属性需要申明为"com.demo.test.TestActivity"。
+我们必须为每个Activity声明 `android:name="<字符串>"` 属性，字符串为Activity的完全限定类名。 `<manifest>` 标签的"package"属性指定了默认的前缀，"MainActivity.java"位于"net.bi4vmr.study"包中，与默认前缀是一致的，此时"name"属性可以省略包名，用"."代替。如果某个Activity所在的包名与默认前缀不同，此时"name"属性必须填写完整的路径，例如我们有一个TestActivity位于"com.demo.test"包中，则"name"属性需要申明为"com.demo.test.TestActivity"。
 
 # 启动新的Activity
 一个应用程序往往拥有多个Activity，例如主界面、设置界面、发行信息界面等，我们通常使用Intent完成Activity间的跳转功能。Intent译作“意图”，是Android系统的消息传递机制之一，我们通过Intent向系统表达某种意愿，例如希望开启某个Activity，系统会根据Intent的参数完成对应操作。
@@ -228,7 +230,7 @@ if (intent != null) {
 }
 ```
 
-对于Intent对象与每个参数，我们都要注意空值的判断，设置适当的默认值，避免发生空指针异常。
+对于Intent对象与每个参数，我们都要注意空值的判断，并设置适当的默认值，避免发生空指针异常。
 
 # 生命周期
 ## 简介
@@ -286,9 +288,9 @@ Activity进入完全可见状态时，将会触发此方法。
 
 Activity被其他组件覆盖而进入"Paused"状态时，将会触发此方法。
 
-此处可以释放部分系统资源，例如暂停动画等。
+我们可以在此处释放部分系统资源，例如暂停动画等。
 
-对于多窗口模式来说，同时只有一个界面能够获得焦点，其它界面处于"Paused"状态但仍然可见，这时就不应该随意释放资源了。
+对于支持多窗口模式的应用程序，同时只有一个界面能够获得焦点，其它界面都处于"Paused"状态但仍然可见，此时就不应该随意释放资源了。
 
 🔶 `onStop()`
 
@@ -302,9 +304,9 @@ Activity被销毁前会调用此方法，我们应当在此处释放所有资源
 
 Activity由不可见状态回到可见状态时，会先调用该方法再调用 `onStart()` 方法。
 
-我们在创建Activity与Service等组件时，需要重写部分生命周期方法，并添加自己的业务逻辑。Android Studio自动生成的生命周期方法内通常都有对父类方法的"super()"调用，我们不能随意删除这些调用语句，否则会导致程序行为异常甚至崩溃。
+我们在创建Activity与Service等组件时，需要重写部分生命周期方法，并添加自己的业务逻辑。Android Studio自动生成的生命周期方法内通常都有对父类方法的 `super()` 调用，我们不能随意删除这些调用语句，否则会导致程序行为异常甚至崩溃。
 
-对于Activity和Service，其生命周期方法中的 `super()` 调用都不可删除。对于其他组件，我们可以查看其父类的源码，若父类的方法体为空，此时可以删除子类的 `super()` 调用；若父类的方法体不为空，则必须保留子类的 `super()` 调用。
+对于Activity和Service，其生命周期方法中的 `super()` 调用都不可删除。对于其他组件，我们可以查看其父类的源码，若父类的方法体为空，此时可以删除子类的 `super()` 调用；若父类的方法体不为空，则必须保留子类的 `super()` 调用，否则可能导致异常。
 
 对于 `onCreate()` 、 `onStart()` 和 `onResume()` 等回调方法，我们的业务逻辑应当在 `super()` 调用之后执行；而在 `onPause()` 、 `onStop()` 和 `onDestroy()` 等回调方法中，如果我们引用了与父类相关的某些变量，业务逻辑应当在 `super()` 调用之前执行，否则业务逻辑执行时可能因关联变量被提前销毁而出现错误。
 
@@ -322,15 +324,15 @@ Activity由不可见状态回到可见状态时，会先调用该方法再调用
 
 ```text
 # Activity启动
-2023-04-02 00:04:56.303 13387-13387/net.bi4vmr.study I/myapp: OnCreate.
-2023-04-02 00:04:56.344 13387-13387/net.bi4vmr.study I/myapp: OnStart.
-2023-04-02 00:04:56.347 13387-13387/net.bi4vmr.study I/myapp: OnResume.
+2023-04-02 00:04:56.303 13387-13387/? I/myapp: OnCreate.
+2023-04-02 00:04:56.344 13387-13387/? I/myapp: OnStart.
+2023-04-02 00:04:56.347 13387-13387/? I/myapp: OnResume.
 # "OnResume"方法执行完毕后，Activity可以与用户正常交互。
 
 # 用户按下返回键或Activity内部调用"finish()"方法
-2023-04-02 00:05:09.556 13387-13387/net.bi4vmr.study I/myapp: OnPause.
-2023-04-02 00:05:10.003 13387-13387/net.bi4vmr.study I/myapp: OnStop.
-2023-04-02 00:05:10.005 13387-13387/net.bi4vmr.study I/myapp: OnDestroy.
+2023-04-02 00:05:09.556 13387-13387/? I/myapp: OnPause.
+2023-04-02 00:05:10.003 13387-13387/? I/myapp: OnStop.
+2023-04-02 00:05:10.005 13387-13387/? I/myapp: OnDestroy.
 # "OnDestroy"方法执行完毕后，资源回收完成。
 ```
 
@@ -349,18 +351,18 @@ Activity由不可见状态回到可见状态时，会先调用该方法再调用
 
 ```text
 # Activity启动
-2023-04-02 00:06:43.589 13387-13387/net.bi4vmr.study I/myapp: OnCreate.
-2023-04-02 00:06:43.624 13387-13387/net.bi4vmr.study I/myapp: OnStart.
-2023-04-02 00:06:43.627 13387-13387/net.bi4vmr.study I/myapp: OnResume.
+2023-04-02 00:06:43.589 13387-13387/? I/myapp: OnCreate.
+2023-04-02 00:06:43.624 13387-13387/? I/myapp: OnStart.
+2023-04-02 00:06:43.627 13387-13387/? I/myapp: OnResume.
 
 # 用户开启新的Activity将旧的Activity覆盖，或按下Home键退出当前Activity。
-2023-04-02 00:06:51.774 13387-13387/net.bi4vmr.study I/myapp: OnPause.
-2023-04-02 00:06:52.234 13387-13387/net.bi4vmr.study I/myapp: OnStop.
+2023-04-02 00:06:51.774 13387-13387/? I/myapp: OnPause.
+2023-04-02 00:06:52.234 13387-13387/? I/myapp: OnStop.
 
 # 关闭新的Activity，或者从其他应用程序回到当前Activity。
-2023-04-02 00:07:15.321 13387-13387/net.bi4vmr.study I/myapp: OnRestart.
-2023-04-02 00:07:15.323 13387-13387/net.bi4vmr.study I/myapp: OnStart.
-2023-04-02 00:07:15.323 13387-13387/net.bi4vmr.study I/myapp: OnResume.
+2023-04-02 00:07:15.321 13387-13387/? I/myapp: OnRestart.
+2023-04-02 00:07:15.323 13387-13387/? I/myapp: OnStart.
+2023-04-02 00:07:15.323 13387-13387/? I/myapp: OnResume.
 ```
 
 ### 场景三
@@ -378,10 +380,10 @@ Activity由不可见状态回到可见状态时，会先调用该方法再调用
 
 ```text
 # 识屏窗口显示，Activity的"onPause()"方法被调用。
-2023-04-02 00:12:29.002 13387-13387/net.bi4vmr.study I/myapp: OnPause.
+2023-04-02 00:12:29.002 13387-13387/? I/myapp: OnPause.
 
 # 识屏窗口关闭，Activity的"onResume()"方法被调用。
-2023-04-02 00:12:34.393 13387-13387/net.bi4vmr.study I/myapp: OnResume.
+2023-04-02 00:12:34.393 13387-13387/? I/myapp: OnResume.
 ```
 
 # 视图数据保持
@@ -439,46 +441,152 @@ protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
 运行程序并打开旋转屏幕功能，我们可以测试该功能。
 
 ```text
-2023-04-01 21:29:01.427 26777-26777/net.bi4vmr.study I/myapp: OnPause.
-2023-04-01 21:29:01.429 26777-26777/net.bi4vmr.study I/myapp: OnSaveInstanceState.
-2023-04-01 21:29:01.429 26777-26777/net.bi4vmr.study I/myapp: 已写入数据：true
-2023-04-01 21:29:01.430 26777-26777/net.bi4vmr.study I/myapp: OnStop.
-2023-04-01 21:29:01.431 26777-26777/net.bi4vmr.study I/myapp: OnDestroy.
-2023-04-01 21:29:01.450 26777-26777/net.bi4vmr.study I/myapp: OnCreate.
-2023-04-01 21:29:01.478 26777-26777/net.bi4vmr.study I/myapp: OnStart.
-2023-04-01 21:29:01.480 26777-26777/net.bi4vmr.study I/myapp: OnRestoreInstanceState.
-2023-04-01 21:29:01.480 26777-26777/net.bi4vmr.study I/myapp: 已读取数据：true
-2023-04-01 21:29:01.482 26777-26777/net.bi4vmr.study I/myapp: OnResume.
+2023-04-01 21:29:01.427 26777-26777/? I/myapp: OnPause.
+2023-04-01 21:29:01.429 26777-26777/? I/myapp: OnSaveInstanceState.
+2023-04-01 21:29:01.429 26777-26777/? I/myapp: 已写入数据：true
+2023-04-01 21:29:01.430 26777-26777/? I/myapp: OnStop.
+2023-04-01 21:29:01.431 26777-26777/? I/myapp: OnDestroy.
+2023-04-01 21:29:01.450 26777-26777/? I/myapp: OnCreate.
+2023-04-01 21:29:01.478 26777-26777/? I/myapp: OnStart.
+2023-04-01 21:29:01.480 26777-26777/? I/myapp: OnRestoreInstanceState.
+2023-04-01 21:29:01.480 26777-26777/? I/myapp: 已读取数据：true
+2023-04-01 21:29:01.482 26777-26777/? I/myapp: OnResume.
 ```
 
 从上述日志可知，当手机屏幕方向发生改变时，Activity将会重建，ToggleButton的状态得以保持。存入数据的方法 `onSaveInstanceState()` 会在 `onPause()` 与 `onStop()` 之间被调用，而读出数据的方法 `OnRestoreInstanceState()` 会在 `onStart()` 与 `onResume()` 之间被调用。
 
 # 处理配置变更
-当设备环境发生变更时，系统将会销毁旧的Activity，并使用新配置重建Activity，以适应新的环境，例如：屏幕方向旋转、分辨率改变、系统语言改变、深色主题开启与关闭等。
+## 配置变更事件
+当设备的环境发生变更时，系统将会销毁旧Activity，并使用新的配置重建Activity，以适应新的环境。
 
-对于某些特定的事件，我们也可以使用逻辑代码自行处理，而不使用系统的自动重建机制。例如：当主题发生改变时，我们可以手动调整控件的颜色，避免重建导致表单数据丢失以及界面闪烁，提升用户体验。
+设备环境的配置项使用Configuration类表示，我们可以通过Context对象进行获取：
 
-TODO
+```java
+Configuration cfg = Context.getResources().getConfiguration();
+```
 
+环境改变事件包括屏幕方向旋转、分辨率改变、系统语言改变、深色主题开启与关闭等，下文将对常用的事件进行介绍：
 
+🔷 `orientation`
 
+屏幕方向改变事件。
 
+移动设备通常拥有重力传感器，当屏幕由竖屏转为横屏，或横屏转为竖屏时，将会触发此事件。
 
+我们可以通过Configuration对象的同名属性获取屏幕方向。
 
+🔷 `screenSize`
 
+屏幕比例改变事件。
 
+此事件表示屏幕的纵横比例发生了变化，通常与 `orientation` 事件同时触发。
 
+我们可以通过Configuration对象的 `screenWidthDp` 与 `screenHeightDp` 属性获取屏幕的宽高数值。
 
+🔷 `smallestScreenSize`
 
+屏幕尺寸改变事件。
 
+此事件表示屏幕的尺寸发生了变化，通常由分屏动作触发。
 
+我们可以通过Configuration对象的 `smallestWidth` 属性获取最小边长，并改变列表的列数等，适配屏幕尺寸。
 
+🔷 `screenLayout`
 
+屏幕布局改变事件。
 
+此事件通常与 `smallestScreenSize` 事件同时触发。
 
+🔷 `uiMode`
 
+界面模式改变事件。
 
+该事件包括多个子状态，例如：桌面模式、车载模式、浅色主题、深色主题等。
 
+🔷 `locale`
+
+区域变更事件。
+
+当用户切换了区域或语言时，该事件将会触发。
+
+我们可以通过Configuration对象的 `getLocales()` 方法获取语言列表，并设置日期的显示格式，适配区域习惯。
+
+🔷 `layoutDirection`
+
+布局方向变更事件。
+
+当布局方向在“从左至右(LTR)”与“从右至左(RTL)”之间切换时，将会触发此事件。
+
+我们可以通过Configuration对象的 `getLayoutDirection()` 方法获取布局方向。
+
+## 系统默认行为
+此处以屏幕旋转事件为例，我们在横屏模式打开测试Activity，并将设备翻转至竖屏模式，然后观察Activity的生命周期变化。
+
+该示例可参考前文小节： [🧭 视图数据保持](#视图数据保持) 。
+
+根据日志输出结果我们可以得知，配置变更导致的Activity重建，将会调用视图数据保持方法，我们可以实现表单数据的存取，防止屏幕旋转后表单被清空。
+
+## 自行处理事件
+对于某些事件，我们也可以使用逻辑代码自行处理变更，而不使用系统的自动重建机制。例如：当主题发生改变时，我们可以手动调整控件的颜色，简化存取表单数据的代码以及禁止界面跳转，提升用户体验。
+
+此处以浅色、深色模式为例，我们首先在Activity的配置中添加 `android:configChanges="uiMode"` 属性，关闭系统的自动重建行为。
+
+AndroidManifest.xml:
+
+```xml
+<application ...>
+
+    <activity
+        android:name=".config.DemoConfigUI"
+        android:configChanges="uiMode"
+        android:exported="false" />
+</application>
+```
+
+该属性的值可以有多个，以竖线("|")进行分隔，在此列表中的事件发生时，系统不再执行自动重建，而是触发Activity的 `void onConfigurationChanged(Configuration newConfig)` 回调方法，我们可以在此执行自己的业务逻辑。
+
+此处我们在深色模式中将页面背景设为黑色、文本设为白色；浅色模式则相反。
+
+```java
+public class DemoConfigUI extends AppCompatActivity {
+
+    /* 此处省略部分变量与方法... */
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        Log.i("myapp", "OnConfigurationChanged.");
+        // 从标志位中分离出主题代码
+        switch (newConfig.uiMode & Configuration.UI_MODE_NIGHT_MASK) {
+            case Configuration.UI_MODE_NIGHT_NO:
+                /* 浅色模式（默认） */
+                Log.i("myapp", "OnConfigurationChanged. NightMode OFF.");
+                tvInfo.setTextColor(Color.BLACK);
+                viewRoot.setBackgroundColor(Color.WHITE);
+                break;
+            case Configuration.UI_MODE_NIGHT_YES:
+                /* 深色模式 */
+                Log.i("myapp", "OnConfigurationChanged. NightMode ON.");
+                tvInfo.setTextColor(Color.WHITE);
+                viewRoot.setBackgroundColor(Color.BLACK);
+                break;
+        }
+    }
+}
+```
+
+我们运行示例程序，并切换主题，查看日志信息与界面的变化。
+
+<!-- GIF -->
+
+```text
+2023-06-26 17:52:17.812 11960-11960/? I/myapp: OnConfigurationChanged.
+2023-06-26 17:52:17.812 11960-11960/? I/myapp: OnConfigurationChanged. NightMode ON.
+2023-06-26 17:52:17.812 11960-11960/? I/myapp: OnConfigurationChanged.
+2023-06-26 17:52:17.812 11960-11960/? I/myapp: OnConfigurationChanged. NightMode ON.
+```
+
+结合上述信息可知，当主题改变时， `onConfigurationChanged()` 方法被触发了，Activity没有重建。
 
 # 任务管理
 ## 简介
@@ -869,7 +977,7 @@ Display #0 (activities from top to bottom):
 >
 > 我们应当为每个SingleInstance模式的Activity配置具有唯一性的TaskAffinity属性。
 >
-> 如果我们不配置TaskAffinity属性，系统就会创建多个Affinity值相同的Task，最近任务视图中只会显示这些Task的其中之一，可能会给用户带来困扰。
+> 如果我们不配置TaskAffinity属性，系统就会创建多个Affinity值相同的Task，“最近任务”视图中只会显示这些Task的其中之一，可能会给用户带来困扰。
 
 ## "Intent.FLAG_ACTIVITY"系列标志位
 ### 简介
