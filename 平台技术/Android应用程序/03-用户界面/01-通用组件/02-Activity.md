@@ -577,7 +577,11 @@ public class DemoConfigUI extends AppCompatActivity {
 
 我们运行示例程序，并切换主题，查看日志信息与界面的变化。
 
-<!-- GIF -->
+<div align="center">
+
+![主题切换实例](./Assets-Activity/处理配置变更-主题切换实例.gif)
+
+</div>
 
 ```text
 2023-06-26 17:52:17.812 11960-11960/? I/myapp: OnConfigurationChanged.
