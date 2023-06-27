@@ -141,7 +141,6 @@ msg=$(uuidgen | awk '{print toupper($0)}'); git add .; git commit -m "$msg"; git
 🚩 提示
 ⚠️ 警告
 ⛔ 禁止
-🚫 禁止
 ☢️ 辐射
 ☣️ 生化
 ✅ 正确/可用

@@ -236,7 +236,7 @@ if (intent != null) {
 ## 简介
 用户从应用程序主页开启一个表单类Activity后，我们可能希望在表单关闭时，回传一些信息给主页。
 
-## 旧方法
+## 旧API
 早期SDK中提供的返回信息监听方法是Activity的 `onActivityResult()` 回调。我们启动新Activity时，需要使用 `startActivityForResult(Intent i, int requestCode)` 方法设置请求码，当新Activity关闭时，旧Activity的 `onActivityResult(int requestCode, int resultCode, Intent data)` 回调触发，参数分别为“请求码”、新Activity的“响应码”、数据内容。
 
 此处我们创建两个测试Activity，DemoGotoForResultUI作为基础界面，通过按钮启动ResultActivity并监听其返回的信息。
@@ -297,14 +297,16 @@ finish();
 
 当Activity中存在Fragment时，各组件的 `onActivityResult()` 回调方法存在一些差异：
 
-<!-- TODO
-- 从Fragment发起 `startActivityForResult()` ，并在Fragment中接收 `onActivityResult()` 回调，没有特殊性。
-- 从Activity发起 `startActivityForResult()` ，并在Activity中接收 `onActivityResult()` 回调，没有特殊性。
-- 从Fragment发起 `startActivityForResult()` ，并在Activity中接收 `onActivityResult()` 回调，没有特殊性。
-- 从Activity发起 `startActivityForResult()` ，并在Activity中接收 `onActivityResult()` 回调，没有特殊性。
--->
+<div align="center">
 
-## 新方法
+|                 序号                 | Fragment的"onActivityResult()" |   Activity的"onActivityResult()"   |
+| :----------------------------------: | :----------------------------: | :--------------------------------: |
+| Fragment的"startActivityForResult()" |        正常接收回传信息        | 可以接收回调，但请求码与原先不同。 |
+| Activity的"startActivityForResult()" |        无法接收回传信息        |          正常接收回传信息          |
+
+</div>
+
+## 新API
 前文所描述的方法耦合性较强，如果页面中存在多种跳转路径与结果类型， `onActivityResult()` 方法内部需要书写多层判断语句，不容易维护。
 
 SDK中提供了ActivityResultContract API，用于更好的实现从其他页面获取回传信息的情况。这种API可以为每条跳转路径各自注册回调事件，使得代码逻辑更为清晰。
@@ -929,8 +931,8 @@ protected void onNewIntent(Intent intent) {
 通过观察控制台日志，我们可以发现第二、三次启动SingleTopActivity时，它的 `onNewIntent()` 方法确实触发了两次，而不是通过 `onCreate()` 方法重建新实例。
 
 ```text
-2023-04-09 14:43:30.974 7191-7191/net.bi4vmr.study I/myapp: SingleTopActivity OnNewIntent.
-2023-04-09 14:43:32.177 7191-7191/net.bi4vmr.study I/myapp: SingleTopActivity OnNewIntent.
+2023-04-09 14:43:30.974 7191-7191/? I/myapp: SingleTopActivity OnNewIntent.
+2023-04-09 14:43:32.177 7191-7191/? I/myapp: SingleTopActivity OnNewIntent.
 ```
 
 此时我们使用"dumpsys"命令查看Task信息：
