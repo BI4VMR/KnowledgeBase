@@ -71,7 +71,7 @@ public class TestFragment extends Fragment {
     tools:layout="@layout/fragment_test" />
 ```
 
-静态加载的Fragment必须设置ID属性，否则程序运行过程中会出现IllegalStateException。`android:name` 属性指明了本容器需要嵌入的Fragment类，需要填写完整的包名。`tools:layout` 属性需填入布局文件的ID，可以在Android Studio的布局预览界面显示目标Fragment，辅助开发者进行布局设计，对程序运行无影响。
+静态加载的Fragment必须设置ID属性，否则程序运行过程中会出现IllegalStateException。`android:name="<Fragment类名>"` 属性指明了本容器需要嵌入的Fragment类，需要填写完整的包名。`tools:layout="<布局文件名称>"` 属性需填入布局文件的ID，可以在Android Studio的布局预览界面显示目标Fragment，辅助开发者进行布局设计，对程序运行无影响。
 
 Fragment布局文件根元素的宽高属性不能传递给引用者，因此引用Fragment的容器需要明确设置宽高数值或使用"match_parent"，若设置为"wrap_content"等同于"0dp"。
 

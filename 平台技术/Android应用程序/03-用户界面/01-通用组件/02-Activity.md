@@ -232,6 +232,131 @@ if (intent != null) {
 
 对于Intent对象与每个参数，我们都要注意空值的判断，并设置适当的默认值，避免发生空指针异常。
 
+# 获取其他Activity的回传信息
+## 简介
+用户从应用程序主页开启一个表单类Activity后，我们可能希望在表单关闭时，回传一些信息给主页。
+
+## 旧方法
+早期SDK中提供的返回信息监听方法是Activity的 `onActivityResult()` 回调。我们启动新Activity时，需要使用 `startActivityForResult(Intent i, int requestCode)` 方法设置请求码，当新Activity关闭时，旧Activity的 `onActivityResult(int requestCode, int resultCode, Intent data)` 回调触发，参数分别为“请求码”、新Activity的“响应码”、数据内容。
+
+此处我们创建两个测试Activity，DemoGotoForResultUI作为基础界面，通过按钮启动ResultActivity并监听其返回的信息。
+
+DemoGotoForResultUI.java:
+
+```java
+public class DemoGotoForResultUI extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.ui_demo_startforresult);
+
+        // 启动页面并等待结果
+        Button btnStart = findViewById(R.id.btnStart);
+        btnStart.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ResultActivity.class);
+            // 启动页面，并设置请求码。
+            startActivityForResult(intent, 100);
+        });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.i("myapp", "OnActivityResult. RequestCode:" + requestCode + " ,ResultCode:" + resultCode);
+        // 判断为何种请求
+        if (requestCode == 100) {
+            // 判断为何种结果
+            if (resultCode == 999) {
+                // 获取结果
+                if (data != null) {
+                    String s = data.getStringExtra("RESULT");
+                    Log.i("myapp", "OnActivityResult. Request 100; Result 999; Data:" + s);
+                }
+            }
+        }
+    }
+}
+```
+
+在ResultActivity中，我们放置一个按钮，当它被点击后，设置返回信息并关闭Activity。
+
+ResultActivity.java:
+
+```java
+// 封装返回数据
+Intent intent = new Intent();
+intent.putExtra("RESULT", "RESULT");
+// 设置返回码和Intent对象
+setResult(999, intent);
+// 关闭当前Activity
+finish();
+```
+
+当我们跳转至ResultActivity并点击关闭按钮后，DemoGotoForResultUI的 `onActivityResult()` 回调将被触发，请求码为"100"，响应码为"999"，Intent参数为ResultActivity回传的对象，可以用来获取我们需要的信息。
+
+当Activity中存在Fragment时，各组件的 `onActivityResult()` 回调方法存在一些差异：
+
+<!-- TODO
+- 从Fragment发起 `startActivityForResult()` ，并在Fragment中接收 `onActivityResult()` 回调，没有特殊性。
+- 从Activity发起 `startActivityForResult()` ，并在Activity中接收 `onActivityResult()` 回调，没有特殊性。
+- 从Fragment发起 `startActivityForResult()` ，并在Activity中接收 `onActivityResult()` 回调，没有特殊性。
+- 从Activity发起 `startActivityForResult()` ，并在Activity中接收 `onActivityResult()` 回调，没有特殊性。
+-->
+
+## 新方法
+前文所描述的方法耦合性较强，如果页面中存在多种跳转路径与结果类型， `onActivityResult()` 方法内部需要书写多层判断语句，不容易维护。
+
+SDK中提供了ActivityResultContract API，用于更好的实现从其他页面获取回传信息的情况。这种API可以为每条跳转路径各自注册回调事件，使得代码逻辑更为清晰。
+
+我们创建一个新的测试Activity，并在其中注册ActivityResultLauncher，当界面上的按钮被按下时，调用ActivityResultLauncher的 `launch(intent)` 方法，开启新界面。
+
+DemoGotoForResult2UI.java:
+
+```java
+public class DemoGotoForResult2UI extends AppCompatActivity {
+
+    private final ActivityResultLauncher<Intent> activityLauncher = getActivityResultLauncher();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.ui_demo_startforresult2);
+
+        Button btnStart = findViewById(R.id.btnStart);
+        btnStart.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ResultActivity.class);
+            // 启动新的Activity
+            activityLauncher.launch(intent);
+        });
+    }
+
+    // 获取ActivityResultLauncher的方法
+    private ActivityResultLauncher<Intent> getActivityResultLauncher() {
+        return registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                new ActivityResultCallback<ActivityResult>() {
+                    @Override
+                    public void onActivityResult(ActivityResult result) {
+                        // 获取返回码
+                        int resultCode = result.getResultCode();
+                        Log.i("myapp", "OnActivityResult. ResultCode:" + resultCode);
+                        // 判断为何种结果
+                        if (resultCode == 999) {
+                            // 获取结果
+                            Intent data = result.getData();
+                            if (data != null) {
+                                String s = data.getStringExtra("RESULT");
+                                Log.i("myapp", "OnActivityResult. Data:" + s);
+                            }
+                        }
+                    }
+                });
+    }
+}
+```
+
+`registerForActivityResult()` 方法用于注册事件回调，第一参数为协定类型，它支持很多不同的功能，例如选择图片等，当我们需要获取 `onActivityResult()` 这种类型的回传信息时，只需传入系统内置的 `ActivityResultContracts.StartActivityForResult()` 对象即可。第二参数为结果的回调监听器，信息获取方式与 `onActivityResult()` 类似。
+
 # 生命周期
 ## 简介
 当用户进入、挂起或退出应用程序时，Activity会在不同的生命周期之间转换，并触发相应的回调方法。我们可以在生命周期回调方法中设置各种状态下的行为，例如：当视频播放界面被挂起时，需要暂停视频播放；当用户回到该界面时，可以继续播放视频。在合适的生命周期内执行正确的操作，将提升应用程序的性能与稳定性。
