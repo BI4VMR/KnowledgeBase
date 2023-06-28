@@ -197,12 +197,12 @@ public class MyViewModel extends ViewModel {
 
 ```text
 # 第一次点击新增按钮
-2023-05-25 16:02:31.661 8287-8287/net.bi4vmr.study I/myapp: Number LiveData数值改变：10
-2023-05-25 16:02:31.665 8287-8287/net.bi4vmr.study I/myapp: Squared LiveData数值改变：100
+2023-05-25 16:02:31.661 8287-8287/? I/myapp: Number LiveData数值改变：10
+2023-05-25 16:02:31.665 8287-8287/? I/myapp: Squared LiveData数值改变：100
 
 # 第二次点击新增按钮
-2023-05-25 16:02:33.530 8287-8287/net.bi4vmr.study I/myapp: Number LiveData数值改变：20
-2023-05-25 16:02:33.531 8287-8287/net.bi4vmr.study I/myapp: Squared LiveData数值改变：400
+2023-05-25 16:02:33.530 8287-8287/? I/myapp: Number LiveData数值改变：20
+2023-05-25 16:02:33.531 8287-8287/? I/myapp: Squared LiveData数值改变：400
 ```
 
 从上述日志可以观察到，当我们首次点击按钮时，"numberData"的值变为"10"，"squaredData"触发 `apply()` 回调方法，经过计算得到数值"100"并通知了观察者。
@@ -255,16 +255,16 @@ public class MyViewModel extends ViewModel {
 
 ```text
 # 第一次点击增加数值按钮
-2023-05-25 16:33:59.909 8568-8568/net.bi4vmr.study I/myapp: Number LiveData数值改变：10
-2023-05-25 16:33:59.909 8568-8568/net.bi4vmr.study I/myapp: Squared LiveData数值改变：100
-2023-05-25 16:33:59.909 8568-8568/net.bi4vmr.study I/myapp: Mediator LiveData数值改变：100
-2023-05-25 16:33:59.909 8568-8568/net.bi4vmr.study I/myapp: Mediator LiveData数值改变：110
+2023-05-25 16:33:59.909 8568-8568/? I/myapp: Number LiveData数值改变：10
+2023-05-25 16:33:59.909 8568-8568/? I/myapp: Squared LiveData数值改变：100
+2023-05-25 16:33:59.909 8568-8568/? I/myapp: Mediator LiveData数值改变：100
+2023-05-25 16:33:59.909 8568-8568/? I/myapp: Mediator LiveData数值改变：110
 
 # 第二次点击增加数值按钮
-2023-05-25 16:34:03.077 8568-8568/net.bi4vmr.study I/myapp: Number LiveData数值改变：20
-2023-05-25 16:34:03.078 8568-8568/net.bi4vmr.study I/myapp: Squared LiveData数值改变：400
-2023-05-25 16:34:03.078 8568-8568/net.bi4vmr.study I/myapp: Mediator LiveData数值改变：510
-2023-05-25 16:34:03.079 8568-8568/net.bi4vmr.study I/myapp: Mediator LiveData数值改变：530
+2023-05-25 16:34:03.077 8568-8568/? I/myapp: Number LiveData数值改变：20
+2023-05-25 16:34:03.078 8568-8568/? I/myapp: Squared LiveData数值改变：400
+2023-05-25 16:34:03.078 8568-8568/? I/myapp: Mediator LiveData数值改变：510
+2023-05-25 16:34:03.079 8568-8568/? I/myapp: Mediator LiveData数值改变：530
 ```
 
 从上述日志信息可以发现，首次点击增加数值按钮时，MediatorLiveData首先收到了平方数值改变事件，从"0"变为"100"；然后收到了原始数值改变事件，最终变为"110"。

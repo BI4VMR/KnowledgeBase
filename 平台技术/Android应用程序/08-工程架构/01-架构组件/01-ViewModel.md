@@ -95,11 +95,11 @@ public void onCreate(@Nullable Bundle savedInstanceState) {
 示例代码编写完毕后，我们运行示例程序，打开测试Activity，并查看控制台日志输出内容：
 
 ```text
-2023-05-11 22:26:08.816 11268-11268/net.bi4vmr.study I/myapp: MyViewModel-VM created. Name:C96AC9
-2023-05-11 22:26:08.816 11268-11268/net.bi4vmr.study I/myapp: DemoBaseUI-Get VM in Activity:C96AC9
-2023-05-11 22:26:08.821 11268-11268/net.bi4vmr.study I/myapp: TestFragment-Get VM in Activity:C96AC9
-2023-05-11 22:26:08.821 11268-11268/net.bi4vmr.study I/myapp: MyViewModel-VM created. Name:35355A
-2023-05-11 22:26:08.821 11268-11268/net.bi4vmr.study I/myapp: TestFragment-Get VM in Fragment:35355A
+2023-05-11 22:26:08.816 11268-11268/? I/myapp: MyViewModel-VM created. Name:C96AC9
+2023-05-11 22:26:08.816 11268-11268/? I/myapp: DemoBaseUI-Get VM in Activity:C96AC9
+2023-05-11 22:26:08.821 11268-11268/? I/myapp: TestFragment-Get VM in Activity:C96AC9
+2023-05-11 22:26:08.821 11268-11268/? I/myapp: MyViewModel-VM created. Name:35355A
+2023-05-11 22:26:08.821 11268-11268/? I/myapp: TestFragment-Get VM in Fragment:35355A
 ```
 
 我们可以观察到Activity首先获取到了自身的MyViewModel(C96AC9)实例，然后Fragment也获取了Activity的ViewModel实例，该操作并未创建新的实例；最后Fragment获取到了MyViewModel(35355A)实例。
@@ -107,8 +107,8 @@ public void onCreate(@Nullable Bundle savedInstanceState) {
 接着我们将Fragment从Activity中移除，并查看日志输出内容：
 
 ```text
-2023-05-11 22:26:18.291 11268-11268/net.bi4vmr.study I/myapp: MyViewModel-OnCleared. Name:35355A
-2023-05-11 22:26:18.291 11268-11268/net.bi4vmr.study I/myapp: TestFragment-OnDestroy.
+2023-05-11 22:26:18.291 11268-11268/? I/myapp: MyViewModel-OnCleared. Name:35355A
+2023-05-11 22:26:18.291 11268-11268/? I/myapp: TestFragment-OnDestroy.
 ```
 
 我们可以观察到Fragment被回收前，其中存储的MyViewModel(35355A)实例被系统回收了，它的 `onCleared()` 方法被系统回调。
