@@ -163,7 +163,7 @@ protected void onCreate(Bundle savedInstanceState) {
 运行示例程序，点击按钮"btGoTo"启动DstActivity，并查看Logcat输出：
 
 ```text
-2023-03-08 17:31:25.635 6239-6239/net.bi4vmr.study I/myapp: Book{id=1, name='第一行代码', type=[Android, Java, Kotlin]}
+2023-03-08 17:31:25.635 6239-6239/? I/myapp: Book{id=1, name='第一行代码', type=[Android, Java, Kotlin]}
 ```
 
 上述日志表明DstActivity从Parcel容器中读取到了数据，并且成功地反序列化为Book对象。
