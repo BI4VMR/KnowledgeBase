@@ -2,7 +2,7 @@
 DrawerLayout是一款用于实现侧滑抽屉效果的控件。
 
 # 基本应用
-DrawerLayout需要作为XML的根布局，原本的页面布局放置在第一个子节点，随后的两个节点分别对应左侧抽屉、右侧抽屉，不需要右侧抽屉时也可以省略。
+DrawerLayout需要作为XML的根布局，原本的页面根布局放置在第一个子节点，随后的两个节点分别对应左侧抽屉、右侧抽屉，不需要右侧抽屉时也可以省略。
 
 ui_demo_base.xml:
 
@@ -60,7 +60,9 @@ ui_demo_base.xml:
 </androidx.drawerlayout.widget.DrawerLayout>
 ```
 
-我们在界面中使用两个按钮分别控制左右抽屉的开启。
+左右抽屉布局的根节点需要分别添加 `android:layout_gravity="start"` 属性和 `android:layout_gravity="end"` 属性。
+
+我们在主界面中使用两个按钮分别控制左右抽屉的开启。
 
 DemoBaseUI.java:
 
@@ -81,3 +83,61 @@ btnPopEnd.setOnClickListener(v -> {
 此时我们可以运行示例程序，点击按钮开启抽屉页面。
 
 <!-- TODO -->
+
+# 外观定制
+## 常用方法
+🔷 `void open()`
+
+弹出页面起始端方向的抽屉。
+
+🔷 `void openDrawer(int gravity)`
+
+弹出参数"gravity"所指定方向的抽屉。
+
+参数可以是 `GravityCompat.START` 或 `GravityCompat.END` 。
+
+🔷 `void openDrawer(int gravity, boolean animate)`
+
+弹出参数"gravity"所指定方向的抽屉，并且设置动画效果是否开启。
+
+🔷 `void close()`
+
+收起页面起始端方向的抽屉。
+
+🔷 `void isDrawerOpen(int gravity)`
+
+判断参数"gravity"所指定方向的抽屉是否已经弹出。
+
+# 监听器
+## DrawerListener
+DrawerListener用于监听侧滑界面的状态。
+
+```java
+// 设置抽屉状态监听器
+layoutDrawer.addDrawerListener(new DrawerLayout.DrawerListener() {
+
+    @Override
+    public void onDrawerOpened(@NonNull View drawerView) {
+        // 当侧滑界面完全打开时触发一次
+        Log.i("myapp", "OnDrawerOpened.");
+    }
+
+    @Override
+    public void onDrawerClosed(@NonNull View drawerView) {
+        // 当侧滑界面完全关闭时触发一次
+        Log.i("myapp", "OnDrawerClosed.");
+    }
+
+    @Override
+    public void onDrawerSlide(@NonNull View drawerView, float slideOffset) {
+        // 当侧滑界面滑动过程中持续触发，参数"slideOffset"为滑动偏移量。
+        Log.i("myapp", "OnDrawerSlide. Offset:[" + slideOffset + "]");
+    }
+
+    @Override
+    public void onDrawerStateChanged(int newState) {
+        // 当侧滑界面滑动状态改变时触发。
+        Log.i("myapp", "OnDrawerStateChanged. State:[" + newState + "]");
+    }
+});
+```
