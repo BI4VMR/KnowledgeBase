@@ -1,7 +1,7 @@
 # 简介
 ViewPager2是ViewPager的升级版本，与ViewPager相比，它可以设置布局方向，拥有可控预加载、模拟拖拽等方便的功能。ViewPager2基于RecyclerView实现，因此它也具有RecyclerView的所有特性。
 
-ViewPager2是AndroidX中的组件，如果使用指定版本，需要在Gradle配置文件中声明依赖：
+ViewPager2是AndroidX中的组件，如果需要使用指定版本，可以在Gradle配置文件中声明依赖：
 
 ```groovy
 dependencies {
@@ -27,16 +27,18 @@ fragment_test.xml:
 </FrameLayout>
 ```
 
-ViewPager2所使用的适配器是FragmentStateAdapter，我们创建它的子类Adapter01并覆盖它的部分方法。
+ViewPager2所使用的适配器是FragmentStateAdapter，我们需要创建它的子类MyVPAdapter并覆盖它的部分方法。
+
+MyVPAdapter.java:
 
 ```java
-public class Adapter01 extends FragmentStateAdapter {
+public class MyVPAdapter extends FragmentStateAdapter {
 
     // 数据源List
     private final List<TestFragment> pages;
 
     // 构造方法
-    public Adapter01(FragmentActivity activity, List<TestFragment> pages) {
+    public MyVPAdapter(FragmentActivity activity, List<TestFragment> pages) {
         super(activity);
         this.pages = pages;
     }
@@ -56,9 +58,11 @@ public class Adapter01 extends FragmentStateAdapter {
 }
 ```
 
-ViewPager2初始加载时，将会调用"getItemCount()"方法，我们需要在此返回Fragment的总数量。需要显示某个页面时，ViewPager2会调用"createFragment()"方法，"position"参数表示页面索引号，我们根据索引取出Fragment实例，并通过返回值传递给ViewPager2。
+ViewPager2初始加载时，将会调用 `getItemCount()` 方法，我们需要在此返回Fragment的总数量。ViewPager2显示某个页面时，会调用 `createFragment()` 方法，参数"position"表示页面索引号，我们根据索引从列表中取出Fragment实例，并通过返回值传递给ViewPager2。
 
-接着在Activity的布局文件中添加ViewPager2控件。FragmentStateAdapter实例化布局文件时调用了具有两个参数的"inflate()"方法，因此"fragment_test.xml"根布局的宽高属性将会失效，需要在ViewPager2标签处声明，此处我们为ViewPager2设置固定高度："150dp"。
+接着我们在测试Activity的布局文件中添加ViewPager2控件。FragmentStateAdapter实例化布局文件时内部调用了具有两个参数的 `inflate()` 方法，因此"fragment_test.xml"根布局的宽高属性将会失效，需要在ViewPager2标签处声明，此处我们为ViewPager2设置固定高度"150dp"。
+
+ui_demo_base.xml:
 
 ```xml
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -72,23 +76,24 @@ ViewPager2初始加载时，将会调用"getItemCount()"方法，我们需要在
 </FrameLayout>
 ```
 
-最后我们在Activity中创建Fragment实例与适配器，完成ViewPager2的配置。
+最后我们在测试Activity中创建Fragment实例与适配器，完成ViewPager2的配置。
+
+DemoBaseUI.java:
 
 ```java
 // 创建测试页面
 List<TestFragment> pages = new ArrayList<>();
-for (int i = 0; i < 6; i++) {
+for (int i = 0; i < 10; i++) {
     pages.add(TestFragment.newInstance("页面" + (i + 1)));
 }
 
-// 初始化
 ViewPager2 viewPager2 = findViewById(R.id.vp2Content);
 // 为ViewPager设置适配器
-Adapter01 adapter = new Adapter01(this, pages);
+MyVPAdapter adapter = new MyVPAdapter(this, pages);
 viewPager2.setAdapter(adapter);
 ```
 
-运行程序，查看显示效果：
+此时可以运行程序，查看显示效果：
 
 <div align="center">
 
@@ -145,89 +150,91 @@ if (rv instanceof RecyclerView) {
 ```
 
 # 监听器
-## 页面滑动监听器
-ViewPager2的页面滑动监听器与ViewPager一致，使用 `registerOnPageChangeCallback()` 方法进行设置，此处省略相关描述。
+## 页面滑动事件监听器
+ViewPager2的页面滑动事件监听器与ViewPager一致，使用 `registerOnPageChangeCallback()` 方法进行设置，此处省略相关描述。
 
-与ViewPager不同的是，ViewPager2的页面滑动监听器是抽象类，我们可以按需实现其中的方法，不必全部实现。
+与ViewPager不同的是，ViewPager2的页面滑动监听器相关方法不是抽象的，我们可以按需实现其中的方法，不必全部实现。
 
 # 预加载
-ViewPager2可以预加载可见页面两侧的页面，以提升切换时画面的连续性。ViewPager2的"setOffscreenPageLimit()"方法用于控制预加载的页面数量，默认值为"-1"，即不进行预加载。当该数值设为"N"时，将会预加载可见页面两侧的N个页面，使它们的生命周期达到"onStart()"。
+ViewPager2可以预加载可见页面两侧的页面，以提升切换时画面的连续性。ViewPager2的 `setOffscreenPageLimit()` 方法用于控制预加载的页面数量，默认值为"-1"，即不进行预加载；当该数值设为"N"时，将会预加载可见页面两侧的N个页面，使它们的生命周期达到"Started"。
 
 我们为Fragment的生命周期方法添加日志，然后使用默认预加载参数，运行程序并查看日志。
 
-```log
-2022-06-13 23:57:16.106 2553-2553/net.bi4vmr.study I/myapp: 页面1-onCreate()
-2022-06-13 23:57:16.106 2553-2553/net.bi4vmr.study I/myapp: 页面1-onCreateView()
-2022-06-13 23:57:16.110 2553-2553/net.bi4vmr.study I/myapp: 页面1-onViewCreated()
-2022-06-13 23:57:16.111 2553-2553/net.bi4vmr.study I/myapp: 页面1-onViewStateRestored()
-2022-06-13 23:57:16.111 2553-2553/net.bi4vmr.study I/myapp: 页面1-onStart()
-2022-06-13 23:57:16.112 2553-2553/net.bi4vmr.study I/myapp: 页面1-onResume()
+```text
+2022-06-13 23:57:16.106 2553-2553/? I/myapp: 页面1-onCreate()
+2022-06-13 23:57:16.106 2553-2553/? I/myapp: 页面1-onCreateView()
+2022-06-13 23:57:16.110 2553-2553/? I/myapp: 页面1-onViewCreated()
+2022-06-13 23:57:16.111 2553-2553/? I/myapp: 页面1-onViewStateRestored()
+2022-06-13 23:57:16.111 2553-2553/? I/myapp: 页面1-onStart()
+2022-06-13 23:57:16.112 2553-2553/? I/myapp: 页面1-onResume()
 ```
 
-此时仅有“页面1”的生命周期到达"onResume()"，其它页面都没有被加载。我们将ViewPager2滑动至第二个页面，再次查看日志。
+此时仅有“页面1”的生命周期到达"Resumed"，其它页面都没有被加载。
 
-```log
-2022-06-13 23:57:28.181 2553-2553/net.bi4vmr.study I/myapp: 页面2-onCreate()
-2022-06-13 23:57:28.181 2553-2553/net.bi4vmr.study I/myapp: 页面2-onCreateView()
-2022-06-13 23:57:28.184 2553-2553/net.bi4vmr.study I/myapp: 页面2-onViewCreated()
-2022-06-13 23:57:28.185 2553-2553/net.bi4vmr.study I/myapp: 页面2-onViewStateRestored()
-2022-06-13 23:57:28.185 2553-2553/net.bi4vmr.study I/myapp: 页面2-onStart()
-2022-06-13 23:57:28.995 2553-2553/net.bi4vmr.study I/myapp: 页面1-onPause()
-2022-06-13 23:57:28.995 2553-2553/net.bi4vmr.study I/myapp: 页面2-onResume()
+我们将ViewPager2滑动至第二个页面，再次查看日志。
+
+```text
+2022-06-13 23:57:28.181 2553-2553/? I/myapp: 页面2-onCreate()
+2022-06-13 23:57:28.181 2553-2553/? I/myapp: 页面2-onCreateView()
+2022-06-13 23:57:28.184 2553-2553/? I/myapp: 页面2-onViewCreated()
+2022-06-13 23:57:28.185 2553-2553/? I/myapp: 页面2-onViewStateRestored()
+2022-06-13 23:57:28.185 2553-2553/? I/myapp: 页面2-onStart()
+2022-06-13 23:57:28.995 2553-2553/? I/myapp: 页面1-onPause()
+2022-06-13 23:57:28.995 2553-2553/? I/myapp: 页面2-onResume()
 ```
 
 此时可以发现仅“页面2”加载并可见，没有预加载右侧的“页面3”。
 
-我们将预加载页面数量设为"1"，重新运行程序并再次查看日志。
+接着我们再将预加载页面数量设为"1"，重新运行程序并查看日志。
 
-```log
-2022-06-14 00:06:42.188 2644-2644/net.bi4vmr.study I/myapp: 页面1-onCreate()
-2022-06-14 00:06:42.189 2644-2644/net.bi4vmr.study I/myapp: 页面1-onCreateView()
-2022-06-14 00:06:42.192 2644-2644/net.bi4vmr.study I/myapp: 页面1-onViewCreated()
-2022-06-14 00:06:42.193 2644-2644/net.bi4vmr.study I/myapp: 页面1-onViewStateRestored()
-2022-06-14 00:06:42.193 2644-2644/net.bi4vmr.study I/myapp: 页面1-onStart()
-2022-06-14 00:06:42.194 2644-2644/net.bi4vmr.study I/myapp: 页面1-onResume()
-2022-06-14 00:06:42.198 2644-2644/net.bi4vmr.study I/myapp: 页面2-onCreate()
-2022-06-14 00:06:42.198 2644-2644/net.bi4vmr.study I/myapp: 页面2-onCreateView()
-2022-06-14 00:06:42.201 2644-2644/net.bi4vmr.study I/myapp: 页面2-onViewCreated()
-2022-06-14 00:06:42.201 2644-2644/net.bi4vmr.study I/myapp: 页面2-onViewStateRestored()
-2022-06-14 00:06:42.202 2644-2644/net.bi4vmr.study I/myapp: 页面2-onStart()
+```text
+2022-06-14 00:06:42.188 2644-2644/? I/myapp: 页面1-onCreate()
+2022-06-14 00:06:42.189 2644-2644/? I/myapp: 页面1-onCreateView()
+2022-06-14 00:06:42.192 2644-2644/? I/myapp: 页面1-onViewCreated()
+2022-06-14 00:06:42.193 2644-2644/? I/myapp: 页面1-onViewStateRestored()
+2022-06-14 00:06:42.193 2644-2644/? I/myapp: 页面1-onStart()
+2022-06-14 00:06:42.194 2644-2644/? I/myapp: 页面1-onResume()
+2022-06-14 00:06:42.198 2644-2644/? I/myapp: 页面2-onCreate()
+2022-06-14 00:06:42.198 2644-2644/? I/myapp: 页面2-onCreateView()
+2022-06-14 00:06:42.201 2644-2644/? I/myapp: 页面2-onViewCreated()
+2022-06-14 00:06:42.201 2644-2644/? I/myapp: 页面2-onViewStateRestored()
+2022-06-14 00:06:42.202 2644-2644/? I/myapp: 页面2-onStart()
 ```
 
-此时“页面1”被加载，与它相邻的“页面2”也被加载了，生命周期到达"onStart()"。
+此时“页面1”被完全加载至可见，与它相邻的“页面2”也被加载了，其生命周期到达"Started"。
 
 我们将ViewPager2滑动至第二个页面，再次查看日志。
 
-```log
-2022-06-14 00:07:04.129 2644-2644/net.bi4vmr.study I/myapp: 页面3-onCreate()
-2022-06-14 00:07:04.129 2644-2644/net.bi4vmr.study I/myapp: 页面3-onCreateView()
-2022-06-14 00:07:04.132 2644-2644/net.bi4vmr.study I/myapp: 页面3-onViewCreated()
-2022-06-14 00:07:04.132 2644-2644/net.bi4vmr.study I/myapp: 页面3-onViewStateRestored()
-2022-06-14 00:07:04.133 2644-2644/net.bi4vmr.study I/myapp: 页面3-onStart()
-2022-06-14 00:07:04.611 2644-2644/net.bi4vmr.study I/myapp: 页面1-onPause()
-2022-06-14 00:07:04.611 2644-2644/net.bi4vmr.study I/myapp: 页面2-onResume()
+```text
+2022-06-14 00:07:04.129 2644-2644/? I/myapp: 页面3-onCreate()
+2022-06-14 00:07:04.129 2644-2644/? I/myapp: 页面3-onCreateView()
+2022-06-14 00:07:04.132 2644-2644/? I/myapp: 页面3-onViewCreated()
+2022-06-14 00:07:04.132 2644-2644/? I/myapp: 页面3-onViewStateRestored()
+2022-06-14 00:07:04.133 2644-2644/? I/myapp: 页面3-onStart()
+2022-06-14 00:07:04.611 2644-2644/? I/myapp: 页面1-onPause()
+2022-06-14 00:07:04.611 2644-2644/? I/myapp: 页面2-onResume()
 ```
 
-此时“页面2”的生命周期到达"onResume()"，“页面3”进行了预加载，生命周期到达"onStart()"。
+此时“页面2”的生命周期到达"Resumed"，“页面3”进行了预加载，其生命周期到达"Started"。
 
 # 缓存与复用
 由于ViewPager2基于RecyclerView实现，它也具有页面缓存与复用机制，如果我们使用不当，页面显示就可能会与预期不符。
 
-使用FragmentStateAdapter时，我们只重写"getItemCount()"与"createFragment()"方法，先加载数据源FragmentListA，并从第一页翻至第二页；然后替换数据源为FragmentListB，再翻回第一页，就会发现第一页仍然是FragmentListA中的页面。
+当我们需要动态切换数据源时，如果在FragmentStateAdapter中只重写 `getItemCount()` 与 `createFragment()` 方法，先加载数据源FragmentListA，并从第一页翻至第二页；然后替换数据源为FragmentListB，再翻回第一页，就会发现第一页仍然是FragmentListA中的页面。
 
-FragmentStateAdapter中有"getItemId()"方法，ViewPager2使用此方法的返回值作为Key缓存Fragment实例，默认实现中返回Fragment对应的Position，我们替换数据源并翻回第一页时，ViewPager2发现缓存中已有"ID=Position=0"的Fragment实例，就会直接进行复用，并不会执行"createFragment()"方法创建新的Fragment。
+FragmentStateAdapter中有 `getItemId()` 方法，ViewPager2使用此方法的返回值作为Key缓存Fragment实例，默认实现中返回Fragment对应的Position，我们替换数据源并翻回第一页时，ViewPager2发现缓存中已有"ID=Position=0"的Fragment实例，就会直接进行复用，并不会执行 `createFragment()` 方法创建新的Fragment。
 
-如果FragmentStateAdapter的数据集需要动态变更，我们一定要重写"getItemId()"和"containsItem()"方法，防止页面复用造成显示异常。
+如果FragmentStateAdapter的数据集需要动态变更，我们一定要重写 `getItemId()` 和 `containsItem()` 方法，防止页面复用造成显示异常。
 
 ```java
-public class Adapter01 extends FragmentStateAdapter {
+public class MyVPAdapter extends FragmentStateAdapter {
 
     // 数据源List
     private final List<TestFragment> pages;
     // IDList
     private final List<Long> idList;
 
-    【此处省略部分方法...】
+    /* 此处省略部分变量与方法... */
 
     // 系统回调：获取当前项的ID
     @Override
@@ -240,6 +247,7 @@ public class Adapter01 extends FragmentStateAdapter {
     public boolean containsItem(long itemId) {
         return idList.contains(itemId);
     }
+}
 ```
 
 # 滑动控制
@@ -254,7 +262,7 @@ ViewPager2.setUserInputEnabled(true);
 
 ViewPager2具有模拟拖拽功能，可以通过代码模拟用户滑动页面的过程，此功能即使用户输入被关闭也可以使用。
 
-开始模拟拖拽前我们需要调用"beginFakeDrag()"方法，然后调用"fakeDragBy(offsetPX)"方法设置偏移量，参数的的单位是像素，数值为正表示向前一个页面滑动，数值为负表示向后一个页面滑动。滑动结束后，我们应当调用"endFakeDrag()"方法结束模拟拖拽状态。
+开始模拟拖拽前我们需要调用 `beginFakeDrag()` 方法，然后调用 `fakeDragBy(offsetPX)` 方法设置偏移量，参数的的单位是像素，数值为正表示向前一个页面滑动，数值为负表示向后一个页面滑动。滑动结束后，我们应当调用 `endFakeDrag()` 方法结束模拟拖拽状态。
 
 ```java
 // 开始模拟拖拽
