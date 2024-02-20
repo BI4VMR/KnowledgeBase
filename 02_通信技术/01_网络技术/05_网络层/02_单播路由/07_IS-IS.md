@@ -191,6 +191,80 @@ IS-IS采用了TLV(Tag-Length-Value)的消息格式来描述常用信息，增强
 </div>
 
 # 报文类型
+ Hello(IIH)
+Hello报文用于建立和维持邻居关系。
+在广播网络中，Hello报文分为Level 1 LAN IIH和Level 2 LAN IIH，用于建立不同级别的邻居关系。Level 1发送到组播地址01:80:C2:00:00:14；Level 2发送到组播地址01:80:C2:00:00:15。IS-IS协议与OSPF相类似，在广播网络中需要选举指定路由器（称为DIS），每3秒发送一次IIH报文，非DIS节点每10秒发送一次IIH报文。
+ 
+图 5-49 LAN Hello报文
+ Circuit Type(1B)
+高位的6bit为保留位，取值为0；低位的2bit表示链路的类型，01表示L1，10表示L2，11表示L1/L2。
+ System ID(6B)
+发送Hello报文的路由器的System ID。
+ Holding Time(2B)
+保持时间，如果在此时间内没有收到邻居的Hello报文，则中止邻居关系。
+ PDU Length(2B)
+PDU的总长度，单位为字节。
+ Priority(1B)
+选举DIS的优先级，最高位为保留位，取值范围：[0,127]，数值越大，优先级越高。
+ LAN ID(7B)
+局域网标识符，包括DIS的System ID和伪节点ID。
+ TLVs
+变长信息包括区域地址、被路由协议、接口地址和填充字段，邻居关系建立后L1 IIH报文还包含邻居的MAC地址。
+在点到点网络中，Hello报文只有一种，各节点每10秒以单播方式发送一次Hello报文。此类型网络中不需要选举DIS，无优先级与局域网标识符字段，但拥有Local Circuit ID字段，表示本地链路ID。
+默认情况下LAN Hello报文会被填充达到链路本端的MTU值，可以在建立邻居的过程中发现MTU不匹配的问题，点对点Hello报文则不使用该特性。
+ 开启/关闭多路访问网络的IIH填充功能
+Cisco(config-router)#{no} hello padding multi-point
+ 开启/关闭点到点网络的IIH填充功能
+Cisco(config-router)#{no} hello padding point-to-point
+ 单独控制接口的填充功能
+Cisco(config-if)#{no} isis hello padding
+ LSP
+链路状态报文(Link State PDUs,LSP)用于描述链路状态信息，分为Level 1 LSP和Level 2 LSP，它们具有相同的内容，网络节点会发送与自身角色一致的LSP。
+ 
+图 5-50 LSP报文
+ PDU Length(2B)
+PDU的总长度，以字节为单位。
+ Remaining Lifetime(2B)
+LSP的剩余生存时间，以秒为单位。
+ LSP ID(8B)
+由System ID、伪节点ID和LSP分片序号组成，伪节点ID和分片序号各一字节。
+ Sequence Number(4B)
+LSP序列号，用于判断消息的新旧。
+ Checksum(2B)
+LSP校验和。
+ Option(1B)
+控制字段，包括以下部分：
+P(Partition Repair)：长度1bit，仅在L2 LSP中有效，表示节点是否支持自动修复区域分割。
+ATT(Attachment)：长度4bit，仅在Level 1/2节点发出的L1 LSP中生效，用来指明始发路由器是否与其它区域相连、相连的区域所使用的度量方式。
+其中从左到右每一位的含义为：
+第1位：差错度量
+第2位：代价度量
+第3位：时延度量
+第4位：缺省度量
+OL(LSDB Overload)：过载标志位，长度1bit。当节点内存不足时，系统会在发出的LSP报文中将其置位。OL被置位的LSP虽然会在网络中泛洪，但其它路由器在进行SPF计算时会忽略这台路由器，因为其信息不再可信。
+Cisco(config-router)#set-overload-bit {on-startup [时间/秒]|suppress [interlevel|external]}
+on-startup：当设备重启时，在设置的时间内将OL置位。
+suppress：使用interlevel参数时抑制泄露进入的路由，使用external参数时抑制从其他路由协议重分发进入的路由。
+IS Type：生成LSP的路由器类型，长度2bit。01表示Level 1，11表示Level 2。
+ TLVs
+变长信息包括区域地址、被路由协议、接口地址、邻居可达性和网络可达性信息，最后两部分即为拓扑信息，其中包含了度量值。
+ CSNP(Complete Sequence Number PDU)
+完全序列号PDU类似OSPF中的DBD，用于向其它路由器通告本地数据库的摘要信息。
+ 
+图 5-51 CSNP报文
+ PDU Length(2B)
+PDU的总长度，以字节为单位。
+ Source ID(7B)
+发送报文节点的System ID+00。
+ Start LSP ID(8B)
+报文中第一个LSP的ID值。
+ End LSP ID(8B)
+报文中最后一个LSP的ID值。
+ LSP Entries
+描述LSP的摘要信息，包括序列号、剩余生存期、校验和信息。
+ PSNP(Partical Sequence Number PDU)
+部分序列号PDU格式同CSNP，但只含有部分LSP的摘要信息，既可以向邻居请求LSP详细信息，也可以作为确认报文使用。
+CSNP和PSNP都分为L1和L2报文，但格式和实现的功能是相同的。
 
 
 # 计时器
@@ -220,7 +294,8 @@ Cisco(config-router)#max-lsp-lifetime [最大生存时间/秒]
 配置指定接口连续发送LSP的最小间隔时间，默认值为33毫秒。
  配置连续LSP的发送间隔。
 Cisco(config-if)#isis lsp-interval [时间/毫秒]
-1.4.6  度量值
+
+# 度量值
 IS-IS协议设计了四种度量类型，但一般设备只支持默认度量，默认度量值为每一跳数值增加10，可以根据需要修改。
  更改接口度量值
 Cisco(config-if)#isis metric [度量值] {level-1|level-2}
