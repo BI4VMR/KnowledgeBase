@@ -3,14 +3,14 @@
 
 
 # 文档模板
-## 概述（简介）
-简要描述该主题是什么、有什么用处以及相关资源的链接。
+## 简介
+简要描述该主题以及相关资源的链接。
 
-## 术语
-介绍该主题相关的术语。
+## 理论基础
+介绍该主题相关的术语、概念。
 
 ## 基本应用
-介绍该主题的基本应用方法。
+介绍该主题的基本使用方法。
 
 ## 版本变更
 记录该主题在不同版本之间的变化。
@@ -204,7 +204,5 @@ msg=$(uuidgen | awk '{print toupper($0)}'); git add .; git commit -m "$msg";git 
 
 
 # 更新内容
-ContentProvider与Application的初始化时序。
 
-https://github.com/BI4VMR/KnowledgeBase/blob/master/07-%E5%B9%B3%E5%8F%B0%E5%BA%94%E7%94%A8%E5%BC%80%E5%8F%91/01-Android%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F/04-%E7%B3%BB%E7%BB%9F%E7%BB%84%E4%BB%B6/04-ContentProvider/03-%E5%85%B1%E4%BA%AB%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE.md#%E5%88%9D%E5%A7%8B%E5%8C%96%E6%97%B6%E5%BA%8F%E4%B8%8E%E5%A4%9A%E8%BF%9B%E7%A8%8B
 -->
