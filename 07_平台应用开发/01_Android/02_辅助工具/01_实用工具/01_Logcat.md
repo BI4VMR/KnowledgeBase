@@ -14,6 +14,8 @@ ADB$ logcat
 12-16 17:54:04.411  1752  1881 W audio_hw_generic: Not supplying enough data to HAL, expected position 50888065 , only wrote 50697378
 ```
 
+该命令不会自行终止，新的日志将不断地被输出到控制台上，直到我们按下 `Ctrl+C` 组合键。
+
 上述内容为Logcat默认的输出格式，每列内容的含义分别为：日期、时间、进程ID、线程ID、日志级别、日志Tag、日志内容。
 
 我们可以通过 `logcat -v <格式名称>` 命令更改日志输出格式，每种格式名称及其内容详见下文表格：
@@ -32,9 +34,48 @@ ADB$ logcat
 
 </div>
 
+除了实时查看日志，我们还可以在命令中添加 `-f <输出文件路径>` 选项，将日志保存至文本文件，以便后续再次查看。
+
+```text
+# 将日志信息保存到"/sdcard/log.txt"文件中
+ADB$ logcat -f /sdcard/log.txt
+```
+
+上述命令会将日志保存至Android设备，有时我们希望将日志直接保存至电脑，则可以使用以下命令：
+
+```text
+# 无需进入ADB Shell，直接将日志信息保存到当前目录的"log.txt"文件中。
+[bi4vmr@Fedora ~]$ adb logcat > log.txt
+```
+
+在电脑的命令行中执行 `adb logcat` 也能查看日志，我们可以配合Shell的重定向功能将日志信息写入文件。
+
+以上两种方法仅记录日志，不会将内容显示在屏幕上；如果我们既要实时查看日志，又要保存日志至文件，可以借助 `tee` 命令实现：
+
+```text
+# 实时查看并保存日志至Android设备
+ADB$ logcat | tee /sdcard/log.txt
+
+# 实时查看并保存日志至电脑
+[bi4vmr@Fedora ~]$ adb logcat | tee log.txt
+```
+
 <!-- TODO
 ### 筛选关键日志
-ADB_Shell$ logcat --pid=<pid>
+默认情况下Logcat将会输出所有组件的日志信息，我们可以配置一些筛选条件，以便检索感兴趣的内容。
+
+🔷 筛选进程
+
+我们可以在 `logcat` 命令中添加 `--pid=<PID>` 选项，使Logcat只输出指定进程的日志。
+
+```text
+# 查看感兴趣的软件包PID
+ps -A | grep -iE "launcher"
+u0_a21    3997   982 4749220 138188 0 0 S com.meizu.flyme.launcher
+
+# 查看PID
+ADB$ logcat --pid=3997
+```
 -->
 
 ### 日志缓冲区
