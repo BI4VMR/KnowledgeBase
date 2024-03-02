@@ -218,7 +218,7 @@ JNIEXPORT void JNICALL Java_net_bi4vmr_study_jni_datatype_JNIClass_passBasicType
     double d1 = d;
 
     // 使用转换后的变量（此处只是简单地在控制台输出它们）
-    printf("PassBasicTypes. b1:[%b], i1:[%ld], d1:[%f]", b1, i1, d1);
+    printf("PassBasicTypes. b1:[%s], i1:[%ld], d1:[%f]", b1 ? "true" : "false", i1, d1);
 }
 ```
 
