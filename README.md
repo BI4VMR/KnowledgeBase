@@ -227,7 +227,4 @@ msg=$(uuidgen | awk '{print toupper($0)}'); git add .; git commit -m "$msg"; git
 msg=$(uuidgen | awk '{print toupper($0)}'); git add .; git commit -m "$msg";git push github; git push private;
 ```
 
-
-# 更新内容
-
 -->
