@@ -5,7 +5,7 @@ ViewModel是Jetpack提供的架构组件，可供开发者创建MVVM架构的应
 
 本章示例代码详见以下链接：
 
-[🔗 示例工程：ViewModel ](https://github.com/BI4VMR/Study-Android/tree/master/M08_Architecture/C02_Component/S01_ViewModel)
+[🔗 示例工程：ViewModel](https://github.com/BI4VMR/Study-Android/tree/master/M08_Architecture/C02_Component/S01_ViewModel)
 
 # 基本应用
 我们首先编写一个MyViewModel类，继承自ViewModel类，并在它的构造方法中获取一个随机数，作为每个实例的唯一标识。
