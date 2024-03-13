@@ -1,3 +1,4 @@
+<!-- TODO
             8.1.1   概述(TODO)
 HSRP协议允许多台路由器共享一个虚拟的IP地址和MAC地址，当一台路由器发生故障时，数据转发将会自动切换至其它路由器，终端用户并不会感知到故障的存在。
 HSRP协议是Cisco开发的私有协议，使用UDP的1985端口。
@@ -58,3 +59,5 @@ Cisco(config-if)#standby [组ID] track [接口ID] {优先级偏移量}
 Cisco(config)#track [对象编号] ip route [网络ID] [子网掩码] reachability
 2.在组中关联追踪对象。
 Cisco(config-if)#standby [组ID] track [对象编号] {decrement [优先级偏移量]}
+ -->
+ 
