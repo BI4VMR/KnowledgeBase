@@ -137,7 +137,24 @@ ADB$ logcat -c; logcat | grep -iE "<关键字>"
 ![Android Studio工具面板](./Assets_Logcat/查看日志_AndroidStudio工具面板.jpg)
 
 ## 日志文件
-大部分系统会将一段时间内的日志写入到文件中，以便开发者查看，通常日志目录的名称为 `/data/log/` ，该路径在不同的系统中可能并不相同。
+系统会将一段时间内的Logcat日志写入到文件中，以便开发者查看。通常日志目录的名称为 `/data/log/` 或 `/data/local/log` ，该路径在不同的系统中可能被修改，应当视具体情况而定。
+
+Logcat日志文件通常采用Gzip格式压缩，无法直接阅读，并且日志目录中可能有其他模块的文件；当我们处于Linux环境时，可以使用以下命令组合删除无用文件并解压所有Gzip文件。
+
+```text
+# 将日志文件传输至PC
+[bi4vmr@Fedora ~]# adb pull /data/log/
+
+# 进入日志目录，解压缩日志文件。
+[bi4vmr@Fedora ~]# cd log
+[bi4vmr@Fedora log]# rm -f !(logcat*); gzip -d *.gz;
+```
+
+为了避免不小心在其他目录执行该命令而误删文件，我们可以添加判断条件，仅在当前目录名称为"log"时执行后续动作。
+
+```text
+[bi4vmr@Fedora log]# if [ $(basename $PWD) = 'log' ]; then rm -f !(logcat*); gzip -d *.gz; fi;
+```
 
 除了Logcat日志记录外，以下目录还包括一些额外的日志信息，我们可以根据需要查看。
 
