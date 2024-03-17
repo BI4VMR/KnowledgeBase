@@ -5,7 +5,7 @@ LiveData与其他观察者模式工具相比，新增了生命周期感知功能
 
 本章示例代码详见以下链接：
 
-[🔗 示例工程：LiveData](https://github.com/BI4VMR/Study-Android/tree/master/M08_Architecture/C02_Component/S02_LiveData)
+- [🔗 示例工程：LiveData](https://github.com/BI4VMR/Study-Android/tree/master/M08_Architecture/C02_Component/S02_LiveData)
 
 # 基本应用
 我们首先创建一个ViewModel类，用来承载LiveData。

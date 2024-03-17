@@ -27,4 +27,4 @@ MediaStore包含以下几种媒体类型：
 
 本章示例代码详见以下链接：
 
-[🔗 示例工程：MediaStore ](https://github.com/BI4VMR/Study-Android/tree/master/M07_Media/C01_Common/S02_MediaStore)
+- [🔗 示例工程：MediaStore](https://github.com/BI4VMR/Study-Android/tree/master/M07_Media/C01_Common/S02_MediaStore)

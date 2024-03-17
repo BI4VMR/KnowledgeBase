@@ -3,7 +3,7 @@
 
 本章示例代码详见以下链接：
 
-[🔗 示例工程：Room ](https://github.com/BI4VMR/Study-Android/tree/master/M05_Storage/C03_SQL/S02_Room)
+- [🔗 示例工程：Room](https://github.com/BI4VMR/Study-Android/tree/master/M05_Storage/C03_SQL/S02_Room)
 
 # 基本应用
 下文将以学生信息管理系统为例，演示Room框架的基本应用。
