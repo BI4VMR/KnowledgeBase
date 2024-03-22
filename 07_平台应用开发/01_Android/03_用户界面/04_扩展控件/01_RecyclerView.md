@@ -893,3 +893,42 @@ public void handleMessage(Message msg) {
     }
 }
 ```
+
+# 疑难解答
+## 索引
+
+<div align="center">
+
+|       序号        |                   摘要                   |
+| :---------------: | :--------------------------------------: |
+| [案例一](#案例一) | 更新数据源后，滚动列表至指定位置无效果。 |
+
+</div>
+
+## 案例一
+### 问题描述
+通过Adapter的"notify"系列方法更新数据后，立即使用 `scrollToPosition()` 等方法控制列表滚动至指定位置，但无效果。
+
+```java
+// 通知RecyclerView数据源改变
+adapter.notifyDataSetChanged();
+
+// 控制列表滚动
+recyclerView.scrollToPosition(10);
+```
+
+### 问题分析
+View的 `requestLayout()` 方法是异步执行的，因此 `scrollToPosition()` 等方法执行时，列表数据可能仍未更新完成，此时对应的表项并不存在，无法滚动成功。
+
+### 解决方案
+我们可以将数据更新后续的任务添加到View的事件队列中，使更新动作全部执行完毕后再调用其他任务。
+
+```java
+// 通知RecyclerView数据源改变
+adapter.notifyDataSetChanged();
+// 将后续任务放入控件的事件队列中
+recyclerView.post(() -> {
+    // 控制列表滚动
+    recyclerView.scrollToPosition(10);
+});
+```

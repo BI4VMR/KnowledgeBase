@@ -1,21 +1,21 @@
-# 概述
-Bundle是Android系统组件之间实现数据传递的工具，其内部实现是一个 `Map<String, Object>` 结构，可以以键值对的形式传递一组数据。
+# 简介
+Bundle是Android系统组件之间实现数据传递的工具，其内部实现是一个 `Map<String, Object>` 结构，能够以键值对的形式传递一组数据。
 
 Bundle支持所有Java基本数据类型、String、Parcelable对象、Serializable对象，以及它们的数组与列表。
 
 # 基本应用
 Bundle中的每条数据使用字符串Key进行唯一标识，其提供了以下方法进行键值对操作：
 
-- "put"系列方法用于存入数据项，例如 `putString(String key, String value)`。
-- "get"系列方法用于读取数据项，例如 `getString(String key)` ，此类方法在Key不存在时将会返回空值，因此还有对应的重载方法用于设置默认值，例如 `getString(String key, String default)`， 可以根据需要选择。
+- "put"系列方法用于存入数据项，例如 `putString(String key, String value)` 。
+- "get"系列方法用于读取数据项，例如 `getString(String key)` ，此类方法在Key不存在时将会返回空值，因此还有对应的重载方法用于设置默认值，例如 `getString(String key, String default)` ，我们可以根据需要选择。
 - `remove(String key)` 方法用于移除指定的数据项。
 - `clear()` 方法用于清除所有数据项。
 
 我们在启动Activity时，经常利用Intent传递一些信息，以便目标Activity进行初始化操作，此时就可以利用Bundle封装数据。
 
-此处我们将从DemoBaseUI启动DstActivity，并传递书籍信息。
+此处我们将从TestUIBase启动DstActivity，并传递书籍信息。
 
-DemoBaseUI.java:
+"TestUIBase.java":
 
 ```java
 // 新建Bundle对象，并存入一些数据。
@@ -35,7 +35,7 @@ Intent内部拥有一个Bundle对象，我们使用Intent的 `putExtras(Bundle b
 
 在DstActivity的 `onCreate()` 方法中，我们可以获取启动它的Intent，并从中读取各项数据。
 
-DstActivity.java:
+"DstActivity.java":
 
 ```java
 // 从Intent中取出Bundle对象
@@ -48,14 +48,14 @@ if (bundle != null) {
     boolean isSoldout = bundle.getBoolean("KEY_SOLDOUT", true);
 
     String bookInfo = "ID:" + id + "\n名称:" + name + "\n价格:" + price + "\n售空:" + isSoldout;
-    Log.d("myapp", bookInfo);
+    Log.i(TAG, bookInfo);
 }
 ```
 
-运行程序并启动DstActivity后，我们可以看到日志输出以下内容：
+此时运行示例程序，启动DstActivity并查看控制台输出信息：
 
 ```text
-2023-03-08 17:06:14.315 5894-5894/? D/myapp: ID:0001
+17:06:14.315 5894 5894 D DstActivity: ID:0001
     名称:书籍
     价格:39.9
     售空:false
