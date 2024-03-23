@@ -1,4 +1,4 @@
-# 概述
+# 简介
 <!-- TODO -->
 
 本章示例代码详见以下链接：
@@ -175,5 +175,34 @@ try {
 
 此处只展示关键的逻辑代码，完整内容详见本章示例代码。
 
+<!-- TODO
 # 异步查询
-<!-- TODO -->
+-->
+
+# 疑难解答
+## 索引
+
+<div align="center">
+
+|       序号        |                         摘要                         |
+| :---------------: | :--------------------------------------------------: |
+| [案例一](#案例一) | Android Debug Database工具无法查看Room数据库的内容。 |
+
+</div>
+
+## 案例一
+### 问题描述
+使用Android Debug Database工具调试Room框架生成的数据库时，Web查看到的内容为空。
+
+### 问题分析
+当API Level大于16时，Room框架的默认日志模式为WAL，这种模式不会将变更立即写入磁盘，因此Android Debug Database工具无法实时读取内容。
+
+### 解决方案
+在构建Database实例时，将日志模式设为"TRUNCATE"。
+
+```java
+Room.databaseBuilder(context.getApplicationContext(), StudentDB.class, "student")
+    // 设置日志模式为"TRUNCATE"
+    .setJournalMode(JournalMode.TRUNCATE)
+    .build();
+```

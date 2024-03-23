@@ -932,3 +932,17 @@ recyclerView.post(() -> {
     recyclerView.scrollToPosition(10);
 });
 ```
+
+如果有多个涉及到 `requestLayout()` 方法的操作需要依次执行，我们应当嵌套提交任务以保证顺序正确。
+
+```java
+// 第1个操作 ...
+// 提交后续任务
+recyclerView.post(() -> {
+    // 第2个操作 ...
+    // 提交后续任务
+    recyclerView.post(() -> {
+        // 其他操作 ...
+    });
+});
+```
