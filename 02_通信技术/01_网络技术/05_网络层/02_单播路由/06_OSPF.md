@@ -54,7 +54,7 @@ OSPF的常见区域设计如下图所示：
 
 <div align="center">
 
-![OSPF基本架构](./Assets-OSPF/术语-OSPF基本架构.jpg)
+![OSPF基本架构](./Assets_OSPF/术语_OSPF基本架构.jpg)
 
 </div>
 
