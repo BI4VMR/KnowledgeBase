@@ -1,6 +1,10 @@
 # 简介
 Logcat是系统内置的日志信息工具，它提供了日志输出、实时查看、持久化记录等功能。
 
+本章示例代码详见以下链接：
+
+- [🔗 示例工程：Logcat](https://github.com/BI4VMR/Study-Android/tree/master/M02_Tool/C01_Common/S02_Logcat)
+
 # 查看日志
 ## ADB Shell
 ### 基本应用
