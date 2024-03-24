@@ -899,15 +899,16 @@ public void handleMessage(Message msg) {
 
 <div align="center">
 
-|       序号        |                   摘要                   |
-| :---------------: | :--------------------------------------: |
-| [案例一](#案例一) | 更新数据源后，滚动列表至指定位置无效果。 |
+|       序号        |                     摘要                      |
+| :---------------: | :-------------------------------------------: |
+| [🧭 案例一](#案例一) |   更新数据源后，滚动列表至指定位置无效果。    |
+| [🧭 案例二](#案例二) | 更新数据源时发生异常：IllegalStateException。 |
 
 </div>
 
 ## 案例一
 ### 问题描述
-通过Adapter的"notify"系列方法更新数据后，立即使用 `scrollToPosition()` 等方法控制列表滚动至指定位置，但无效果。
+通过Adapter的"notify"系列方法更新数据后，如果我们立即调用 `scrollToPosition()` 等方法控制列表滚动至指定位置，可能并没有效果。
 
 ```java
 // 通知RecyclerView数据源改变
@@ -918,10 +919,10 @@ recyclerView.scrollToPosition(10);
 ```
 
 ### 问题分析
-View的 `requestLayout()` 方法是异步执行的，因此 `scrollToPosition()` 等方法执行时，列表数据可能仍未更新完成，此时对应的表项并不存在，无法滚动成功。
+`notifyDataSetChanged()` 等方法可能需要执行布局更新，但View的 `requestLayout()` 方法是异步执行的，因此 `scrollToPosition()` 等方法执行时，列表数据可能仍未更新完成，此时对应的表项并不存在，导致无法滚动成功。
 
 ### 解决方案
-我们可以将数据更新后续的任务添加到View的事件队列中，使更新动作全部执行完毕后再调用其他任务。
+我们可以将数据更新的后续任务提交至RecyclerView的事件队列中，使数据更新动作执行完毕后再执行其他任务。
 
 ```java
 // 通知RecyclerView数据源改变
@@ -946,3 +947,34 @@ recyclerView.post(() -> {
     });
 });
 ```
+
+## 案例二
+### 问题描述
+通过Adapter的"notify"系列方法更新数据时，发生异常：IllegalStateException，导致应用程序崩溃。
+
+### 问题分析
+IllegalStateException异常有两种具体情况：
+
+第一种情况的消息为"Cannot call this method while RecyclerView is computing a layout or scrolling"，含义为“不能在表项布局未完成或滚动过程中更新数据。
+
+正如相关章节 [🧭 案例一](#案例一) 中的描述，Adapter的"notify"系列方法调用后不会阻塞当前作用域，因此连续调用"notify"系列方法时，前一个操作可能还没有执行完毕，此时就会遇到上述异常。
+
+第二种情况的消息为"Cannot call this method in a scroll callback"，含义为“不能在列表滚动事件回调中更新数据”。
+
+如果我们在列表滚动事件回调方法中调用了Adapter的"notify"系列方法，就会遇到上述异常。
+
+```java
+recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+
+    @Override
+    public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+        // 更新数据源
+        updateData();
+        // 更新列表
+        adapter.notifyDataSetChanged();
+    }
+});
+```
+
+### 解决方案
+与相关章节 [🧭 案例一](#案例一) 中的解决方案类似，我们可以将多个任务提交至RecyclerView的事件队列中，以确保同步执行。
