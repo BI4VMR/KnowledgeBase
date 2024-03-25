@@ -273,7 +273,6 @@ MTU         : 1500
 
 ```text
 PC1> ping 192.168.1.2
-
 84 bytes from 192.168.1.2 icmp_seq=1 ttl=64 time=0.316 ms
 84 bytes from 192.168.1.2 icmp_seq=2 ttl=64 time=0.442 ms
 84 bytes from 192.168.1.2 icmp_seq=3 ttl=64 time=0.455 ms
@@ -407,7 +406,9 @@ Cisco(config-if)# exit
 # 命令列表
 ## Cisco设备
 ### 基本配置
-🔷 开启/关闭DHCP服务
+以下命令用于配置基本功能。
+
+🔷 开启或关闭DHCP服务
 
 ```text
 Cisco(config)# [no] service dhcp
@@ -438,7 +439,9 @@ Cisco(dhcp-config)# domain-name <域名>
 Cisco(dhcp-config)# option <选项代码> <数据类型> <数据值>
 ```
 
-### 可选配置
+### 参数调整
+以下命令用于调整可选参数。
+
 🔶 添加排除地址
 
 ```text
@@ -447,38 +450,84 @@ Cisco(config)# ip dhcp excluded-address <起始地址> [结束地址]
 
 仅需排除单个地址时将其填入起始地址即可，结束地址不用填写。
 
+### 静态绑定
+在Cisco设备中，我们需要为每个静态绑定关系创建专用的地址池。
+
+```text
+# 进入地址池配置菜单
+Cisco(config)# ip dhcp pool <静态地址池名称>
+
+# 设置地址
+Cisco(dhcp-config)# host <网络ID>/<前缀长度>
+
+# 绑定客户端标识符
+Cisco(dhcp-config)# client-identifier <客户端标识符>
+
+# 退出地址池配置菜单
+Cisco(dhcp-config)# exit
+```
+
+### DHCP Snooping
+以下命令用于配置DHCP Snooping。
+
+🔷 基本配置
+
+若要使用DHCP Snooping，我们首先需要在设备上将其全局启用，再对指定VLAN启用该功能。
+
+```text
+# 全局开启DHCP Snooping
+Cisco(config)# ip dhcp snooping
+
+# 为指定VLAN开启DHCP Snooping
+Cisco(config)# ip dhcp snooping vlan <VLAN ID>
+```
+
+🔷 配置信任端口
+
+若DHCP服务器在交换机上，则SVI接口默认为信任端口，无需手动配置；若DHCP服务器在路由器上，我们需要手动配置信任端口。
+
+```text
+# 进入端口配置菜单
+Cisco(config)# interface <端口ID>
+
+# 将该端口设为信任端口
+Cisco(config-if)# ip dhcp snooping trust
+```
+
+🔷 配置Discoery报文限制
+
+我们可以为端口配置Discoery报文限制，防止短时间内收到过多报文。
+
+```text
+# 进入端口配置菜单
+Cisco(config)# interface <端口ID>
+
+# 配置Discoery报文限制
+Cisco(config-if)# ip dhcp snooping limit rate <数量/个>
+```
+
 ### 调试工具
-🔷 查看地址池配置
+以下命令可以显示设备的状态信息，以便我们排除故障。
+
+🔶 查看地址池配置
 
 ```text
 Cisco# show ip dhcp pool
 ```
 
-🔷 查看客户端与地址的绑定关系
+🔶 查看客户端与地址的绑定关系
 
 ```text
 Cisco# show ip dhcp binding
 ```
 
-我们可以使用此命令查看当前已建立的绑定关系：
-
-```text
-S1# show ip dhcp binding
-Bindings from all pools not associated with VRF:
-IP address      Client-ID/              Lease expiration        Type       State      Interface
-                Hardware address/
-                User name
-192.168.1.4      0100.5079.6668.02       May 31 2023 02:43 PM    Automatic  Active     Vlan10
-192.168.1.222    0100.5079.6668.03       Infinite                Manual     Active     Unknown
-```
-
-🔷 查看DHCP报文统计信息
+🔶 查看DHCP报文统计信息
 
 ```text
 Cisco# show ip dhcp server statistics
 ```
 
-🔷 清除DHCP绑定关系
+🔶 清除DHCP绑定关系
 
 ```text
 Cisco# clear ip dhcp binding *
@@ -488,55 +537,9 @@ Cisco# clear ip dhcp binding *
 网络设备的三层接口可以作为DHCP客户端，从服务器获取地址。
 
 ```text
+# 进入端口配置菜单
+Cisco(config)# interface <端口ID>
+
+# 将IP地址设为通过DHCP获取
 Cisco(config-if)# ip address dhcp
 ```
-
-<!-- TODO
-
-### 配置静态绑定
-🔶 设置需要分配给客户端的IP地址
-
-```text
-Cisco(config)#ip dhcp pool [静态地址池名称]
-2.设置需要分配给客户端的IP地址。
-Cisco(dhcp-config)#host [网络ID] /[前缀长度]
-```
-
-## DHCP静态绑定配置方法
-1.为每个静态映射关系创建单独的地址池。
-Cisco(config)#ip dhcp pool [静态地址池名称]
-2.设置需要分配给客户端的IP地址。
-Cisco(dhcp-config)#host [网络ID] /[前缀长度]
-3.绑定客户端标识符或MAC地址。
-Cisco(dhcp-config)#client-identifier [客户端标识符]
-Cisco(dhcp-config)#hardware-address [MAC地址]
-Cisco设备优先识别客户端标识符。
-
-
-
-
-1.全局开启DHCP Snooping功能。
-Cisco(config)#ip dhcp snooping
-2.配置要开启DHCP Snooping功能的VLAN。
-Cisco(config)#ip dhcp snooping vlan [VLAN列表]
-3.若DHCP服务器在VLAN内，需要将相应端口设为信任端口，使用中继则无需配置。
-Cisco(config-if)#ip dhcp snooping trust
-4.配置接口每分钟最多接收Discoery报文的数量。（可选）
-Cisco(config-if)#ip dhcp snooping limit rate [数量/个] -->
-
-
-
-
-<!-- TODO
-1.全局开启DHCP Snooping功能。
-Cisco(config)#ip dhcp snooping
-2.配置要开启DHCP Snooping功能的VLAN。
-Cisco(config)#ip dhcp snooping vlan [VLAN列表]
-3.若DHCP服务器在VLAN内，需要将相应端口设为信任端口，使用中继则无需配置。
-Cisco(config-if)#ip dhcp snooping trust
-4.配置接口每分钟最多接收Discoery报文的数量。（可选）
-Cisco(config-if)#ip dhcp snooping limit rate [数量/个] -->
-
-
-<!-- 
-
