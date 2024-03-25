@@ -161,6 +161,23 @@ android {
 }
 ```
 
+上述内容也可以使用Kotlin语言进行书写：
+
+"build.gradle.kts":
+
+```kotlin
+android {
+    // 打包配置
+    packagingOptions {
+        // 排除ARM64架构的OpenCV库
+        jniLibs.excludes.add("lib/arm64-v8a/libopencv_java3.so")
+
+        // 排除ARM64架构所有库
+        jniLibs.excludes.add("lib/arm64-v8a/*.so")
+    }
+}
+```
+
 `packagingOptions {}` 小节也可以配合Build Types或Product Flavors使用，以便适应更多的场景。
 
 ## 库文件的查找顺序
@@ -218,7 +235,7 @@ Module_NDK
 └────────── build.gradle
 ```
 
-`.cxx` 目录和 `build` 目录类似，用于存放编译时产生的临时文件，我们可以在版本控制工具中忽略该目录。
+`.cxx` 目录和 `build` 目录类似，用于存放C++编译过程中产生的临时文件，我们可以在版本控制工具中忽略该目录。
 
 `cpp` 目录用于存放C++源代码和CMake配置文件，我们首先创建一个 `jni.cpp` 文件实现JNIClass中的本地方法。
 
@@ -320,6 +337,24 @@ android {
 }
 ```
 
+上述内容也可以使用Kotlin语言进行书写：
+
+"build.gradle.kts":
+
+```kotlin
+android {
+    // C语言编译配置
+    externalNativeBuild {
+        cmake {
+            // 指定CMake配置文件
+            path = File("src/main/cpp/CMakeLists.txt")
+            // 指定CMake版本
+            version = "3.22.1"
+        }
+    }
+}
+```
+
 此时我们执行一次Gradle Sync任务，当前模块的NDK就配置完成了。当我们编译该模块时，Clang将会编译C++源代码生成库文件，然后由Gradle打包至APK或AAR中。
 
 # Gradle配置
@@ -331,6 +366,16 @@ android {
 "build.gradle":
 
 ```groovy
+android {
+    ndkVersion = "24.0.8215888"
+}
+```
+
+上述内容也可以使用Kotlin语言进行书写：
+
+"build.gradle.kts":
+
+```kotlin
 android {
     ndkVersion = "24.0.8215888"
 }
@@ -361,6 +406,27 @@ android {
 }
 ```
 
+上述内容也可以使用Kotlin语言进行书写：
+
+"build.gradle.kts":
+
+```kotlin
+android {
+    defaultConfig {
+        // NDK配置
+        ndk {
+            /*
+             * 声明需要使用的ABI名称
+             *
+             * 未在此处出现的ABI都将被禁用。
+             */
+            abiFilters.add("arm64-v8a")
+            abiFilters.add("x86_64")
+        }
+    }
+}
+```
+
 `ndk {}` 小节也可以配合Build Types或Product Flavors使用，以便适应更多的场景。
 
 ## 修改第三方依赖库目录
@@ -380,7 +446,53 @@ android {
 }
 ```
 
+上述内容也可以使用Kotlin语言进行书写：
+
+"build.gradle.kts":
+
+```kotlin
+android {
+    sourceSets {
+        // 此处以"main"为例，也可以在其他SourceSet中使用。
+        getByName("main") {
+            // 添加第三方依赖库目录"<SourceSet>/sdks/"
+            jniLibs.srcDir("sdks")
+        }
+    }
+}
+```
+
 该属性的值为数组，允许添加多个目录；上述配置添加完成之后，我们还应当同步修改CMake中的相关路径。
+
+## 自动清理C语言构建缓存
+默认情况下，Gradle的Clean任务只会清理Java和Kotlin的构建缓存文件，我们可以在模块的 `build.gradle` 文件中添加以下配置，在执行Clean任务时同步清理C/C++构建缓存文件。
+
+"build.gradle":
+
+```groovy
+gradle.projectsEvaluated {
+    tasks.withType(Delete.class).tap {
+        configureEach {
+            // 清除C++构建缓存文件
+            def cppCacheDir = getProjectDir().absolutePath + File.separator + ".cxx"
+            delete(cppCacheDir)
+        }
+    }
+}
+```
+
+上述内容也可以使用Kotlin语言进行书写：
+
+"build.gradle.kts":
+
+```kotlin
+gradle.projectsEvaluated {
+    tasks.withType(Delete::class.java) {
+        // 清除C++构建缓存文件
+        delete("${projectDir.absolutePath}${File.separator}.cxx")
+    }
+}
+```
 
 # 疑难解答
 ## 索引
