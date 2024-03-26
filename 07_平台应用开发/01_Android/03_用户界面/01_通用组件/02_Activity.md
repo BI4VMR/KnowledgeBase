@@ -1,14 +1,14 @@
-# 概述
+# 简介
 Activity是Android应用程序的关键组件之一，用于承载各种控件以组成用户界面。Activity通常填满整个屏幕可视区域，但也可以作为窗口悬浮在其它Activity之上。
 
-Activity作为一种系统组件，不仅能够被用户从Launcher图标启动，还可以通过Name、IntentFilter等方式被其它程序调用，例如我们可以从即时通信软件跳转至系统电话簿或电子邮件程序。如果一个应用程序不包含“启动Activity”，系统不会为其生成启动器图标，此时它仅能够被外部程序调用，不能由用户主动启动。
+Activity作为一种系统组件，不仅能够被用户从Launcher图标启动，还可以通过Name、IntentFilter等方式被其它程序调用，例如我们可以从即时通信软件跳转至系统电话簿或电子邮件程序。如果一个应用程序不包含“LauncherActivity”，系统不会为其生成启动器图标，此时它仅能够被外部程序调用，不能由用户主动启动。
 
 # 基本应用
-此处我们以Android Studio项目模板代码为例，分析Activity代码及其所需的配置项。
+此处我们以Android Studio中新工程的模板代码为例，分析Activity的逻辑代码及配置项。
 
-开发者自行创建的Activity类需要继承系统提供的Activity类。MainActivity继承自AppCompatActivity，此类属于"androidx.appcompat.app"包，"androidx"系列库是AOSP官方开发的扩展库，可以独立于SDK单独更新，获取较新的功能特性，因此官方更加推荐开发者使用这些库。
+开发者自行创建的Activity类需要继承自SDK提供的Activity类，MainActivity继承自AppCompatActivity，此类属于 `androidx.appcompat.app` 包，"androidx"系列库是AOSP官方开发的扩展库，可以独立于SDK单独更新，获取较新的功能特性，因此官方更加推荐开发者使用这些库。
 
-MainActivity.java:
+"MainActivity.java":
 
 ```java
 public class MainActivity extends AppCompatActivity {
