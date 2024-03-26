@@ -186,6 +186,23 @@ Log.w(TAG, "Warn Log.");
 Log.e(TAG, "Error Log.");
 ```
 
+上述内容也可以使用Kotlin语言进行书写：
+
+"TestUIBase.kt":
+
+```kotlin
+// 输出Verbose级别日志
+Log.v(TAG, "Verbose Log.")
+// 输出Debug级别日志
+Log.d(TAG, "Debug Log.")
+// 输出Info级别日志
+Log.i(TAG, "Info Log.")
+// 输出Warn级别日志
+Log.w(TAG, "Warn Log.")
+// 输出Error级别日志
+Log.e(TAG, "Error Log.")
+```
+
 此时运行示例程序，并查看控制台输出信息：
 
 ```text
@@ -207,39 +224,6 @@ ADB$ logcat -c; logcat | grep -iE "System.out|System.err"
 22:59:33.325 19296 19296 W System.err: 错误信息输出测试。
 ```
 
-# 输出超长的行
-Logcat的每条消息长度限制是4KB左右，超过长度限制的日志将被截断并丢弃。
-
-经过测试，当一条日志的消息均为ASCII字符时，控制台最多能显示4047个字符；而消息均为中文时，最多能显示1350个字符。
-
-我们可以自定义日志打印工具，将超长的文本分为多条日志输出，避免内容被截断。
-
-"TestUIBase.java":
-
-```text
-public static void MyLog(String tag, String msg){
-    // 每行最大长度
-    final int lineLength = 1000;
-
-    // 计算切分后的行数（不含最后一行）
-    int lines = msg.length() / lineLength;
-    // 循环打印每一行内容
-    for (int i = 0; i <= lines; i++) {
-        if (i != lines) {
-            /* 打印完整的行 */
-            String line = msg.substring(i * lineLength, (i + 1) * lineLength);
-            Log.i(tag, line);
-        } else {
-            /* 打印最后一行 */
-            String line = msg.substring(i * lineLength);
-            if (!line.isEmpty()) {
-                Log.i(tag, line);
-            }
-        }
-    }
-}
-```
-
 # Chatty机制
 为了减轻I/O负载，从Android O开始Logcat新增了Chatty机制。
 
@@ -256,10 +240,92 @@ for (int i = 0; i < 100; i++) {
 }
 ```
 
+上述内容也可以使用Kotlin语言进行书写：
+
+"TestUIBase.kt":
+
+```kotlin
+for (i in 0 until 100) {
+    Log.i(TAG, "Chatty机制测试内容。")
+}
+```
+
 此时运行示例程序，并查看控制台输出信息：
 
 ```text
 15:50:25.999 17621 17621 I TestApp-TestUIBase: Chatty机制测试内容。
 15:50:26.001 17621 17621 I chatty  : uid=10182(net.bi4vmr.study.tool.common.logcat) identical 98 lines
 15:50:26.001 17621 17621 I TestApp-TestUIBase: Chatty机制测试内容。
+```
+
+# 输出超长的行
+Logcat的每条消息长度限制是4KB左右，超过长度限制的日志将被截断并丢弃。
+
+经过测试，当一条日志的消息均为ASCII字符时，控制台最多能显示4047个字符；而消息均为中文时，最多能显示1350个字符。
+
+我们可以自定义日志打印工具，将超长的文本分为多条日志输出，避免内容被截断。
+
+"TestUIBase.java":
+
+```text
+public static void myLog(String tag, String input){
+    // 每行最大长度
+    final int lineLength = 1000;
+
+    // 如果无需换行，则原样打印。
+    if (input.length() <= lineLength) {
+        Log.i(tag, input);
+        return;
+    }
+
+    // 计算切分后的行数（不含最后一行）
+    int lines = input.length() / lineLength;
+    // 循环打印每一行内容
+    for (int i = 0; i <= lines; i++) {
+        if (i != lines) {
+            /* 打印完整的行 */
+            String line = input.substring(i * lineLength, (i + 1) * lineLength);
+            Log.i(tag, "Line:[" + (i + 1) + "] Text:[" + line + "]");
+        } else {
+            /* 打印最后一行 */
+            String line = input.substring(i * lineLength);
+            if (!line.isEmpty()) {
+                Log.i(tag, "Line:[" + (i + 1) + "] Text:[" + line + "]");
+            }
+        }
+    }
+}
+```
+
+上述内容也可以使用Kotlin语言进行书写：
+
+"TestUIBase.kt":
+
+```kotlin
+fun myLog(tag: String, input: String){
+    // 每行最大长度
+    val lineLength = 1000
+
+    if (input.length <= lineLength) {
+        Log.i(tag, input)
+        return
+    }
+
+    // 计算切分后的行数（不含最后一行）
+    val lines: Int = input.length / lineLength
+    // 循环打印每一行内容
+    for (i in 0..lines) {
+        if (i != lines) {
+            /* 打印完整的行 */
+            val line: String = input.substring(i * lineLength, (i + 1) * lineLength)
+            Log.i(tag, "Line:[${i + 1}] Text:[$line]")
+        } else {
+            /* 打印最后一行 */
+            val line: String = input.substring(i * lineLength)
+            if (line.isNotEmpty()) {
+                Log.i(tag, "Line:[${i + 1}] Text:[$line]")
+            }
+        }
+    }
+}
 ```

@@ -18,12 +18,22 @@ ViewBinding功能默认是关闭的，Gradle不会生成相关代码，我们首
 
 ```groovy
 android {
-
-    /* 此处省略部分无关代码... */
-
     // 开启ViewBinding
     viewBinding {
         enabled = true
+    }
+}
+```
+
+上述内容也可以使用Kotlin语言进行书写：
+
+"build.gradle.kts":
+
+```kotlin
+android {
+    // 开启ViewBinding
+    viewBinding {
+        enable = true
     }
 }
 ```

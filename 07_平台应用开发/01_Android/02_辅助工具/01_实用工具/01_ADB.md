@@ -300,7 +300,7 @@ try {
 
 上述内容也可以使用Kotlin语言进行书写：
 
-"TestUIBase.kotlin":
+"TestUIBase.kt":
 
 ```kotlin
 // 命令语句
@@ -337,7 +337,7 @@ if (resultCode == 0) {
 
 上述内容也可以使用Kotlin语言进行书写：
 
-"TestUIBase.kotlin":
+"TestUIBase.kt":
 
 ```kotlin
 if (resultCode == 0) {
