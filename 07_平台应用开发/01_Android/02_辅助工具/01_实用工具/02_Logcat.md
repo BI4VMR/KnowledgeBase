@@ -110,6 +110,13 @@ ADB$ logcat | grep -iE "Test\-|myapp"
 
 在ADB Shell中使用正则表达式时，横杠("-")等特殊符号之前需要添加转义字符。
 
+在ADB Shell中使用 `grep` 命令时，默认不会开启关键词高亮，我们可以手动添加 `--color` 选项以便查看输出结果。
+
+```text
+# 检索包含"Test-"或"myapp"的日志
+ADB$ logcat | grep --color -iE "Test\-|myapp"
+```
+
 ### 日志缓冲区
 Logcat会在内存中暂存部分历史日志，有时系统日志输出频率过快，我们便无法筛选出有效信息，此时需要调整缓冲区大小，使内存中暂存更多的日志信息。
 
