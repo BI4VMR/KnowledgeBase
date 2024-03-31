@@ -1,31 +1,49 @@
 # 简介
-TextView是最简单的控件，它是一种文本框，用于向用户展示文本类信息。
+TextView是最常见的控件，它是一种文本框，用于向用户展示文本类信息。
 
 # 基本应用
-TextView在XML文件中的典型配置如下文所示：
+TextView在布局文件中的典型配置如下文代码块所示：
+
+"testui_base.xml":
 
 ```xml
 <TextView
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:text="Hello World!" />
+    android:text="这是一个文本框。" />
 ```
 
-显示效果：
+此时运行示例程序，并查看界面外观：
 
 <div align="center">
 
-![TextView示例](./Assets-TextView/基本应用-TextView示例.jpg)
+![TextView示例](./Assets_TextView/基本应用_默认样式.jpg)
 
 </div>
 
 # 外观定制
 ## 基本样式
-🔷 `android:text=" <文本内容> | <字符串资源ID> "`
+### 文本内容
+以下属性与方法用于获取与设置文本框中的文字内容。
 
-设置文本框的初始内容。
+- XML属性 : `android:text="<文本内容 | 字符串资源ID>"`
+- Java方法 : `void setText(CharSequence text)`
+- Java方法 : `CharSequence getText()`
 
-此处可以直接填入文本内容，但系统并不推荐这样做，将会产生硬编码警告。我们应该将内容写入到 `res/values/strings.xml` 等文件中，然后在此处引用资源ID，系统将根据语言环境自动选择合适的文本，以实现多语言适配。
+设置文本时，我们可以直接填入文本内容，但系统并不推荐这样做，将会产生硬编码(HardcodedText)警告。我们应当将内容写入到 `res/values/strings.xml` 等文件中，然后在此处引用其资源ID，系统将根据语言环境自动选择合适的文本，以实现多语言适配。
+<!-- TODO -->
+### 文本字号
+以下属性与方法用于获取与设置文本框中的文本字号。
+
+- XML属性 : `android:textSize="<尺寸>"`
+- Java方法 : `void setTextSize(float size)`
+- Java方法 : `void setTextSize(int unit, float size)`
+- Java方法 : `float getTextSize()`
+- Java方法 : `int getTextSizeUnit()`
+
+
+### 文本颜色
+
 
 🔷 `android:textSize="<字号>"`
 
@@ -107,9 +125,11 @@ TextView在XML文件中的典型配置如下文所示：
 设置文本显示颜色。
 
 # 滚动显示
-当文本框中的内容过多时，屏幕宽度不足以容纳全部的内容，我们可以将文本框设为滚动模式，以便于用户浏览完整的内容。
+当文本框只有单行时，屏幕宽度不足以容纳全部的内容，我们可以将文本框设为滚动模式，以便于用户浏览完整的内容。
 
-首先我们在TextView的XML配置中添加"ellipsize"和"singleLine"属性：
+首先我们在TextView的XML配置中添加 `android:ellipsize="marquee"` 和 `android:singleLine="true"` 属性：
+
+"testui_scroll_display.xml":
 
 ```xml
 <TextView
@@ -120,19 +140,30 @@ TextView在XML文件中的典型配置如下文所示：
     android:singleLine="true" />
 ```
 
-然后在逻辑代码中调用 `setSelected()` 方法，设置TextView的选中状态为"true"，滚动效果即可生效。
+然后在逻辑代码中调用TextView的 `setSelected()` 方法，将其选中状态置为"true"，滚动效果即可生效。
+
+"TestUIScrollDisplay.java":
 
 ```java
-// 绑定控件
-TextView tvMarquee = findViewById(R.id.tvMarquee);
-// 设置选中状态为"true"
+// 设置选中状态为"true"，使滚动生效。
 tvMarquee.setSelected(true);
 ```
 
+上述内容也可以使用Kotlin语言进行书写：
+
+"TestUIScrollDisplay.kt":
+
+```kotlin
+// 设置选中状态为"true"，使滚动生效。
+tvMarquee.isSelected = true
+```
+
+此时运行示例程序，并查看界面外观：
+
 <div align="center">
 
-![滚动显示效果](./Assets-TextView/滚动显示-滚动显示效果.gif)
+![效果示例](./Assets_TextView/滚动显示_效果示例.gif)
 
 </div>
 
-默认情况下滚动效果将在几个周期后停止，如果我们希望滚动行为无限循环，可以在XML中添加属性： `android:marqueeRepeatLimit="marquee_forever"` ，或者在逻辑代码中设置TextView的属性： `setMarqueeRepeatLimit(-1)` 。
+默认情况下滚动效果将在几个周期后停止，如果我们希望滚动效果无限循环，可以在XML配置中添加属性 `android:marqueeRepeatLimit="marquee_forever"` ，或者在逻辑代码中调用TextView的 `setMarqueeRepeatLimit(-1)` 方法。
