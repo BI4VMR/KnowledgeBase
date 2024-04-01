@@ -24,32 +24,31 @@ TextView在布局文件中的典型配置如下文代码块所示：
 # 外观定制
 ## 基本样式
 ### 文本内容
-以下属性与方法用于获取与设置文本框中的文字内容。
+以下属性与方法用于获取与设置TextView中的文字内容：
 
-- XML属性 : `android:text="<文本内容 | 字符串资源ID>"`
-- Java方法 : `void setText(CharSequence text)`
-- Java方法 : `CharSequence getText()`
+- XML - 设置文本内容 : `android:text="<文本内容 | 字符串资源ID>"`
+- Java - 设置文本内容 : `void setText(CharSequence text)`
+- Java - 获取文本内容 : `CharSequence getText()`
 
 设置文本时，我们可以直接填入文本内容，但系统并不推荐这样做，将会产生硬编码(HardcodedText)警告。我们应当将内容写入到 `res/values/strings.xml` 等文件中，然后在此处引用其资源ID，系统将根据语言环境自动选择合适的文本，以实现多语言适配。
 <!-- TODO -->
 ### 文本字号
-以下属性与方法用于获取与设置文本框中的文本字号。
+以下属性与方法用于获取与设置TextView中的文本字号：
 
-- XML属性 : `android:textSize="<尺寸>"`
-- Java方法 : `void setTextSize(float size)`
-- Java方法 : `void setTextSize(int unit, float size)`
-- Java方法 : `float getTextSize()`
-- Java方法 : `int getTextSizeUnit()`
-
+- XML - 设置文本尺寸 : `android:textSize="<尺寸>"`
+- Java - 设置文本尺寸（单位为"sp"） : `void setTextSize(float size)`
+- Java - 设置文本尺寸（指定单位） : `void setTextSize(int unit, float size)`
+- Java - 获取文本尺寸 : `float getTextSize()`
+- Java - 获取文本尺寸单位 : `int getTextSizeUnit()`
 
 ### 文本颜色
+以下属性与方法用于获取与设置TextView中的文本字号：
+
+- XML - 设置文本颜色 : `android:textColor="<颜色>"`
+- Java - 设置文本颜色 : `void setTextColor(int color)`
 
 
-🔷 `android:textSize="<字号>"`
 
-该属性用于控制文本的字号，推荐使用单位"sp"。
-
-🔷 `android:textColor="<颜色>"`
 
 该属性用于控制文本的颜色，可以引用 `res/values/colors.xml` 中定义的值，也可以使用十六进制RGB格式表示，例如"#XXX"中的X分别表示8位精度的RGB颜色，"#XYXYXY"中的每组XY分别表示16位精度的RGB颜色。
 
@@ -167,3 +166,17 @@ tvMarquee.isSelected = true
 </div>
 
 默认情况下滚动效果将在几个周期后停止，如果我们希望滚动效果无限循环，可以在XML配置中添加属性 `android:marqueeRepeatLimit="marquee_forever"` ，或者在逻辑代码中调用TextView的 `setMarqueeRepeatLimit(-1)` 方法。
+
+
+<!-- TODO
+# SpannableString
+## 简介
+相信很多朋友在日常开发中都遇到过这样的问题：有一段文本，需要单独给它各部分文字设置不同的样式，有的文字设置为粗体，有的文字设置特殊的颜色，有的地方要加入表情，遇到数学公式还可能要设置上下标，这时候该怎么办呢？
+有的人可能会说：简单，不同样式的文字就用不同的TextView，这样就可以完美解决了。先不说这个方法行不行得通，事实上，若采用这种方式，当碰上一段文字需要设置非常多的样式时，光是这一堆TextView就够浪费资源的了，布局还复杂，也不利于维护，因此这种方式一般不会被采用。
+那么有其他办法吗？有，并且还很简单，今天介绍的这个SpannableString就是用来解决这个问题的。
+
+
+
+
+SpannableString，是CharSequence的一种，原本的CharSequence只是一串字符序列，没有任何样式，而SpannableString可以在字符序列基础上对指定的字符进行润饰，在开发中，TextView可以通过setText(CharSequence)传入SpannableString作为参数，来达到显示不同样式文字的效果。
+-->
