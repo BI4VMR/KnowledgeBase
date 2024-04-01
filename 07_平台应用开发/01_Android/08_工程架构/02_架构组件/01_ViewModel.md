@@ -19,14 +19,13 @@ public class MyViewModel extends ViewModel {
 
     // 实例ID
     public final String id;
-
     // 共享数据
     private int num = 0;
 
     public MyViewModel() {
         // 生成随机ID，标识当前实例。
         id = genRandomID();
-        Log.i(TAG, "VM created. ID:" + id);
+        Log.i(TAG, "VM created. ID:[" + id + "]");
     }
 
     // 读取共享数据
@@ -41,6 +40,42 @@ public class MyViewModel extends ViewModel {
 }
 ```
 
+上述内容也可以使用Kotlin语言进行书写：
+
+"MyViewModel.kt":
+
+```kotlin
+class MyViewModel : ViewModel() {
+
+    /* 此处省略部分变量与方法... */
+
+    companion object {
+        val TAG: String = "TestApp-${MyViewModel::class.java.simpleName}"
+    }
+
+    // 实例ID
+    var id: String
+    // 共享数据
+    private var num: Int = 0
+
+    init {
+        // 生成随机ID，标识当前实例。
+        id = genRandomID()
+        Log.i(TAG, "VM created. ID:[$id]")
+    }
+
+    // 读取共享数据
+    fun getNum(): Int {
+        return num
+    }
+
+    // 写入共享数据
+    fun setNum(num: Int) {
+        this.num = num
+    }
+}
+```
+
 我们在ViewModel中声明了一个变量 `num` ，并添加对应的"get"与"set"方法，以便测试数据共享功能。
 
 随后我们在测试Activity的 `onCreate()` 方法中获取该ViewModel实例，并调用 `setNum()` 方法更新变量 `num` 的值。
@@ -50,7 +85,7 @@ public class MyViewModel extends ViewModel {
 ```java
 // 获取当前Activity的MyViewModel实例
 MyViewModel vm = new ViewModelProvider(this).get(MyViewModel.class);
-Log.i(TAG, "Get VM in Activity. ID: " + vm.id);
+Log.i(TAG, "Get VM in Activity. ID:[" + vm.id + "]");
 
 // 向VM实例写入数据
 vm.setNum(1000);
@@ -58,12 +93,31 @@ vm.setNum(1000);
 // 初始化Fragment
 getSupportFragmentManager()
         .beginTransaction()
-        .add(R.id.container, new TestFragment())
+        .add(R.id.container, TestFragment.newInstance())
         .addToBackStack(null)
         .commit();
 ```
 
-在上述示例代码中，我们通过ViewModelProvider的 `get()` 方法获取ViewModel实例。ViewModelProvider的构造方法参数是ViewModelStoreOwner接口实现类，这些类拥有管理ViewModel实例的能力； `get()` 方法的参数是我们指定的ViewModel类。此处我们获取了一个MyViewModel实例，存储在DemoBaseUI(Activity)中。
+上述内容也可以使用Kotlin语言进行书写：
+
+"TestUIBase.kt":
+
+```kotlin
+// 获取当前Activity的MyViewModel实例
+val vm: MyViewModel = ViewModelProvider(this)[MyViewModel::class.java]
+Log.i(TAG, "Get VM in Activity. ID:[${vm.id}]")
+
+// 向VM实例写入数据
+vm.setNum(1000)
+
+// 初始化Fragment
+supportFragmentManager.beginTransaction()
+    .add(R.id.container, TestFragment.newInstance())
+    .addToBackStack(null)
+    .commit()
+```
+
+在上述示例代码中，我们通过ViewModelProvider的 `get()` 方法获取ViewModel实例。ViewModelProvider的构造方法参数是ViewModelStoreOwner接口实现类，这些类拥有管理ViewModel实例的能力； `get()` 方法的参数是我们指定的ViewModel类。此处我们获取了一个MyViewModel实例，存储在TestUIBase(Activity)中。
 
 该Activity中包含一个Fragment，我们在Fragment的 `onCreate()` 方法中尝试获取Activity持有的MyViewModel实例。
 
@@ -79,19 +133,33 @@ int data = vm.getNum();
 Log.i(TAG, "Get data in Activity's VM: " + data);
 ```
 
+上述内容也可以使用Kotlin语言进行书写：
+
+"TestFragment.kt":
+
+```kotlin
+// 获取宿主Activity的MyViewModel实例
+val vm: MyViewModel = ViewModelProvider(requireActivity())[MyViewModel::class.java]
+Log.i(TAG, "Get VM in parent Activity. ID:[${vm.id}]")
+
+// 从VM实例读取数据
+val data: Int = vm.getNum()
+Log.i(TAG, "Get data in Activity's VM. Value:[$data]")
+```
+
 此时运行示例程序，并查看控制台输出信息：
 
 ```text
-12-20 23:26:55.696  4192  4192 I TestApp-MyViewModel: VM created. ID: 91050B
-12-20 23:26:55.696  4192  4192 I TestApp-TestUIBase: Get VM in Activity. ID: 91050B
-12-20 23:26:55.696  4192  4192 I TestApp-TestUIBase: Set data to Activity's VM. Value: 1000
-12-20 23:26:55.708  4192  4192 I TestApp-TestFragment: Get VM in parent Activity. ID: 91050B
-12-20 23:26:55.708  4192  4192 I TestApp-TestFragment: Get data in Activity's VM. Value: 1000
+23:41:10.222 12409 12409 I MyViewModel: VM created. ID:[551A4E]
+23:41:10.222 12409 12409 I TestUIBase: Get VM in Activity. ID:[551A4E]
+23:41:10.222 12409 12409 I TestUIBase: Set data to Activity's VM. Value:[1000]
+23:41:10.224 12409 12409 I TestFragment: Get VM in parent Activity. ID:[551A4E]
+23:41:10.224 12409 12409 I TestFragment: Get data in Activity's VM. Value:[1000]
 ```
 
 根据上述输出内容可知：
 
-Activity与其中的Fragment都获取到了同一个MyViewModel实例（ID为："91050B"），并且Activity设置变量 `num` 的值后，Fragment能够读取该值，实现了数据的共享。
+Activity与其中的Fragment都获取到了同一个MyViewModel实例（ID为"551A4E"），并且Activity设置变量 `num` 的值后，Fragment能够读取该值，实现了数据的共享。
 
 # ViewModel的存储与复用
 我们通常使用 `new ViewModelProvider(ViewModelStoreOwner owner).get(Class<T> vmClass)` 这种方式获取ViewModel实例，其中ViewModelStoreOwner是一个接口，实现它的类具有管理ViewModel实例的能力，SDK中默认的ViewModel容器有Activity和Fragment，我们也可以根据需要自行实现新的容器。
