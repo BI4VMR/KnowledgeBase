@@ -168,15 +168,96 @@ tvMarquee.isSelected = true
 默认情况下滚动效果将在几个周期后停止，如果我们希望滚动效果无限循环，可以在XML配置中添加属性 `android:marqueeRepeatLimit="marquee_forever"` ，或者在逻辑代码中调用TextView的 `setMarqueeRepeatLimit(-1)` 方法。
 
 
-<!-- TODO
+
 # SpannableString
 ## 简介
-相信很多朋友在日常开发中都遇到过这样的问题：有一段文本，需要单独给它各部分文字设置不同的样式，有的文字设置为粗体，有的文字设置特殊的颜色，有的地方要加入表情，遇到数学公式还可能要设置上下标，这时候该怎么办呢？
-有的人可能会说：简单，不同样式的文字就用不同的TextView，这样就可以完美解决了。先不说这个方法行不行得通，事实上，若采用这种方式，当碰上一段文字需要设置非常多的样式时，光是这一堆TextView就够浪费资源的了，布局还复杂，也不利于维护，因此这种方式一般不会被采用。
-那么有其他办法吗？有，并且还很简单，今天介绍的这个SpannableString就是用来解决这个问题的。
+有时我们需要为整段文本中的部分字符设置样式，此时可以通过多个TextView实现，但是这种方式不够灵活，无法适应动态内容的文本，我们推荐使用SpannableString实现该功能。
+
+SpannableString是CharSequence接口的实现类，我们不仅可以在TextView中使用它，也可以在EditText等控件中使用。
+
+## 基本应用
+我们首先需要使用SpannableString类的构造方法 `SpannableString(String text)` 创建实例，参数 `text` 为初始文本内容；然后调用 `setSpan()` 方法为文本设置样式。
 
 
 
 
-SpannableString，是CharSequence的一种，原本的CharSequence只是一串字符序列，没有任何样式，而SpannableString可以在字符序列基础上对指定的字符进行润饰，在开发中，TextView可以通过setText(CharSequence)传入SpannableString作为参数，来达到显示不同样式文字的效果。
--->
+
+
+
+
+
+🔶 `void setSpan(Object what, int start, int end, int flags)`
+
+功能简述：
+
+为文本设置样式。
+
+参数列表：
+
+🔺 `what`
+
+样式类型，内置样式名称通常以"Span"结尾。
+         *              每个Span实例只会被SpannableString应用一次，如果重复应用Span，则会导致其先前设置的样式
+         *              被清除；如果我们不希望清空Span已经设置的样式，应当创建一个新的Span实例再应用到Spannable
+         *              String中。
+
+🔺 `start`
+
+起始位置索引，包括该位置。
+
+🔺 `end`
+
+终止位置索引，不包括该位置。
+
+🔺 `flags`
+
+         * @param flags 标志位
+         *              以下标志位用于控制在Span区域前后插入文本时，是否需要也应用该样式。
+         *              Spanned.SPAN_INCLUSIVE_INCLUSIVE - 包括起始与结束位置。
+         *              Spanned.SPAN_INCLUSIVE_EXCLUSIVE - 包括起始位置，不包括结束位置。
+         *              Spanned.SPAN_EXCLUSIVE_INCLUSIVE - 不包括起始位置，包括结束位置。
+         *              Spanned.SPAN_EXCLUSIVE_EXCLUSIVE - 不包括起始与结束位置。
+
+异常情况：
+
+🔺 `RuntimeException`
+
+包括索引越界等异常情况。
+
+
+
+
+
+
+
+
+
+
+"TestUISpan.java":
+
+```text
+// 示例文本
+String text = "我能吞下玻璃而不伤身体";
+// 创建SpannableString实例，并设置初始内容。
+SpannableString ss1 = new SpannableString(text);
+
+// 设置样式
+ss1.setSpan(new BackgroundColorSpan(Color.RED), 2, 6, 0);
+ss1.setSpan(new BackgroundColorSpan(Color.GREEN), 8, 10, 0);
+
+// 将SpannableString设置到TextView中
+textview.setText(ss1);
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
