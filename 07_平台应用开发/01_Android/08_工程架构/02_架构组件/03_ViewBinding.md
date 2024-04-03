@@ -1,5 +1,5 @@
 # 简介
-ViewBinding是Jetpack提供的一种界面开发辅助工具，能够帮助开发者访问布局XML文件中的控件。ViewBinding可以取代 `findViewById()` 方法，有效地避免了因ID填写错误导致空指针异常的问题。
+ViewBinding是Jetpack提供的一种界面开发辅助工具，能够帮助开发者访问布局XML文件中的控件。ViewBinding可以取代 `findViewById()` 方法，有效地避免了因ID填写错误导致空指针异常的问题，并且减少了重复代码。
 
 ViewBinding的工作原理是：通过Gradle生成与布局文件对应的ViewBinding类，这些类中包含布局控件的引用；我们可以直接使用 `<ViewBinding实例>.<控件名称>` 的方式访问控件，不必使用 `findViewById()` 方法获取控件，也不必通过全局变量保存控件的引用。
 

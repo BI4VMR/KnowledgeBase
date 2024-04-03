@@ -161,18 +161,18 @@ Log.i(TAG, "Get data in Activity's VM. Value:[$data]")
 
 Activity与其中的Fragment都获取到了同一个MyViewModel实例（ID为"551A4E"），并且Activity设置变量 `num` 的值后，Fragment能够读取该值，实现了数据的共享。
 
-# ViewModel的存储与复用
-我们通常使用 `new ViewModelProvider(ViewModelStoreOwner owner).get(Class<T> vmClass)` 这种方式获取ViewModel实例，其中ViewModelStoreOwner是一个接口，实现它的类具有管理ViewModel实例的能力，SDK中默认的ViewModel容器有Activity和Fragment，我们也可以根据需要自行实现新的容器。
+# VM实例的存储与复用
+我们通常使用 `new ViewModelProvider(ViewModelStoreOwner owner).get(Class<T> vmClass)` 这种方式获取ViewModel实例，其中ViewModelStoreOwner是一个接口，它的实现类具有管理ViewModel实例的能力，SDK中默认的ViewModel容器有Activity和Fragment，我们也可以根据需要自行实现新的容器。
 
 ViewModel实例在容器中以键值对的形式存储，键名为该ViewModel对应的Class。当我们调用 `get()` 方法获取ViewModel实例时，如果当前容器中没有该ViewModel的实例，就会创建一个新的实例并返回；如果当前容器中已有该ViewModel的实例，则会直接返回现有实例。
 
 <div align="center">
 
-![ViewModel的存储与复用](./Assets_ViewModel/ViewModel的存储与复用_ViewModel的存储与复用.jpg)
+![VM实例的存储与复用](./Assets_ViewModel/VM实例的存储与复用_VM实例的存储与复用.jpg)
 
 </div>
 
-正如前文章节 [🧭 基本应用](#基本应用) 所示，我们在Fragment中可以通过 `requireActivity()` 得到宿主Activity实例，然后将其作为ViewModelStoreOwner获取宿主Activity中的MyViewModel实例，便可方便地实现数据共享与事件传递。
+正如前文章节 [🧭 基本应用](#基本应用) 所示，我们在Fragment中可以通过 `requireActivity()` 得到宿主Activity实例，然后将其作为ViewModelStoreOwner获取宿主Activity中的MyViewModel实例，此时就能够方便地实现数据共享与事件传递。
 
 # 生命周期
 ## 简介
@@ -206,50 +206,65 @@ public void onCreate(@Nullable Bundle savedInstanceState) {
     Log.i(TAG, "OnCreate.");
 
     // 获取当前Fragment的ViewModel2实例
-    MyViewModel2 vm = new ViewModelProvider(this).get(MyViewModel2.class);
-    Log.i(TAG, "Get VM in Fragment. ID: " + vm.id);
+    MyViewModel2 vmInFragment = new ViewModelProvider(this).get(MyViewModel2.class);
+    Log.i(TAG, "Get VM in Fragment. ID:[" + vmInFragment.id + "]");
 }
 ```
 
-此时运行示例程序，首先点击按钮添加TestFragment实例，并查看控制台输出信息：
+上述内容也可以使用Kotlin语言进行书写：
+
+"TestFragment.kt":
+
+```kotlin
+override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    Log.i(TAG, "OnCreate.")
+
+    // 获取当前Fragment的ViewModel2实例
+    val vmInFragment: MyViewModel2KT = ViewModelProvider(this)[MyViewModel2KT::class.java]
+    Log.i(TAG, "Get VM in Fragment. ID:[${vmInFragment.id}]")
+}
+```
+
+此时运行示例程序，点击按钮添加TestFragment实例，并查看控制台输出信息：
 
 ```text
-12-21 22:12:48.127  5076  5076 I TestApp-TestFragment: OnCreate.
-12-21 22:12:48.128  5076  5076 I TestApp-MyViewModel2: VM created. ID: 2F9A7B
-12-21 22:12:48.128  5076  5076 I TestApp-TestFragment: Get VM in Fragment. ID: 2F9A7B
+19:23:50.018 24527 24527 I TestFragment: OnCreate.
+19:23:50.018 24527 24527 I MyViewModel2: VM created. ID:[6E846A]
+19:23:50.018 24527 24527 I TestFragment: Get VM in Fragment. ID:[6E846A]
 ```
 
 根据上述输出内容可知：
 
-TestFragment实例首先被创建，当运行至 `new ViewModelProvider(this).get(MyViewModel2.class)` 语句时，TestFragment容器中没有MyViewModel2实例，因此系统调用MyViewModel2的构造方法创建了一个实例(ID为"2F9A7B")。
+TestFragment实例首先被创建，当运行至 `new ViewModelProvider(this).get(MyViewModel2.class)` 语句时，TestFragment容器中没有MyViewModel2实例，因此系统调用MyViewModel2的构造方法创建了一个实例(ID为"6E846A")。
 
 随后我们改变设备屏幕方向，再次查看控制台输出信息：
 
 ```text
-12-21 22:12:50.110  5222  5222 I TestApp-TestFragment: OnDestroy.
-12-21 22:12:50.254  5222  5222 I TestApp-TestFragment: OnCreate.
-12-21 22:12:50.268  5222  5222 I TestApp-TestFragment: Get VM in Fragment. ID: 2F9A7B
+19:23:50.110  24527  24527 I TestFragment: OnDestroy.
+19:23:50.254  24527  24527 I TestFragment: OnCreate.
+19:23:50.268  24527  24527 I TestFragment: Get VM in Fragment. ID:[6E846A]
 ```
 
 根据上述输出内容可知：
 
-TestFragment实例因屏幕方向改变而销毁重建，此时获取到的MyViewModel2实例ID为2F9A7B，与首次创建的MyViewModel2实例相同，因此其中的数据得以被保留。
+TestFragment实例因屏幕方向改变而销毁重建，此时获取到的MyViewModel2实例ID为6E846A，与首次创建的MyViewModel2实例相同，因此其中的数据得以被保留。
 
 最后我们点击按钮移除TestFragment实例，并查看控制台输出信息：
 
 ```text
-12-21 22:12:52.510  5076  5076 I TestApp-MyViewModel2: OnCleared. ID: 2F9A7B
-12-21 22:12:52.510  5076  5076 I TestApp-TestFragment: OnDestroy.
+19:23:50.510  24527  24527 I MyViewModel2: OnCleared. ID:[6E846A]
+19:23:50.510  24527  24527 I TestFragment: OnDestroy.
 ```
 
 根据上述输出内容可知：
 
-TestFragment被系统回收之前，其中存储的MyViewModel2实例先被回收了，资源得以释放。
+TestFragment被系统回收之前，其中存储的MyViewModel2实例先被回收了，相关资源得以释放。
 
 # AndroidViewModel
 有时我们需要通过Context初始化外部组件，但ViewModel只能使用无参构造方法，无法设置任何初始参数，此时不妨使用AndroidViewModel。
 
-AndroidViewModel的构造方法参数为应用程序的Application实例，我们可以从中获取到Context实例。
+AndroidViewModel的构造方法参数 `application` 为应用程序的Application实例，我们可以从中获取到Context实例。
 
 "AndroidVM.java":
 
@@ -263,7 +278,26 @@ public class AndroidVM extends AndroidViewModel {
 
         // 获取应用级的Context对象
         Context context = application.getApplicationContext();
-        Log.i(TAG, "Get APPContext:" + context.toString());
+        Log.i(TAG, "Get APPContext: " + context.toString());
+    }
+}
+```
+
+上述内容也可以使用Kotlin语言进行书写：
+
+"AndroidVM.kt":
+
+```kotlin
+class AndroidVMKT(application: Application) : AndroidViewModel(application) {
+
+    companion object {
+        val TAG: String = "TestApp-${AndroidVMKT::class.java.simpleName}"
+    }
+
+    init {
+        // 获取应用级的Context对象
+        val context: Context = application.applicationContext
+        Log.i(TAG, "Get APPContext: $context")
     }
 }
 ```

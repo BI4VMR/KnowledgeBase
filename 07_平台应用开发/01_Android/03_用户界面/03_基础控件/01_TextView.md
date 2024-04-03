@@ -176,15 +176,7 @@ tvMarquee.isSelected = true
 SpannableString是CharSequence接口的实现类，我们不仅可以在TextView中使用它，也可以在EditText等控件中使用。
 
 ## 基本应用
-我们首先需要使用SpannableString类的构造方法 `SpannableString(String text)` 创建实例，参数 `text` 为初始文本内容；然后调用 `setSpan()` 方法为文本设置样式。
-
-
-
-
-
-
-
-
+我们首先需要使用SpannableString类的构造方法 `SpannableString(String text)` 创建实例，唯一参数 `text` 为初始文本内容；然后调用 `setSpan()` 方法为文本设置样式，该方法的详情如下文内容所示：
 
 🔶 `void setSpan(Object what, int start, int end, int flags)`
 
@@ -197,9 +189,8 @@ SpannableString是CharSequence接口的实现类，我们不仅可以在TextView
 🔺 `what`
 
 样式类型，内置样式名称通常以"Span"结尾。
-         *              每个Span实例只会被SpannableString应用一次，如果重复应用Span，则会导致其先前设置的样式
-         *              被清除；如果我们不希望清空Span已经设置的样式，应当创建一个新的Span实例再应用到Spannable
-         *              String中。
+
+Span实例不可复用，如果重复使用同一个Span实例，则会导致先前设置的样式被清除。因此即使两处文本的样式完全相同，我们也应当创建两个不同的Span实例。
 
 🔺 `start`
 
@@ -211,12 +202,14 @@ SpannableString是CharSequence接口的实现类，我们不仅可以在TextView
 
 🔺 `flags`
 
-         * @param flags 标志位
-         *              以下标志位用于控制在Span区域前后插入文本时，是否需要也应用该样式。
-         *              Spanned.SPAN_INCLUSIVE_INCLUSIVE - 包括起始与结束位置。
-         *              Spanned.SPAN_INCLUSIVE_EXCLUSIVE - 包括起始位置，不包括结束位置。
-         *              Spanned.SPAN_EXCLUSIVE_INCLUSIVE - 不包括起始位置，包括结束位置。
-         *              Spanned.SPAN_EXCLUSIVE_EXCLUSIVE - 不包括起始与结束位置。
+标志位，用于控制在Span区域前后插入新文本时，是否为它们也应用当前样式。
+
+- `Spanned.SPAN_INCLUSIVE_INCLUSIVE` : 包括起始与结束位置。
+- `Spanned.SPAN_INCLUSIVE_EXCLUSIVE` : 包括起始位置，不包括结束位置。
+- `Spanned.SPAN_EXCLUSIVE_INCLUSIVE` : 不包括起始位置，包括结束位置。
+- `Spanned.SPAN_EXCLUSIVE_EXCLUSIVE` : 不包括起始与结束位置。
+
+该配置项仅对EditText等文本可变的控件生效，在TextView等控件中我们可以传入"0"。
 
 异常情况：
 
@@ -224,18 +217,13 @@ SpannableString是CharSequence接口的实现类，我们不仅可以在TextView
 
 包括索引越界等异常情况。
 
+<br />
 
-
-
-
-
-
-
-
+此处我们使用一条示例文本创建SpannableString实例，并为部分字符设置系统内置的“背景颜色样式(BackgroundColorSpan)”。
 
 "TestUISpan.java":
 
-```text
+```java
 // 示例文本
 String text = "我能吞下玻璃而不伤身体";
 // 创建SpannableString实例，并设置初始内容。
@@ -249,15 +237,161 @@ ss1.setSpan(new BackgroundColorSpan(Color.GREEN), 8, 10, 0);
 textview.setText(ss1);
 ```
 
+上述内容也可以使用Kotlin语言进行书写：
 
+"TestUISpan.kt":
 
+```kotlin
+// 示例文本
+val text = "我能吞下玻璃而不伤身体"
+// 创建SpannableString实例，并设置初始内容。
+val ss1 = SpannableString(text)
 
+// 设置样式
+ss1.setSpan(BackgroundColorSpan(Color.RED), 2, 6, 0)
+ss1.setSpan(BackgroundColorSpan(Color.GREEN), 8, 10, 0)
 
+// 将SpannableString设置到TextView中
+textview.text = ss1
+```
 
+此时运行示例程序，并查看界面外观：
 
+<!-- TODO -->
 
+## 文本外观
+以下内置样式可以改变文本的外观：
 
+- ForegroundColorSpan : 设置文本的背景颜色。
+- BackgroundColorSpan : 设置文本的前景颜色（即文本自身的颜色）。
+- RelativeSizeSpan : 设置文本的相对尺寸（相对于原始字号的倍数）。
+- AbsoluteSizeSpan : 设置文本的绝对尺寸（单位为像素）。
 
+此处我们使用上述几种样式，设置示例文本中不同字符的外观。
 
+"TestUISpan.java":
 
+```java
+// 设置前景色（即文本的颜色）
+ForegroundColorSpan foregroundSpan = new ForegroundColorSpan(Color.RED);
+// 设置背景色
+BackgroundColorSpan backgroundSpan = new BackgroundColorSpan(Color.CYAN);
+// 设置尺寸（相对大小：相对原始字号增大2倍）
+RelativeSizeSpan relativeSizeSpan = new RelativeSizeSpan(2.0F);
+// 设置尺寸（绝对大小：像素）
+AbsoluteSizeSpan absoluteSizeSpan = new AbsoluteSizeSpan(30);
 
+SpannableString ss2 = new SpannableString(text);
+ss2.setSpan(foregroundSpan, 0, 2, 0);
+ss2.setSpan(backgroundSpan, 2, 4, 0);
+ss2.setSpan(relativeSizeSpan, 4, 6, 0);
+ss2.setSpan(absoluteSizeSpan, 6, 8, 0);
+
+textview2.setText(ss2);
+```
+
+上述内容也可以使用Kotlin语言进行书写：
+
+"TestUISpan.kt":
+
+```kotlin
+// 设置前景色（即文本的颜色）
+val foregroundSpan = ForegroundColorSpan(Color.RED)
+// 设置背景色
+val backgroundSpan = BackgroundColorSpan(Color.CYAN)
+// 设置尺寸（相对大小：相对原始字号增大2倍）
+val relativeSizeSpan = RelativeSizeSpan(2.0F)
+// 设置尺寸（绝对大小：像素）
+val absoluteSizeSpan = AbsoluteSizeSpan(30)
+
+val ss2 = SpannableString(text)
+ss2.setSpan(foregroundSpan, 0, 2, 0)
+ss2.setSpan(backgroundSpan, 2, 4, 0)
+ss2.setSpan(relativeSizeSpan, 4, 6, 0)
+ss2.setSpan(absoluteSizeSpan, 6, 8, 0)
+
+textview2.text = ss2
+```
+
+此时运行示例程序，并查看界面外观：
+
+<!-- TODO -->
+
+## 点击事件
+我们可以使用ClickableSpan为文本中的字符添加点击事件，该类中的抽象方法 `onClick()` 即为点击事件回调，我们需要在此处添加自定义逻辑。
+
+"TestUISpan.java":
+
+```java
+ClickableSpan clickableSpan = new ClickableSpan() {
+
+    @Override
+    public void onClick(@NonNull View widget) {
+        /* 设置点击效果 */
+        Log.i(TAG, "ClickableSpan-OnClick.");
+        Toast.makeText(getApplicationContext(), "已点击文字", Toast.LENGTH_SHORT)
+                .show();
+    }
+
+    @Override
+    public void updateDrawState(@NonNull TextPaint ds) {
+        // 设置文本颜色，覆盖默认样式。
+        ds.setColor(Color.YELLOW);
+        // 设置下划线为不显示，覆盖默认样式。
+        ds.setUnderlineText(false);
+    }
+};
+```
+
+上述内容也可以使用Kotlin语言进行书写：
+
+"TestUISpan.kt":
+
+```kotlin
+val clickableSpan: ClickableSpan = object : ClickableSpan() {
+
+    override fun onClick(widget: View) {
+        /* 设置点击效果 */
+        Log.i(TAG, "ClickableSpan-OnClick.")
+        Toast.makeText(applicationContext, "已点击文字", Toast.LENGTH_SHORT)
+            .show()
+    }
+
+    override fun updateDrawState(ds: TextPaint) {
+        // 设置文本颜色，覆盖默认样式。
+        ds.color = Color.YELLOW
+        // 设置下划线为不显示，覆盖默认样式。
+        ds.isUnderlineText = false
+    }
+}
+```
+
+回调方法 `updateDrawState()` 用于改变文本的外观，我们可以在此处修改字符的颜色与下划线等属性。
+
+ClickableSpan实例创建完毕后，我们就可以将其应用在SpannableString中。对于TextView，我们还需要调用 `setMovementMethod()` 方法，使其可以接收链接点击事件。
+
+"TestUISpan.java":
+
+```java
+SpannableString ss3 = new SpannableString(text);
+ss3.setSpan(clickableSpan, 2, 6, 0);
+// TextView需要添加以下方法，才能使点击事件生效。
+textview3.setMovementMethod(LinkMovementMethod.getInstance());
+textview3.setText(ss3);
+```
+
+上述内容也可以使用Kotlin语言进行书写：
+
+"TestUISpan.kt":
+
+```kotlin
+val ss3 = SpannableString(text)
+ss3.setSpan(clickableSpan, 2, 6, 0)
+// TextView需要添加以下方法，才能使点击事件生效。
+textview3.movementMethod = LinkMovementMethod.getInstance()
+textview3.text = ss3
+```
+
+此时运行示例程序，并查看界面外观：
+
+<!-- TODO -->
