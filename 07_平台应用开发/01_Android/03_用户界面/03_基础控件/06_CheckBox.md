@@ -1,37 +1,39 @@
 # 简介
-<!-- TODO -->
+CheckBox是一种复选框控件，具有“选中”与“未选中”两种状态。
 
 # 基本应用
-TextView在布局文件中的典型配置如下文代码块所示：
+CheckBox在布局文件中的典型配置如下文代码块所示：
 
 "testui_base.xml":
 
 ```xml
 <CheckBox
-    android:id="@+id/checkbox"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_marginStart="10dp"
-    android:text="这是一个复选框"
-    android:textAllCaps="false" />
+    android:text="这是一个复选框" />
 ```
 
 此时运行示例程序，并查看界面外观：
 
 <div align="center">
 
-![TextView示例](./Assets_TextView/基本应用_默认样式.jpg)
+![默认样式](./Assets_CheckBox/基本应用_默认样式.jpg)
 
 </div>
 
-
-
 # 外观定制
 ## 基本样式
-### 文本内容
+### 选中状态
+以下属性与方法用于获取与设置CheckBox的选中状态：
 
+- XML - 设置选中状态 : `android:checked="<true | false>"`
+- Java - 设置选中状态 : `void setChecked()(boolean state)`
+- Java - 获取选中状态 : `boolean isChecked()`
 
-复选框颜色
+CheckBox的默认状态为“未选中”，对应的布尔值为"false"。
+
+### 复选框颜色
 
 
 复选框素材

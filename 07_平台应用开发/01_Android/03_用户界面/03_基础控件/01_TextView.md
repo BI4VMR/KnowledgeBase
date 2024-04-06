@@ -17,7 +17,7 @@ TextView在布局文件中的典型配置如下文代码块所示：
 
 <div align="center">
 
-![TextView示例](./Assets_TextView/基本应用_默认样式.jpg)
+![默认样式](./Assets_TextView/基本应用_默认样式.jpg)
 
 </div>
 
@@ -29,9 +29,10 @@ TextView在布局文件中的典型配置如下文代码块所示：
 - XML - 设置文本内容 : `android:text="<文本内容 | 字符串资源ID>"`
 - Java - 设置文本内容 : `void setText(CharSequence text)`
 - Java - 获取文本内容 : `CharSequence getText()`
+- Java - 获取文本长度 : `int length()`
 
 设置文本时，我们可以直接填入文本内容，但系统并不推荐这样做，将会产生硬编码(HardcodedText)警告。我们应当将内容写入到 `res/values/strings.xml` 等文件中，然后在此处引用其资源ID，系统将根据语言环境自动选择合适的文本，以实现多语言适配。
-<!-- TODO -->
+
 ### 文本字号
 以下属性与方法用于获取与设置TextView中的文本字号：
 
@@ -48,6 +49,22 @@ TextView在布局文件中的典型配置如下文代码块所示：
 - Java - 设置文本颜色 : `void setTextColor(int color)`
 
 
+### 文本样式
+
+
+
+🔷 `android:textStyle="< normal | bold | italic >"`
+
+设置文本的字体样式。
+
+取值为"normal"时显示为普通样式，是默认值；取值为"bold"时显示为粗体，取值为"italic"时显示为斜体。
+
+
+
+
+
+
+### 对齐方式
 
 
 该属性用于控制文本的颜色，可以引用 `res/values/colors.xml` 中定义的值，也可以使用十六进制RGB格式表示，例如"#XXX"中的X分别表示8位精度的RGB颜色，"#XYXYXY"中的每组XY分别表示16位精度的RGB颜色。
@@ -55,12 +72,6 @@ TextView在布局文件中的典型配置如下文代码块所示：
 🔷 `android:gravity="< left | right | start | end | top | bottom | center >"`
 
 设置文本框内部文本的对齐方式，默认执行左对齐与顶部对齐。
-
-🔷 `android:textStyle="< normal | bold | italic >"`
-
-设置文本的字体样式。
-
-取值为"normal"时显示为普通样式，是默认值；取值为"bold"时显示为粗体，取值为"italic"时显示为斜体。
 
 🔷 `android:textScaleX="<倍数>"`
 
@@ -88,6 +99,11 @@ TextView在布局文件中的典型配置如下文代码块所示：
 取值为"start|end|middle"时分别在相应位置显示"..."；取值为"marquee"时为滚动显示效果，此时还需设置属性 `android:singleLine="true"` ，并且要在逻辑代码中进行相应的设置，详见后文小节  [🧭 滚动显示](#滚动显示) 。
 
 ## 超链接
+
+
+
+
+
 🔷 `android:autoLink="[none|web|email|phone|all]"`
 
 指定文本链接类型。
@@ -98,30 +114,6 @@ TextView在布局文件中的典型配置如下文代码块所示：
 
 设置文本在链接状态时的颜色。
 
-## 常用方法
-🔶 `void setText(CharSequence text)`
-
-设置文本内容。
-
-本方法可以接受空值，效果等同于传入空字符串。
-
-🔶 `CharSequence getText()`
-
-获取文本内容。
-
-本方法返回值永不为空值，如果 `setText()` 传入空值，将会得到空字符串。
-
-🔶 `int length()`
-
-获取文本长度。
-
-🔶 `void setTextSize(float size)`
-
-设置文本显示字号。
-
-🔶 `void setTextColor(Color color)`
-
-设置文本显示颜色。
 
 # 滚动显示
 当文本框只有单行时，屏幕宽度不足以容纳全部的内容，我们可以将文本框设为滚动模式，以便于用户浏览完整的内容。
@@ -166,8 +158,6 @@ tvMarquee.isSelected = true
 </div>
 
 默认情况下滚动效果将在几个周期后停止，如果我们希望滚动效果无限循环，可以在XML配置中添加属性 `android:marqueeRepeatLimit="marquee_forever"` ，或者在逻辑代码中调用TextView的 `setMarqueeRepeatLimit(-1)` 方法。
-
-
 
 # SpannableString
 ## 简介
