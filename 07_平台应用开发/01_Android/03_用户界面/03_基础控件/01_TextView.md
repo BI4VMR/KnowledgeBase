@@ -257,7 +257,11 @@ textview.text = ss1
 
 此时运行示例程序，并查看界面外观：
 
-<!-- TODO -->
+<div align="center">
+
+![基本应用](./Assets_TextView/SpannableString_基本应用.jpg)
+
+</div>
 
 ## 文本外观
 以下内置样式可以改变文本的外观：
@@ -315,7 +319,11 @@ textview2.text = ss2
 
 此时运行示例程序，并查看界面外观：
 
-<!-- TODO -->
+<div align="center">
+
+![文本外观](./Assets_TextView/SpannableString_文本外观.jpg)
+
+</div>
 
 ## 点击事件
 我们可以使用ClickableSpan为文本中的字符添加点击事件，该类中的抽象方法 `onClick()` 即为点击事件回调，我们需要在此处添加自定义逻辑。
@@ -394,4 +402,8 @@ textview3.text = ss3
 
 此时运行示例程序，并查看界面外观：
 
-<!-- TODO -->
+<div align="center">
+
+![点击事件](./Assets_TextView/SpannableString_点击事件.jpg)
+
+</div>
