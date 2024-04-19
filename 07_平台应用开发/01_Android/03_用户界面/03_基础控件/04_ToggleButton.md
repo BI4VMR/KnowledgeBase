@@ -1,25 +1,30 @@
 # 概述
-ToggleButton是一个自锁按钮，它拥有两种状态：“选中”和“未选中”，用户点击按钮后不会立即弹起，而是保持选中状态，直到再次被点击才会转换为未选中状态。
+ToggleButton是一种自锁按钮，它拥有两种状态：“开启”和“关闭”，用户点击后按钮不会立即弹起，而是保持新的状态，直到再次被点击才会再次切换状态。
 
 # 基本应用
-ToggleButton在XML文件中的典型配置如下：
+TextView在布局文件中的典型配置如下文代码块所示：
+
+"testui_base.xml":
 
 ```xml
 <ToggleButton
-    android:id="@+id/button"
+    android:id="@+id/toggleButton"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:textOff="已关闭"
-    android:textOn="已开启" />
+    android:layout_height="wrap_content" />
 ```
 
-显示效果：
+此时运行示例程序，并查看界面外观：
 
 <div align="center">
 
-![ToggleButton示例](./Assets-ToggleButton/基本应用-ToggleButton示例.jpg)
+<!-- TODO ![ToggleButton示例](./Assets-ToggleButton/基本应用-ToggleButton示例.jpg) -->
 
 </div>
+
+<!-- TODO
+# 外观定制
+## 基本样式
+### 文本内容
 
 # 常用属性
 🔷 `android:textOn="[文本]"`
@@ -47,25 +52,25 @@ ToggleButton在XML文件中的典型配置如下：
 
 反转当前选中状态。
 
-# 监听器
+-->
+
+# 事件监听器
 ## OnCheckedChangeListener
-ToggleButton的状态发生改变时，将会触发监听器OnCheckedChangeListener，此监听器仅有一个回调方法，参数含义见下文的代码片段。
+当ToggleButton的开关状态发生改变时，将会触发OnCheckedChangeListener监听器。
+
+该监听器仅有一个 `void onCheckedChanged(CompoundButton buttonView, boolean isChecked)` 回调方法，第一参数 `buttonView` 是ToggleButton实例；第二参数 `isChecked` 是新的开关状态。
+
+"TestUIEvent.java":
 
 ```java
-ToggleButton button = findViewById(R.id.button);
-button.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+toggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 
-    /**
-     * “选中状态改变”回调方法
-     *
-     * 当按钮的选中事件发生改变时，此回调被触发。
-     *
-     * @param buttonView 事件源。
-     * @param isChecked 布尔值，表示按钮当前的选中状态。
-     */
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        Log.d("Test", "按钮当前的选中状态：" + isChecked);
+        boolean userInput = buttonView.isPressed();
+        Log.i(TAG, "OnCheckedChanged. State:[" + isChecked + "] UserInput:[" + userInput + "]");
     }
 });
 ```
+
+当我们调用ToggleButton的 `setChecked(boolean state)` 或 `toggle()` 方法设置开关状态时，回调方法 `onCheckedChanged()` 也会触发，这在某些场景下可能导致逻辑错误。我们可以在回调方法中使用控件的 `isPressed()` 方法判断当前事件是否为用户输入。
