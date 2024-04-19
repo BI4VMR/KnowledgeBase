@@ -1,6 +1,10 @@
 # 简介
 CheckBox是一种复选框控件，具有“选中”与“未选中”两种状态。
 
+本章示例代码详见以下链接：
+
+- [🔗 示例工程：CheckBox](https://github.com/BI4VMR/Study-Android/tree/master/M03_UI/C03_CtrlBase/S06_CheckBox)
+
 # 基本应用
 CheckBox在布局文件中的典型配置如下文代码块所示：
 
