@@ -257,15 +257,15 @@ extern "C" {
 #endif
 
 JNIEXPORT void JNICALL passBasicTypes(JNIEnv *env, jobject instance, jboolean b, jint i, jdouble d) {
-    // 此处省略具体实现，详见示例代码。
+    // 此处省略具体实现，详见示例程序。
 }
 
 JNIEXPORT void JNICALL passString(JNIEnv *env, jobject instance, jstring str) {
-    // 此处省略具体实现，详见示例代码。
+    // 此处省略具体实现，详见示例程序。
 }
 
 JNIEXPORT void JNICALL passStringArray(JNIEnv *env, jobject instance, jobjectArray stringArray) {
-    // 此处省略具体实现，详见示例代码。
+    // 此处省略具体实现，详见示例程序。
 }
 
 // 方法映射表
@@ -277,7 +277,7 @@ static const JNINativeMethod jniNativeMethods[] = {
 
 // 注册JNI方法
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved) {
-    // 此处省略具体实现，详见示例代码。
+    // 此处省略具体实现，详见示例程序。
 }
 
 #ifdef __cplusplus
