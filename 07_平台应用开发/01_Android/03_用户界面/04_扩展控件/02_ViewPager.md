@@ -1,6 +1,10 @@
 # 简介
 ViewPager是一种多页面组合翻页显示控件，我们向ViewPager中填充多个Fragment后，用户可以使用滑动手势在Fragment之间切换。
 
+本章示例代码详见以下链接：
+
+- [🔗 示例工程：ViewPager](https://github.com/BI4VMR/Study-Android/tree/master/M03_UI/C04_CtrlExt/S02_ViewPager)
+
 # 基本应用
 我们首先创建 `TestFragment` ，其中包括一个文本框，用于显示构造实例时传入的名称标识，此处省略相关代码，详见示例程序。
 
@@ -94,12 +98,6 @@ OnPageChangeListener拥有三个回调方法，它们的详情分别如下文内
 - `SCROLL_STATE_DRAGGING` (1) : 表示用户用手指按住屏幕，当前正在进行拖拽。
 - `SCROLL_STATE_SETTLING` (2) : 表示用户手指已离开屏幕，ViewPager向目标页面自动滑动，以使其完全显示。
 
-🔷 `onPageScrolled(int position, float positionOffset, int positionOffsetPixels)`
-
-当页面正在切换时，该方法以较高频率被触发。
-
-第一参数 `position` 表示当前正在滑动的页面索引。第二参数 `positionOffset` 表示当前页面滑动至目标位置的进度，取值范围为 `[0, 1)` ，数值越大则离目标位置越近。第三参数 `positionOffsetPixels` 表示当前页面滑过的像素数量，取值范围为 `[0, <ViewPager宽度>)` 。
-
 🔷 `onPageSelected(int position)`
 
 当用户滑动完毕最终选定某个页面时，该方法将被触发。
@@ -108,6 +106,12 @@ OnPageChangeListener拥有三个回调方法，它们的详情分别如下文内
 
 该事件仅在目标页面与先前显示的页面不同时触发，如果我们反复拖拽最后抬手时又回到了拖拽前显示的页面，则该事件并不会触发。
 
+🔷 `onPageScrolled(int position, float positionOffset, int positionOffsetPixels)`
+
+当页面正在切换时，该方法以较高频率被触发。
+
+第一参数 `position` 表示当前正在滑动的页面索引。第二参数 `positionOffset` 表示当前页面滑动至目标位置的进度，取值范围为 `[0, 1)` ，数值越大则离目标位置越近。第三参数 `positionOffsetPixels` 表示当前页面滑过的像素数量，取值范围为 `[0, <ViewPager宽度>)` 。
+
 <br />
 
 当我们用手指按住屏幕并开始滑动时，将会触发一次 `onPageScrollStateChanged(SCROLL_STATE_DRAGGING)` 事件；当手指从屏幕上离开时，将会触发一次 `onPageScrollStateChanged(SCROLL_STATE_SETTLING)` 事件，并且触发 `onPageSelected()` 事件汇报目标页面索引，随后控件按照手势的滑动方向继续自动滑动，直至目标页面完全进入屏幕，最后触发一次 `onPageScrollStateChanged(SCROLL_STATE_IDLE)` 事件表示滑动终止。
@@ -115,6 +119,12 @@ OnPageChangeListener拥有三个回调方法，它们的详情分别如下文内
 当ViewPager的前一次操作进入自动滑动阶段时，我们可以再次触摸屏幕并手动滑动，此时 `onPageScrollStateChanged()` 事件序列将会变为 `DRAGGING（首次触摸滑动） -> SETTLING（手指离屏） -> DRAGGING（二次触摸滑动） -> SETTLING（手指离屏） -> IDLE（自动滑动结束）` 。
 
 ViewPager除了可以由用户手动控制滑动，还可以通过 `setCurrentItem(int index, false)` 方法禁止动画直接显示目标页面，这种方式只会触发一次 `onPageSelected()` 事件汇报目标页面，以及一次 `onPageScrolled()` 事件，此时"index"值为目标页面，其余值均为"0"。
+
+> 🚩 提示
+>
+> OnPageChangeListener是一个接口，我们需要实现前文提到的3个抽象方法；有时我们只关心部分事件，为了减少无用代码，可以使用SimpleOnPageChangeListener。
+>
+> SimpleOnPageChangeListener是OnPageChangeListener接口的实现类，提供3个抽象方法的空实现，我们可以继承SimpleOnPageChangeListener，并重写我们关心的方法。
 
 # 限制连续滑动
 正如相关章节 [🧭 OnPageChangeListener](#onpagechangelistener) 中的描述，用户可以在ViewPager仍在自动滑动状态时再次触摸屏幕手动滑动，这可能在短视频播放器、复杂转场动效等场景下导致诸多问题。

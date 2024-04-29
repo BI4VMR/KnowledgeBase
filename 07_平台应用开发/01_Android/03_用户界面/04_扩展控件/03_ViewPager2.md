@@ -9,6 +9,10 @@ dependencies {
 }
 ```
 
+本章示例代码详见以下链接：
+
+- [🔗 示例工程：ViewPager2](https://github.com/BI4VMR/Study-Android/tree/master/M03_UI/C04_CtrlExt/S03_ViewPager2)
+
 # 基本应用
 首先我们创建一个TestFragment作为页面模板，其中仅有一个居中的TextView，初始化参数将被设置在该TextView中，相关逻辑代码略。
 
