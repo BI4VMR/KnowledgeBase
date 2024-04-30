@@ -41,7 +41,7 @@ public class MyVPAdapter extends FragmentStatePagerAdapter {
 
 我们在初始化MyVPAdapter时使用List存放Fragment实例；当系统加载ViewPager时，首先回调 `getCount()` 方法获取总的页面数量；然后回调 `getItem()` 方法加载当前显示的页面及需要预加载的页面。
 
-然后我们在测试Activity的布局文件中放置ViewPager控件。
+然后我们在测试Activity的布局文件中放置ViewPager控件：
 
 "testui_base.xml":
 
@@ -51,7 +51,7 @@ public class MyVPAdapter extends FragmentStatePagerAdapter {
     android:layout_height="match_parent">
 
     <androidx.viewpager.widget.ViewPager
-        android:id="@+id/vpTest"
+        android:id="@+id/viewpager"
         android:layout_width="match_parent"
         android:layout_height="150dp" />
 </FrameLayout>
@@ -71,14 +71,18 @@ for (int i = 0; i < 10; i++) {
 }
 
 // 创建适配器实例
-MyVPAdapter adapter = new MyVPAdapter(getSupportFragmentManager(), pages);
+MyVPAdapter adapter = new MyVPAdapter(this, pages);
 // 将适配器与ViewPager绑定
-binding.viewpager.setAdapter(adapter);
+binding.viewpager2.setAdapter(adapter);
 ```
 
 此时运行示例程序，并查看界面外观：
 
 <!-- TODO 添加GIF -->
+
+除了由用户触摸控制翻页之外，我们还可以调用ViewPager的 `setCurrentItem(int item, boolean smoothScroll)` 方法控制翻页，第一参数 `item` 为目标页面的索引；第二参数 `smoothScroll` 为是否需要播放过渡动画，设为"true"时与触控翻页类似，设为"false"时将瞬间切换至目标页面。
+
+ViewPager还有一个 `setCurrentItem(int item)` 方法，内部调用了具有2个参数的同名方法，且 `smoothScroll` 参数为"true"，我们可以根据实际需要选择。
 
 # 监听器
 ## OnPageChangeListener

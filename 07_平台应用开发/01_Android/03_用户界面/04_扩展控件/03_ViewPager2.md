@@ -1,11 +1,11 @@
 # 简介
-ViewPager2是ViewPager的升级版本，与ViewPager相比，它可以设置布局方向，拥有可控预加载、模拟拖拽等方便的功能。ViewPager2基于RecyclerView实现，因此它也具有RecyclerView的所有特性。
+ViewPager2是ViewPager的升级版本，与ViewPager相比，它新增了可配置的预加载、RTL支持、模拟拖拽等特性。ViewPager2基于RecyclerView实现，因此它也具有RecyclerView的所有特性。
 
-ViewPager2是AndroidX中的组件，如果需要使用指定版本，可以在Gradle配置文件中声明依赖：
+ViewPager2是AndroidX中的组件，如果我们需要使用指定的版本，可以在Gradle配置文件中声明组件依赖：
 
 ```groovy
 dependencies {
-    implementation 'androidx.viewpager2:viewpager2:1.0.0'
+    implementation("androidx.viewpager2:viewpager2:1.0.0")
 }
 ```
 
@@ -14,26 +14,11 @@ dependencies {
 - [🔗 示例工程：ViewPager2](https://github.com/BI4VMR/Study-Android/tree/master/M03_UI/C04_CtrlExt/S03_ViewPager2)
 
 # 基本应用
-首先我们创建一个TestFragment作为页面模板，其中仅有一个居中的TextView，初始化参数将被设置在该TextView中，相关逻辑代码略。
+我们首先创建 `TestFragment` ，其中包括一个文本框，用于显示构造实例时传入的名称标识，此处省略相关代码，详见示例程序。
 
-fragment_test.xml:
+ViewPager2所使用的适配器是FragmentStateAdapter，我们创建它的子类MyVPAdapter并重写其中的一些方法。
 
-```xml
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <TextView
-        android:id="@+id/tvContent"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center" />
-</FrameLayout>
-```
-
-ViewPager2所使用的适配器是FragmentStateAdapter，我们需要创建它的子类MyVPAdapter并覆盖它的部分方法。
-
-MyVPAdapter.java:
+"MyVPAdapter.java":
 
 ```java
 public class MyVPAdapter extends FragmentStateAdapter {
@@ -62,11 +47,11 @@ public class MyVPAdapter extends FragmentStateAdapter {
 }
 ```
 
-ViewPager2初始加载时，将会调用 `getItemCount()` 方法，我们需要在此返回Fragment的总数量。ViewPager2显示某个页面时，会调用 `createFragment()` 方法，参数"position"表示页面索引号，我们根据索引从列表中取出Fragment实例，并通过返回值传递给ViewPager2。
+我们在初始化MyVPAdapter时使用List存放Fragment实例；当系统加载ViewPager2时，首先回调 `getItemCount()` 方法获取总的页面数量；然后回调 `createFragment()` 方法加载当前显示的页面及需要预加载的页面。
 
-接着我们在测试Activity的布局文件中添加ViewPager2控件。FragmentStateAdapter实例化布局文件时内部调用了具有两个参数的 `inflate()` 方法，因此"fragment_test.xml"根布局的宽高属性将会失效，需要在ViewPager2标签处声明，此处我们为ViewPager2设置固定高度"150dp"。
+然后我们在测试Activity的布局文件中放置ViewPager2控件：
 
-ui_demo_base.xml:
+"testui_base.xml":
 
 ```xml
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -74,15 +59,17 @@ ui_demo_base.xml:
     android:layout_height="match_parent">
 
     <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/vp2Content"
+        android:id="@+id/viewpager2"
         android:layout_width="match_parent"
         android:layout_height="150dp" />
 </FrameLayout>
 ```
 
-最后我们在测试Activity中创建Fragment实例与适配器，完成ViewPager2的配置。
+ViewPager2的高度通常是"match_parent"或者确定的数值，如果设为"wrap_content"可能无法达到预期的效果。
 
-DemoBaseUI.java:
+我们在测试Activity中初始化10个TestFragment，将它们通过适配器添加到ViewPager2中。
+
+"TestUIBase.java":
 
 ```java
 // 创建测试页面
@@ -97,14 +84,15 @@ MyVPAdapter adapter = new MyVPAdapter(this, pages);
 viewPager2.setAdapter(adapter);
 ```
 
-此时可以运行程序，查看显示效果：
+此时运行示例程序，并查看界面外观：
 
 <div align="center">
-
-![ViewPager2示例](./Assets-ViewPager2/基本应用-ViewPager2示例.gif)
+<!-- TODO 添加GIF -->
+<!-- ![ViewPager2示例](./Assets-ViewPager2/基本应用-ViewPager2示例.gif) -->
 
 </div>
 
+<!-- TODO
 # 外观定制
 ## 页面排列方向
 ViewPager2默认将页面按水平方向排列，它提供了简单易用的方向变更API，调整页面排列方向十分方便。
@@ -152,15 +140,19 @@ if (rv instanceof RecyclerView) {
     rv.setOverScrollMode(View.OVER_SCROLL_NEVER);
 }
 ```
+-->
 
 # 监听器
 ## OnPageChangeCallback
-我们可以使用 `registerOnPageChangeCallback(ViewPager2.OnPageChangeCallback cb)` 方法注册监听器，使用 `unregisterOnPageChangeCallback(ViewPager2.OnPageChangeCallback cb)` 方法注销监听器。
+OnPageChangeCallback用于监听ViewPager2的页面滑动事件，每当页面进行切换时其中的事件将被触发。
 
-ViewPager2的页面滑动事件监听器与ViewPager一致，此处省略相关描述，具体用法可以参考相关章节： [🧭 ViewPager - OnPageChangeListener](./02-ViewPager.md#OnPageChangeListener) 。
+我们可以使用ViewPager2的 `registerOnPageChangeCallback(ViewPager2.OnPageChangeCallback cb)` 方法注册监听器，同一个ViewPager2支持注册多个监听器。当我们不再需要某个监听器时，可以调用ViewPager的 `unregisterOnPageChangeCallback(ViewPager2.OnPageChangeCallback cb)` 方法注销监听器。
 
-与ViewPager不同的是，ViewPager2的页面滑动监听器相关方法不是抽象的，我们可以按需重写其中的方法，不必全部实现。
+ViewPager2的页面滑动事件与ViewPager完全一致，此处省略具体描述，详见相关章节： [🧭 ViewPager - OnPageChangeListener](./02_ViewPager.md#onpagechangelistener) 。
 
+ViewPager2的OnPageChangeCallback监听器不是抽象的，我们可以按需重写其中的方法，不必全部实现一遍。
+
+<!-- TODO
 # 预加载
 ViewPager2可以预加载可见页面两侧的页面，以提升切换时画面的连续性。ViewPager2的 `setOffscreenPageLimit()` 方法用于控制预加载的页面数量，默认值为"-1"，即不进行预加载；当该数值设为"N"时，将会预加载可见页面两侧的N个页面，使它们的生命周期达到"Started"。
 
@@ -280,3 +272,5 @@ viewPager2.endFakeDrag();
 ```
 
 模拟拖拽方法执行后页面会瞬间偏移到相应的位置，没有过渡动画，如果需要页面缓慢移动的视觉效果，我们可以使用定时任务进行小步长的多次偏移。
+
+-->
