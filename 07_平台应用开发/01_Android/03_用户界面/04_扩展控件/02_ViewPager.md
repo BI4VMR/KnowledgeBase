@@ -78,7 +78,11 @@ binding.viewpager2.setAdapter(adapter);
 
 此时运行示例程序，并查看界面外观：
 
-<!-- TODO 添加GIF -->
+<div align="center">
+
+![ViewPager示例](./Assets_ViewPager/基本应用_ViewPager的默认样式.gif)
+
+</div>
 
 除了由用户触摸控制翻页之外，我们还可以调用ViewPager的 `setCurrentItem(int item, boolean smoothScroll)` 方法控制翻页，第一参数 `item` 为目标页面的索引；第二参数 `smoothScroll` 为是否需要播放过渡动画，设为"true"时与触控翻页类似，设为"false"时将瞬间切换至目标页面。
 
@@ -120,7 +124,7 @@ OnPageChangeListener拥有三个回调方法，它们的详情分别如下文内
 
 当我们用手指按住屏幕并开始滑动时，将会触发一次 `onPageScrollStateChanged(SCROLL_STATE_DRAGGING)` 事件；当手指从屏幕上离开时，将会触发一次 `onPageScrollStateChanged(SCROLL_STATE_SETTLING)` 事件，并且触发 `onPageSelected()` 事件汇报目标页面索引，随后控件按照手势的滑动方向继续自动滑动，直至目标页面完全进入屏幕，最后触发一次 `onPageScrollStateChanged(SCROLL_STATE_IDLE)` 事件表示滑动终止。
 
-当ViewPager的前一次操作进入自动滑动阶段时，我们可以再次触摸屏幕并手动滑动，此时 `onPageScrollStateChanged()` 事件序列将会变为 `DRAGGING（首次触摸滑动） -> SETTLING（手指离屏） -> DRAGGING（二次触摸滑动） -> SETTLING（手指离屏） -> IDLE（自动滑动结束）` 。
+当ViewPager的前一次操作进入自动滑动阶段时，我们可以再次触摸屏幕并手动滑动，此时 `onPageScrollStateChanged()` 事件序列将会变为 `DRAGGING（首次触摸滑动） -> SETTLING（手指离屏） -> DRAGGING（再次触摸滑动） -> SETTLING（手指离屏） -> IDLE（自动滑动结束）` 。
 
 ViewPager除了可以由用户手动控制滑动，还可以通过 `setCurrentItem(int index, false)` 方法禁止动画直接显示目标页面，这种方式只会触发一次 `onPageSelected()` 事件汇报目标页面，以及一次 `onPageScrolled()` 事件，此时"index"值为目标页面，其余值均为"0"。
 
