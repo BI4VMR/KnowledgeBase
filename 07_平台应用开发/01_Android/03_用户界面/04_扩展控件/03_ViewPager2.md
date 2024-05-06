@@ -375,9 +375,7 @@ override fun onPageScrollStateChanged(state: Int) {
 
 <div align="center">
 
-<!-- TODO
-![第二种实现方法的原理示意图](./Assets_ViewPager2/)
--->
+![第二种实现方法的原理示意图](./Assets_ViewPager2/循环滑动_第二种实现方法的原理示意图.jpg)
 
 </div>
 
