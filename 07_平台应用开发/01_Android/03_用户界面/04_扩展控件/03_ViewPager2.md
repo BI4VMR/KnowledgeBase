@@ -14,7 +14,7 @@ dependencies {
 - [🔗 示例工程：ViewPager2](https://github.com/BI4VMR/Study-Android/tree/master/M03_UI/C04_CtrlExt/S03_ViewPager2)
 
 # 基本应用
-我们首先创建 `TestFragment` ，其中包括一个文本框，用于显示构造实例时传入的名称标识，此处省略相关代码，详见示例程序。
+我们首先创建TestFragment，其中包括一个文本框，用于显示构造实例时传入的名称标识，此处省略相关代码，详见示例程序。
 
 ViewPager2所使用的适配器是FragmentStateAdapter，我们创建它的子类MyVPAdapter并重写其中的一些方法。
 
@@ -592,24 +592,14 @@ public class MyVPAdapter extends FragmentStateAdapter {
     // 数据源List
     private final List<TestFragment> pages;
 
-    /**
-     * 获取当前位置表项的ID。
-     *
-     * @param position 页面索引。
-     * @return 表项ID。
-     */
+    // 获取当前位置表项的ID。
     @Override
     public long getItemId(int position) {
         // 返回表项的唯一标识符（此处以HashCode代替）
         return pages.get(position).hashCode();
     }
 
-    /**
-     * 判断当前表项ID是否属于当前数据源。
-     *
-     * @param itemId 待判断的页面ID。
-     * @return 表项是否存在。
-     */
+    // 判断当前表项ID是否属于当前数据源。
     @Override
     public boolean containsItem(long itemId) {
         boolean result = false;
@@ -647,23 +637,13 @@ class MyVPAdapterKT(
     private val pages: MutableList<TestFragmentKT>
 ) : FragmentStateAdapter(activity) {
 
-    /**
-     * 获取当前位置表项的ID。
-     *
-     * @param[position] 页面索引。
-     * @return 表项ID。
-     */
+    // 获取当前位置表项的ID。
     override fun getItemId(position: Int): Long {
         // 返回表项的唯一标识符（此处以HashCode代替）
         return pages[position].hashCode().toLong()
     }
 
-    /**
-     * 判断当前表项ID是否属于当前数据源。
-     *
-     * @param[itemId] 待判断的页面ID。
-     * @return 表项是否存在。
-     */
+    // 判断当前表项ID是否属于当前数据源。
     override fun containsItem(itemId: Long): Boolean {
         var result = false
         // 遍历数据源，寻找ID与系统传入的值匹配的项。
@@ -691,7 +671,7 @@ class MyVPAdapterKT(
 
 此处的测试页面TestFragment并没有ID，因此我们以对象哈希值作为ID。
 
-# 生命周期
+# 页面的生命周期
 ViewPager2的 `setOffscreenPageLimit()` 方法用于控制预加载的页面数量，默认值为"-1"，即不进行预加载；当我们将数值设为"N"时，ViewPager2将会预加载可见页面两侧的N个页面，使它们的生命周期达到"STARTED"。
 
 我们为TestFragment的生命周期方法添加日志输出语句，然后运行示例程序，并查看控制台输出信息：
