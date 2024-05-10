@@ -282,10 +282,38 @@ viewpager.addOnPageChangeListener(object : ViewPager.SimpleOnPageChangeListener(
 ```
 
 # 页面的生命周期
+ViewPager的 `setOffscreenPageLimit()` 方法用于控制预加载的页面数量，默认值为"1"，即预加载当前页面两侧的一个页面，使它们的生命周期达到"STARTED"；当我们将数值设为"N"时，ViewPager将会预加载可见页面两侧的N个页面；当我们将数值设为小于"1"的值时，等同于"1"，无法关闭预加载机制。
+
+我们使用默认的预加载参数，然后再次运行示例程序，并查看控制台输出信息：
+
+```text
+05-10 22:41:15.763  2357  2357 I TestApp: 页面1 OnCreate.
+05-10 22:41:15.764  2357  2357 I TestApp: 页面1 OnCreateView.
+05-10 22:41:15.766  2357  2357 I TestApp: 页面1 OnStart.
+05-10 22:41:15.767  2357  2357 I TestApp: 页面2 OnCreate.
+05-10 22:41:15.767  2357  2357 I TestApp: 页面2 OnCreateView.
+05-10 22:41:15.768  2357  2357 I TestApp: 页面2 OnStart.
+05-10 22:41:15.768  2357  2357 I TestApp: 页面1 OnResume.
+```
+
+此时“页面1”完全可见，进入"RESUMED"状态，与它相邻的“页面2”被预加载，其生命周期到达"STARTED"状态。
+
+随后我们将ViewPager滑动至第二个页面，再次查看控制台输出信息：
+
+```text
+05-10 22:47:05.656  2357  2357 I TestApp: 页面3 OnCreate.
+05-10 22:47:05.657  2357  2357 I TestApp: 页面3 OnCreateView.
+05-10 22:47:05.659  2357  2357 I TestApp: 页面3 OnStart.
+05-10 22:47:05.659  2357  2357 I TestApp: 页面1 OnPause.
+05-10 22:47:05.659  2357  2357 I TestApp: 页面2 OnResume.
+```
+
+此时“页面2”的生命周期到达"RESUMED"状态；与它相邻的“页面3”被预加载，其生命周期到达"STARTED"状态；“页面1”不可见，生命周期进入"PAUSED"状态。
+
 ViewPager提供了两种内置Adapter用于容纳Fragment，它们的接口形式是相同的，但是页面缓存行为有所不同。
 
-对于FragmentStatePagerAdapter，当页面移至预加载区域之外后，Adapter将会使用视图数据保持机制暂存数据，然后销毁整个Fragment实例；当用户再次进入该页面时，Adapter重新创建新的Fragment实例并恢复数据。视图数据保持机制的相关细节可参考以下章节： [🧭 Activity - 视图数据保持](../01-通用组件/02-Activity.md#视图数据保持) 。
+对于FragmentStatePagerAdapter，当页面移至预加载区域之外后，Adapter将会使用视图数据保持机制暂存数据，然后销毁整个Fragment实例；当用户再次滑动进入该页面时，Adapter将会创建新的Fragment实例并恢复数据。视图数据保持机制的相关细节可参考以下章节： [🧭 Activity - 视图数据保持](../01_通用组件/02_Activity.md#视图数据保持) 。
 
-对于FragmentPagerAdapter，当页面移至预加载区域之外后，Adapter不会销毁整个Fragment实例，而是将其从视图中Detach，Fragment实例仍然驻留在内存中；当用户再次进入该页面时，Adapter将使用旧的Fragment实例重新创建视图。
+对于FragmentPagerAdapter，当页面移至预加载区域之外后，Adapter不会销毁整个Fragment实例，而是将其从视图中Detach，此时Fragment实例仍然驻留在内存中；当用户再次滑动进入该页面时，Adapter将会复用旧的Fragment实例重新创建视图。
 
-如果我们需要显示大量的Fragment，应当使用FragmentStatePagerAdapter；如果我们只需要显示少量固定的页面，则可以使用FragmentPagerAdapter。
+如果我们需要显示大量的Fragment，应当使用FragmentStatePagerAdapter；如果我们只需要显示少量固定的页面，则可以选择FragmentPagerAdapter。
