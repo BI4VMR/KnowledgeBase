@@ -6,9 +6,9 @@
 - [🔗 示例工程：Room](https://github.com/BI4VMR/Study-Android/tree/master/M05_Storage/C03_SQL/S02_Room)
 
 # 基本应用
-下文将以学生信息管理系统为例，演示Room框架的基本应用。
+下文将以学生信息管理系统为例，演示Room框架的基本使用方法。
 
-我们首先创建一个实体类，用于描述“学生”的属性，此处设置“ID、姓名、年龄”三个属性。为了建立实体类与数据库表的关联，我们需要在Student类的属性与方法上添加一些Room注解。
+我们首先创建一个实体类Student，用于描述“学生”的属性，此处设置“ID、姓名、年龄”三个属性。为了建立实体类与数据库表的关联，我们还需要在Student类的属性与方法上添加一些Room注解。
 
 "Student.java":
 
@@ -28,19 +28,20 @@ public class Student {
     // 年龄
     private int age;
 
-    // Room只能识别具有完整属性的构造方法，因此其他构造方法需要添加"@Ignore"注解，使Room忽略它们。
+    // 具有1个参数的构造方法
     @Ignore
     public Student(long id) {
         this.id = id;
     }
 
+    // 具有3个参数的构造方法
     public Student(long id, String name, int age) {
         this.id = id;
         this.name = name;
         this.age = age;
     }
 
-    /* 此处省略各属性的Get、Set方法... */
+    /* 此处省略部分代码... */
 }
 ```
 
@@ -50,7 +51,7 @@ public class Student {
 
 注解 `@ColumnInfo` 用于设置属性在二维表中对应的字段名称。如果某个属性未被添加该注解，则字段名称与属性名称一致。
 
-注解 `@Ignore` 可以被添加在属性与方法上。对于拥有该注解的属性，初始化数据库时Room不会在二维表中创建对应的字段；读取数据时Room也不会寻找对应的字段并进行赋值。对于拥有该注解的方法，它们不会参与Room编译。Room只能使用具有全部属性对应参数的构造方法，若扫描到缺少参数的构造方法，将会出现错误，此处我们通过 `@Ignore` 注解使只有 `id` 参数的构造方法被Room忽略，避免编译失败。
+注解 `@Ignore` 可以被添加在属性与方法上，对于拥有该注解的属性，初始化数据库时Room不会在二维表中创建对应的字段；读取数据时Room也不会寻找对应的字段并进行赋值。对于拥有该注解的方法，它们不会参与Room编译。Room只能使用具有全部属性对应参数的构造方法，若扫描到缺少参数的构造方法，将会出现错误，此处我们通过 `@Ignore` 注解使只有 `id` 参数的构造方法被Room忽略，避免编译失败。
 
 接着，我们创建一个StudentDAO接口，提供对“学生信息表”进行增删改查的方法。
 
