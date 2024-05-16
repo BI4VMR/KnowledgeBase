@@ -23,16 +23,36 @@ Room中各元素的关系如下文图片所示：
 ```groovy
 dependencies {
     // Room核心
+    implementation 'androidx.room:room-runtime:2.5.1'
+
+    // Room注解处理器(Java)
+    annotationProcessor 'androidx.room:room-compiler:2.5.1'
+    // Room注解处理器(Kotlin-KAPT)
+    kapt 'androidx.room:room-compiler:2.5.1'
+    // Room注解处理器(Kotlin-KSP)
+    ksp 'androidx.room:room-compiler:2.5.1'
+}
+```
+
+上述内容也可以使用Kotlin语言书写：
+
+"build.gradle.kts":
+
+```groovy
+dependencies {
+    // Room核心
     implementation("androidx.room:room-runtime:2.5.1")
 
     // Room注解处理器(Java)
     annotationProcessor("androidx.room:room-compiler:2.5.1")
-    // Room注解处理器(Kotlin)
+    // Room注解处理器(Kotlin-KAPT)
+    kapt("androidx.room:room-compiler:2.5.1")
+    // Room注解处理器(Kotlin-KSP)
     ksp("androidx.room:room-compiler:2.5.1")
 }
 ```
 
-"room-runtime"是Room的核心组件，"room-compiler"是Room的注解处理器，一个应用程序至少需要引入它们才能使用Room框架。
+"room-runtime"是Room的核心组件，"room-compiler"是Room的注解处理器，一个应用程序至少需要引入这些组件才能使用Room框架。上述的三条注解处理器声明语句不可同时添加，我们需要根据项目所使用的语言进行选择。
 
 我们首先创建一个Student实体类，用于描述“学生”的属性，此处设置“ID、姓名、年龄”三个属性。为了建立实体类与二维表的关联，我们还需要在Student类的属性与方法上添加一些Room注解。
 
@@ -77,7 +97,7 @@ public class Student {
 }
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "StudentKT.kt":
 
@@ -166,7 +186,7 @@ public interface StudentDAO {
 }
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "StudentDAOKT.kt":
 
@@ -225,7 +245,7 @@ public abstract class StudentDB extends RoomDatabase {
 }
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "StudentDBKT.kt":
 
@@ -243,13 +263,7 @@ abstract class StudentDBKT : RoomDatabase() {
             if (instance == null) {
                 synchronized(StudentDBKT::class) {
                     if (instance == null) {
-                        /*
-                         * 构造实例并进行配置
-                         * "databaseBuilder()"的参数分别为：
-                         * "context": 上下文。
-                         * "dbClass": 数据库类的Class。
-                         * "name": 数据库文件的名称。
-                         */
+                        // 构造实例并进行配置
                         instance = Room.databaseBuilder(
                             context.applicationContext,
                             StudentDBKT::class.java,
@@ -273,9 +287,9 @@ abstract class StudentDBKT : RoomDatabase() {
 
 注解 `@Database` 表示这是一个Room数据库，属性 `entities` 用于声明本数据库包含的所有实体类，当存在多个实体类时，使用逗号(",")分隔，例如： `entities = {A.class, B.class, ...}` 。属性 `version` 表示数据库的版本号，程序启动时用于判断数据库是否需要执行升级或降级操作。
 
-在获取实例的 `getInstance()` 方法中，我们通过Room的 `Room.databaseBuilder(Context context, Class<T> cls, String name)` 方法初始化数据库，此处的三个参数依次为：上下文环境、当前抽象类的Class实例和数据库文件名称，该方法返回的Builder实例可以配置其他功能，最后我们调用Builder的 `build()` 方法创建StudentDB的实例。
+在获取实例的 `getInstance()` 方法中，我们通过Room的 `Room.databaseBuilder(Context context, Class<T> cls, String name)` 方法初始化数据库，此处的三个参数依次为：上下文环境、当前抽象类的Class实例和数据库名称，该方法返回的Builder实例可以配置其他功能，最后我们调用Builder的 `build()` 方法创建StudentDB的实例。
 
-Room默认禁止在主线程操作数据库，因为耗时操作可能会导致ANR；此处为了便于调试，我们添加配置项 `allowMainThreadQueries()` 以允许在主线程操作数据库。
+Room默认禁止在主线程操作数据库；此处为了便于调试，我们添加配置项 `allowMainThreadQueries()` 解除该限制。
 
 该类中还需要书写返回每个DAO实例的抽象方法，具体实现代码将在编译时自动生成。
 
@@ -319,7 +333,7 @@ dao.delStudent(student);
 List<Student> result = dao.getStudent();
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "TestUIBaseKT.kt":
 
