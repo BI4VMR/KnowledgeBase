@@ -342,13 +342,9 @@ List<Student> result = dao.getStudent();
 private val studentDB: StudentDBKT = StudentDBKT.getInstance(this)
 
 
-/* 查询所有记录 */
-val result: List<StudentKT> = studentDB.getStudentDAO().getStudent()
-
-
 /* 新增记录 */
 // 获取待操作的数据项ID
-val id: Long = edittext.getText().toString().toLong()
+val id: Long = edittext.text.toString().toLong()
 val name = "田所浩二$id"
 // 插入记录
 val student = StudentKT(id, name, 24)
@@ -357,7 +353,7 @@ studentDB.getStudentDAO().addStudent(student)
 
 /* 更新记录 */
 // 获取待操作的数据项ID
-val id: Long = edittext.getText().toString().toLong()
+val id: Long = edittext.text.toString().toLong()
 // 更新记录
 val student = StudentKT(id, "远野", 25)
 studentDB.getStudentDAO().updateStudent(student)
@@ -365,13 +361,154 @@ studentDB.getStudentDAO().updateStudent(student)
 
 /* 删除记录 */
 // 获取待操作的数据项ID
-val id: Long = edittext.getText().toString().toLong()
+val id: Long = edittext.text.toString().toLong()
 // 删除记录
 val student = StudentKT(id)
 studentDB.getStudentDAO().delStudent(student)
+
+
+/* 查询所有记录 */
+val result: List<StudentKT> = studentDB.getStudentDAO().getStudent()
 ```
 
 此处省略了UI控件声明与异常处理等逻辑，详见本章示例代码。
+
+# 注解与配置
+## 数据库
+### 导出调试信息
+`@Database` 注解的 `exportSchema = <true | false>` 属性用于控制是否显示调试信息，该功能仅用于调试，对编译产物毫无影响。
+
+当Room的注解被处理时，Gradle可以将二维表结构等信息以JSON格式输出到工程目录中，便于开发者查看与分析。
+
+该属性的默认值为"true"，但默认配置中并未指明输出路径，因此不会生成JSON文件。如果我们希望查看JSON文件，需要在Gradle配置文件的 `android {}` 小节中添加配置语句以指明路径。
+
+"build.gradle":
+
+```groovy
+defaultConfig {
+    javaCompileOptions {
+        // Java项目
+        annotationProcessorOptions {
+            arguments += ["room.schemaLocation": "$projectDir/RoomSchema"]
+        }
+
+        // Kotlin项目(KAPT)
+        kapt {
+            arguments { arg("room.schemaLocation", "$projectDir/RoomSchema") }
+        }
+
+        // Kotlin项目(KSP)
+        ksp {
+            arg("room.schemaLocation", "$projectDir/RoomSchema")
+        }
+    }
+}
+```
+
+上述内容也可以使用Kotlin语言书写：
+
+"build.gradle.kts":
+
+```kotlin
+defaultConfig {
+    javaCompileOptions {
+        // Java项目
+        annotationProcessorOptions {
+            arguments["room.schemaLocation"] = "$projectDir/RoomSchema"
+        }
+
+        // Kotlin项目(KAPT)
+        kapt {
+            arguments { arg("room.schemaLocation", "$projectDir/RoomSchema") }
+        }
+
+        // Kotlin项目(KSP)
+        ksp {
+            arg("room.schemaLocation", "$projectDir/RoomSchema")
+        }
+    }
+}
+```
+
+在上述示例配置中，我们将调试信息的输出目录指定为 `<当前模块根目录>/RoomSchema/` ，成功地执行一次编译任务后，工程中就会出现对应的文件。
+
+### 指定数据库文件路径
+`Room.databaseBuilder(Context context, Class<T> cls, String name)` 方法的第三参数 `name` 表示数据库名称，默认情况下，系统会在 `/data/data/<应用程序包名>/databases/` 目录中创建同名数据库文件，并自动添加".db"后缀。
+
+如果我们希望将数据库文件存放至其他目录，可以在 `name` 参数处传入完整的路径，如果系统发现该参数的值以"/"开头，就会将其视为绝对路径。例如：当我们传入 `/sdcard/StudentManager/student.db` 时，系统将会尝试在SD卡根目录下创建 `StudentManager` 目录以及 `student.db` 文件。
+
+### 允许在主线程访问数据库
+默认情况下，Room禁止在主线程访问数据库，因为I/O等耗时操作可能会导致应用程序出现ANR。
+
+当我们进行一些简单的功能验证时，可以在Builder中添加 `allowMainThreadQueries()` 配置项，以允许在主线程中直接访问数据库。
+
+## 实体类
+### 将属性映射到字段
+默认情况下，实体类中的每个全局变量都会被自动映射到二维表中，且字段名称与变量名称完全一致。如果我们希望修改属性所对应的字段名称，可以添加 `@ColumnInfo` 注解并指明 `name = <字段名称>` 属性。
+
+```java
+// ID
+@ColumnInfo(name = "student_id")
+private long id;
+
+// 姓名
+@ColumnInfo(name = "student_name")
+private String name = "";
+
+// 年龄
+private int age;
+```
+
+在上述示例代码中， `id` 属性与 `name` 属性通过注解设置了列名，它们在二维表中对应的字段名称分别为"student_id"和"student_name"； `age` 属性没有指明列名，因此在二维表中的字段名称为"age"，与变量同名。
+
+如果某些属性不需要与二维表相互关联，我们可以添加 `@Ignore` 注解，它们不会在表中生成字段。
+
+```java
+// 是否在UI中隐藏
+@Ignore
+private boolean hide;
+```
+
+### 使用自增主键
+`@PrimaryKey` 注解的 `autoGenerate = <true | false>` 属性用于控制插入记录时主键是否自增，该属性的默认值为"false"，仅当主键为整数类型时，我们可以将其设为"true"。
+
+当实体类使用Java语言编写时，插入新记录遵循以下规则：
+
+- 传入数值"0"，触发自增，新记录的主键为 $当前最大主键数值 + 1$ 。
+- 传入大于"0"的数值，如果该数值未被占用，新记录的主键即为该数值；如果该数值已被占用，则产生异常。
+- 传入小于"0"的数值，如果该数值未被占用，新记录的主键即为该数值；如果该数值已被占用，则产生异常。虽然负数不在自增ID的范围内，但与主键数据类型是匹配的，新记录可以插入成功。
+
+当实体类使用Kotlin语言编写时，若主键为非空整数，其行为与Java语言是一致的。若主键为可空整数，传入空值也可以触发自增。
+
+在新建数据实体时，其ID属性是未知的，逻辑上可以使用空值表示，例如： `var id: Long? = null` ；但我们并不推荐这样做，因为根据主键的定义，ID必然是一个非空的值，使用可空ID会导致代码可读性降低，并在查询时引入多余的空值判断逻辑。
+
+为了便于使用自增ID插入记录，我们可以提供一个将ID属性置为"0"的次要构造方法。
+
+```kotlin
+@Entity(tableName = "student_info")
+data class Student(
+
+    // ID（自增主键）
+    @PrimaryKey(autoGenerate = true)
+    var id: Long,
+
+    // 姓名
+    var name: String,
+
+    // 年龄
+    var age: Int
+) {
+
+    // 次要构造方法，插入自增记录时使用。
+    @Ignore
+    constructor(name: String, age: Int) : this(0, name, age)
+}
+```
+
+### 字段是否允许为空
+当实体类使用Java语言编写时，基本数据类型变量对应的二维表字段不可为空，并且我们不能将其修改为可空。引用数据类型变量对应的二维表字段默认可以为空；如果我们希望使某个字段不可为空，需要在对应的属性上添加 `androidx.annotation` 包中的 `@NonNull` 注解。
+
+当实体类使用Kotlin语言编写时，变量数据类型是否可空将会映射到对应的二维表字段，例如变量 `var name: String` 在二维表中是非空字段，而变量 `var address: String?` 在二维表中是可空字段。
 
 # 疑难解答
 ## 索引
