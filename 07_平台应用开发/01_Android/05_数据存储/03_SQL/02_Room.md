@@ -229,7 +229,7 @@ public abstract class StudentDB extends RoomDatabase {
             synchronized (StudentDB.class) {
                 if (instance == null) {
                     // 构造实例并进行配置
-                    instance = Room.databaseBuilder(context.getApplicationContext(), StudentDB.class, "student")
+                    instance = Room.databaseBuilder(context.getApplicationContext(), StudentDB.class, "student.db")
                             // Room默认不允许在主线程执行操作，此配置允许在主线程操作，仅适用于调试。
                             .allowMainThreadQueries()
                             // 构建实例
@@ -267,7 +267,7 @@ abstract class StudentDBKT : RoomDatabase() {
                         instance = Room.databaseBuilder(
                             context.applicationContext,
                             StudentDBKT::class.java,
-                            "student"
+                            "student.db"
                         )
                             // Room默认不允许在主线程执行操作，此配置允许在主线程操作，仅适用于调试。
                             .allowMainThreadQueries()
@@ -509,6 +509,78 @@ data class Student(
 当实体类使用Java语言编写时，基本数据类型变量对应的二维表字段不可为空，并且我们不能将其修改为可空。引用数据类型变量对应的二维表字段默认可以为空；如果我们希望使某个字段不可为空，需要在对应的属性上添加 `androidx.annotation` 包中的 `@NonNull` 注解。
 
 当实体类使用Kotlin语言编写时，变量数据类型是否可空将会映射到对应的二维表字段，例如变量 `var name: String` 在二维表中是非空字段，而变量 `var address: String?` 在二维表中是可空字段。
+
+# 版本迁移
+Room对SQLite API进行了封装，我们无需在SQLiteOpenHelper类的 `onUpgrade()` 方法中书写各个版本的判断与升级逻辑，应当转而使用Migration类。
+
+Migration类的构造方法为 `Migration(int startVersion, int endVersion)` ，第一参数 `startVersion` 表示旧的版本号；第三参数 `endVersion` 表示新的版本号，因此我们可以继承Migration类并创建一个或多个子类，在每个子类中分别实现两个版本间的升降级逻辑。
+
+以前文示例为基础，我们将学生信息表的整型字段年龄 `age` 变更为字符型字段出生日期 `birthday` ，并将数据结构升级至版本2。
+
+此时只有1和2两个版本号，本程序不必支持降级安装，因此我们只需要创建一个MigrationV1ToV2类即可，实现从版本1到版本2的迁移逻辑。
+
+"MigrationV1ToV2.java":
+
+```java
+public class MigrationV1ToV2 extends Migration {
+
+    public MigrationV1ToV2() {
+        super(1, 2);
+    }
+
+    @Override
+    public void migrate(@NonNull SupportSQLiteDatabase db) {
+        migrateV1ToV2(db);
+    }
+}
+```
+
+上述内容也可以使用Kotlin语言书写：
+
+"MigrationV1ToV2KT.kt":
+
+```kotlin
+class MigrationV1ToV2KT : Migration(1, 2) {
+
+    override fun migrate(db: SupportSQLiteDatabase) {
+        migrateV1ToV2(db);
+    }
+}
+```
+
+Migration类的回调方法 `migrate()` 将在版本迁移时被触发，我们需要在此处书写迁移逻辑，本示例省略，详见前文示例： [🧭 SQLite - 版本迁移](./01_SQLite.md#版本迁移) 。
+
+接下来，我们需要在Room的构造器中调用 `addMigrations(Migration... migrations)` 方法注册MigrationV1ToV2。
+
+"StudentDB.java":
+
+```java
+Room.databaseBuilder(context.getApplicationContext(), StudentDB.class, "student.db")
+    // 添加版本迁移工具
+    .addMigrations(new MigrationV1ToV2())
+    // 构建实例
+    .build();
+```
+
+上述内容也可以使用Kotlin语言书写：
+
+"StudentDBKT.kt":
+
+```kotlin
+Room.databaseBuilder(context.applicationContext, StudentDBKT::class.java, "student.db")
+    // 添加版本迁移工具
+    .addMigrations(MigrationV1ToV2KT())
+    // 构建实例
+    .build()
+```
+
+`addMigrations()` 方法的参数数量是可变的，如果有多个Migration的子类，我们需要将它们分别进行注册。
+
+当数据库加载时，如果程序中的版本号与本地数据库不一致，Room将会尝试调用已注册的Migration类完成迁移。例如：从版本1升级至版本2时，Room会调用前文示例中的MigrationV1ToV2类。
+
+跨版本升级时，Room将会首先尝试调用版本号相匹配的Migration类；若没有找到该类，则会依次调用中途过渡版本的所有Migration类。例如：从版本1升级至版本3时，Room会尝试调用旧版本号为"1"且新版本号为"3"的Migration类；若不存在该类，则首先调用旧版本号为"1"且新版本号为"2"的Migration类，再调用旧版本号为"2"且新版本号为"3"的Migration类。
+
+若某两个版本缺少对应的Migration类，默认情况下Room会抛出异常 `IllegalStateException: A migration from <X> to <Y> is necessary.` ，但用户数据得以保留。如果我们在Room的构造器中调用了 `fallbackToDestructiveMigration()` 方法，缺少Migration类时会直接清空旧的数据，以当前版本的数据库结构重新初始化。
 
 # 疑难解答
 ## 索引
