@@ -52,7 +52,7 @@ dependencies {
 }
 ```
 
-"room-runtime"是Room的核心组件，"room-compiler"是Room的注解处理器，一个应用程序至少需要引入这些组件才能使用Room框架。上述的三条注解处理器声明语句不可同时添加，我们需要根据项目所使用的语言进行选择。
+"room-runtime"是Room的核心组件，"room-compiler"是Room的注解处理器，一个应用程序至少需要引入这些组件才能使用Room框架。上述的三条注解处理器声明语句不可同时书写，我们需要根据项目所使用的语言进行选择。
 
 我们首先创建一个Student实体类，用于描述“学生”的属性，此处设置“ID、姓名、年龄”三个属性。为了建立实体类与二维表的关联，我们还需要在Student类的属性与方法上添加一些Room注解。
 
@@ -509,6 +509,89 @@ data class Student(
 当实体类使用Java语言编写时，基本数据类型变量对应的二维表字段不可为空，并且我们不能将其修改为可空。引用数据类型变量对应的二维表字段默认可以为空；如果我们希望使某个字段不可为空，需要在对应的属性上添加 `androidx.annotation` 包中的 `@NonNull` 注解。
 
 当实体类使用Kotlin语言编写时，变量数据类型是否可空将会映射到对应的二维表字段，例如变量 `var name: String` 在二维表中是非空字段，而变量 `var address: String?` 在二维表中是可空字段。
+
+## 数据访问类
+### 定义DAO类
+`@Dao` 注解可以被放置在抽象类或接口上，表示这是一个数据访问类，其中包括若干抽象方法。在程序编译阶段，注解处理器将会自动生成抽象方法的具体实现。
+
+以下是一个简单的DAO接口示例，其中包含对于学生信息表进行新增、删除、查询的抽象方法。
+
+"StudentDAO.java":
+
+```java
+@Dao
+public interface StudentDAO {
+
+    // 新增学生记录。
+    @Insert
+    void addStudent(Student student);
+
+    // 删除学生记录。
+    @Delete
+    void delStudent(Student student);
+
+    // 查询所有学生信息。
+    @Query("SELECT * FROM student_info")
+    List<Student> getStudent();
+}
+```
+
+上述内容也可以使用Kotlin语言书写：
+
+"StudentDAOKT.kt":
+
+```kotlin
+interface StudentDAOKT {
+
+    // 新增学生记录。
+    @Insert
+    fun addStudent(student: StudentKT)
+
+    // 删除学生记录。
+    @Delete
+    fun delStudent(student: StudentKT)
+    
+    // 查询所有学生信息。
+    @Query("SELECT * FROM student_info")
+    fun getStudent(): List<StudentKT>
+}
+```
+
+在上述示例代码中，Room注解能够生成全部符合要求的数据访问方法，如果我们需要在DAO类中添加自定义的方法，则可以将接口变更为抽象类。
+
+### 定义插入方法
+`@Insert` 注解用于定义向二维表插入记录的抽象方法，参数类型必须是我们在RoomDatabase中注册的实体类。
+
+插入方法可以拥有多个参数，以便使用者向表中批量插入记录，所有受支持的形式如下文示例代码所示：
+
+"StudentDAO.java":
+
+```java
+// 插入单个实体
+@Insert
+long insertStudent(Student student);
+
+// 插入多个实体（可变参数）
+@Insert
+long[] insertStudents(Student... students);
+
+// 插入多个实体（集合）
+@Insert
+List<Long> insertStudents(List<Student> students);
+
+// 插入多个实体（混合参数）
+@Insert
+void insertStudents(Student monitor, List<Student> students);
+```
+
+插入操作将会返回新数据在表中的"RowID"，如果参数为单个实体，则返回值类型为 `long` ；如果参数为多个实体，则返回值类型为 `long[]` 或 `List<Long>` ；如果我们并不关心生成的"RowID"，也可以将返回值类型设置为 `void` 。
+
+<!-- TODO
+> ⚠️ 警告
+>
+> SQLite中的"RowID"不一定等同于主键，我们在使用该数值前需要注意鉴别，相关知识可查阅以下链接：TODO 。
+-->
+
 
 # 版本迁移
 Room对SQLite API进行了封装，我们无需在SQLiteOpenHelper类的 `onUpgrade()` 方法中书写各个版本的判断与升级逻辑，应当转而使用Migration类。
