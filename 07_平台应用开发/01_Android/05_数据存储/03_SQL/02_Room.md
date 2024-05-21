@@ -373,7 +373,7 @@ val result: List<StudentKT> = studentDB.getStudentDAO().getStudent()
 
 此处省略了UI控件声明与异常处理等逻辑，详见本章示例代码。
 
-# 注解与配置
+# 进阶技巧
 ## 数据库
 ### 导出调试信息
 `@Database` 注解的 `exportSchema = <true | false>` 属性用于控制是否显示调试信息，该功能仅用于调试，对编译产物毫无影响。
@@ -433,9 +433,9 @@ defaultConfig {
 在上述示例配置中，我们将调试信息的输出目录指定为 `<当前模块根目录>/RoomSchema/` ，成功地执行一次编译任务后，工程中就会出现对应的文件。
 
 ### 指定数据库文件路径
-`Room.databaseBuilder(Context context, Class<T> cls, String name)` 方法的第三参数 `name` 表示数据库名称，默认情况下，系统会在 `/data/data/<应用程序包名>/databases/` 目录中创建同名数据库文件，并自动添加".db"后缀。
+`Room.databaseBuilder(Context context, Class<T> cls, String name)` 方法的第三参数 `name` 表示数据库文件名称，默认情况下，系统会在 `/data/data/<应用程序包名>/databases/` 目录中创建同名数据库文件。
 
-如果我们希望将数据库文件存放至其他目录，可以在 `name` 参数处传入完整的路径，如果系统发现该参数的值以"/"开头，就会将其视为绝对路径。例如：当我们传入 `/sdcard/StudentManager/student.db` 时，系统将会尝试在SD卡根目录下创建 `StudentManager` 目录以及 `student.db` 文件。
+如果我们希望将数据库文件存放至其他目录，可以在 `name` 参数处传入完整的路径；程序启动时，若该参数的值以"/"开头，就会被视为绝对路径。例如：当我们传入 `/sdcard/StudentManager/student.db` 时，系统将会尝试在SD卡根目录下创建 `StudentManager` 目录以及 `student.db` 文件。
 
 ### 允许在主线程访问数据库
 默认情况下，Room禁止在主线程访问数据库，因为I/O等耗时操作可能会导致应用程序出现ANR。
@@ -444,7 +444,9 @@ defaultConfig {
 
 ## 实体类
 ### 将属性映射到字段
-默认情况下，实体类中的每个全局变量都会被自动映射到二维表中，且字段名称与变量名称完全一致。如果我们希望修改属性所对应的字段名称，可以添加 `@ColumnInfo` 注解并指明 `name = <字段名称>` 属性。
+默认情况下，实体类中的每个全局变量都会被自动映射到二维表中，且字段名称与变量名称完全一致；Room将会使用与变量名称对应的"get"与"set"方法访问属性，因此实体类必须符合Java Bean规范。
+
+如果我们希望修改属性所对应的字段名称，可以添加 `@ColumnInfo` 注解并指明 `name = <字段名称>` 属性。
 
 ```java
 // ID
@@ -459,7 +461,7 @@ private String name = "";
 private int age;
 ```
 
-在上述示例代码中， `id` 属性与 `name` 属性通过注解设置了列名，它们在二维表中对应的字段名称分别为"student_id"和"student_name"； `age` 属性没有指明列名，因此在二维表中的字段名称为"age"，与变量同名。
+在上述示例代码中， `id` 属性与 `name` 属性通过注解设置了字段名称，它们在二维表中对应的字段名称分别为"student_id"和"student_name"； `age` 属性没有指明列名，因此在二维表中对应的字段名称为"age"，与变量同名。
 
 如果某些属性不需要与二维表相互关联，我们可以添加 `@Ignore` 注解，它们不会在表中生成字段。
 
@@ -510,9 +512,9 @@ data class Student(
 
 当实体类使用Kotlin语言编写时，变量数据类型是否可空将会映射到对应的二维表字段，例如变量 `var name: String` 在二维表中是非空字段，而变量 `var address: String?` 在二维表中是可空字段。
 
-## 数据访问类
-### 定义DAO类
-`@Dao` 注解可以被放置在抽象类或接口上，表示这是一个数据访问类，其中包括若干抽象方法。在程序编译阶段，注解处理器将会自动生成抽象方法的具体实现。
+## 数据访问对象类
+### 简介
+`@Dao` 注解可以被放置在抽象类或接口上，表示这是一个数据访问类，其中包括若干抽象方法。在程序编译阶段，注解处理器将会根据其他注解信息自动生成抽象方法的具体实现。
 
 以下是一个简单的DAO接口示例，其中包含对于学生信息表进行新增、删除、查询的抽象方法。
 
@@ -557,10 +559,10 @@ interface StudentDAOKT {
 }
 ```
 
-在上述示例代码中，Room注解能够生成全部符合要求的数据访问方法，如果我们需要在DAO类中添加自定义的方法，则可以将接口变更为抽象类。
+在上述示例代码中，Room注解能够生成全部符合需求的数据访问方法，因此我们将StudentDAO定义为接口；若需要在DAO类中添加自定义方法，我们也可以将接口变更为抽象类。
 
 ### 定义插入方法
-`@Insert` 注解用于定义向二维表插入记录的抽象方法，参数类型必须是我们在RoomDatabase中注册的实体类。
+`@Insert` 注解用于声明向二维表中插入记录的抽象方法，参数类型必须是我们在RoomDatabase中注册的实体类。
 
 插入方法可以拥有多个参数，以便使用者向表中批量插入记录，所有受支持的形式如下文示例代码所示：
 
@@ -584,14 +586,33 @@ List<Long> insertStudents(List<Student> students);
 void insertStudents(Student monitor, List<Student> students);
 ```
 
-插入操作将会返回新数据在表中的"RowID"，如果参数为单个实体，则返回值类型为 `long` ；如果参数为多个实体，则返回值类型为 `long[]` 或 `List<Long>` ；如果我们并不关心生成的"RowID"，也可以将返回值类型设置为 `void` 。
+上述内容也可以使用Kotlin语言书写：
 
-<!-- TODO
+"StudentDAOKT.kt":
+
+```kotlin
+// 插入单个实体
+@Insert
+fun insertStudent(student: StudentKT): Long
+
+// 插入多个实体（可变参数）
+@Insert
+fun insertStudents(vararg students: StudentKT): Array<Long>
+
+// 插入多个实体（集合）
+@Insert
+fun insertStudents(students: List<StudentKT>): List<Long>
+
+// 插入多个实体（混合参数）
+@Insert
+fun insertStudents(monitor: StudentKT, students: List<StudentKT>)
+```
+
+插入操作将会返回新记录在二维表中的"RowID"，如果参数为单个实体，则返回值类型为 `long` ；如果参数为多个实体，则返回值类型可以为 `long[]` 或 `List<Long>` ；如果我们并不关心"RowID"，也可以将返回值类型设置为 `void` 。
+
 > ⚠️ 警告
 >
-> SQLite中的"RowID"不一定等同于主键，我们在使用该数值前需要注意鉴别，相关知识可查阅以下链接：TODO 。
--->
-
+> SQLite中的"RowID"不一定等同于主键，我们在使用该数值前需要注意鉴别，此处省略具体描述，详见相关章节： [🧭 SQLite - "RowID"字段](../../../../04_应用软件/08_存储工具/01_关系型数据库/01_SQLite/02_基本概念.md#rowid字段) 。
 
 # 版本迁移
 Room对SQLite API进行了封装，我们无需在SQLiteOpenHelper类的 `onUpgrade()` 方法中书写各个版本的判断与升级逻辑，应当转而使用Migration类。
@@ -663,7 +684,7 @@ Room.databaseBuilder(context.applicationContext, StudentDBKT::class.java, "stude
 
 跨版本升级时，Room将会首先尝试调用版本号相匹配的Migration类；若没有找到该类，则会依次调用中途过渡版本的所有Migration类。例如：从版本1升级至版本3时，Room会尝试调用旧版本号为"1"且新版本号为"3"的Migration类；若不存在该类，则首先调用旧版本号为"1"且新版本号为"2"的Migration类，再调用旧版本号为"2"且新版本号为"3"的Migration类。
 
-若某两个版本缺少对应的Migration类，默认情况下Room会抛出异常 `IllegalStateException: A migration from <X> to <Y> is necessary.` ，但用户数据得以保留。如果我们在Room的构造器中调用了 `fallbackToDestructiveMigration()` 方法，缺少Migration类时会直接清空旧的数据，以当前版本的数据库结构重新初始化。
+若某两个版本缺少对应的Migration类，默认情况下Room会抛出异常： `IllegalStateException: A migration from <X> to <Y> is necessary.` ，但用户数据得以保留。如果我们在Room的构造器中调用了 `fallbackToDestructiveMigration()` 方法，缺少Migration类时会直接清空旧的数据，以当前版本的数据库结构重新初始化。
 
 # 疑难解答
 ## 索引
