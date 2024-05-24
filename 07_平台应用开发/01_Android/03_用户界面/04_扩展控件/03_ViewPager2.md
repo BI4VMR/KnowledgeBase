@@ -47,7 +47,7 @@ public class MyVPAdapter extends FragmentStateAdapter {
 }
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "MyVPAdapterKT.kt":
 
@@ -113,7 +113,7 @@ MyVPAdapter adapter = new MyVPAdapter(this, pages);
 viewPager2.setAdapter(adapter);
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "TestUIBaseKT.kt":
 
@@ -201,7 +201,7 @@ if (rv instanceof RecyclerView) {
 }
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "TestUIStyleKT.kt":
 
@@ -301,7 +301,7 @@ viewpager2.post(() -> {
 });
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "TestUILoop1KT.kt":
 
@@ -360,7 +360,7 @@ public void onPageScrollStateChanged(int state) {
 }
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "TestUILoop1KT.kt":
 
@@ -443,7 +443,7 @@ public class MyVPAdapter extends FragmentStateAdapter {
 }
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "MyVPAdapterKT.kt":
 
@@ -500,7 +500,7 @@ viewpager2.post(() -> {
 });
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "TestUILoop2KT.kt":
 
@@ -546,7 +546,7 @@ public int getMiddlePosition() {
 }
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "MyVPAdapterKT.kt":
 
@@ -626,7 +626,7 @@ public class MyVPAdapter extends FragmentStateAdapter {
 }
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "MyVPAdapterKT.kt":
 

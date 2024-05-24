@@ -140,7 +140,7 @@ TextView在布局文件中的典型配置如下文代码块所示：
 tvMarquee.setSelected(true);
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "TestUIScrollDisplay.kt":
 
@@ -227,7 +227,7 @@ ss1.setSpan(new BackgroundColorSpan(Color.GREEN), 8, 10, 0);
 textview.setText(ss1);
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "TestUISpan.kt":
 
@@ -284,7 +284,7 @@ ss2.setSpan(absoluteSizeSpan, 6, 8, 0);
 textview2.setText(ss2);
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "TestUISpan.kt":
 
@@ -341,7 +341,7 @@ ClickableSpan clickableSpan = new ClickableSpan() {
 };
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "TestUISpan.kt":
 
@@ -378,7 +378,7 @@ textview3.setMovementMethod(LinkMovementMethod.getInstance());
 textview3.setText(ss3);
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "TestUISpan.kt":
 

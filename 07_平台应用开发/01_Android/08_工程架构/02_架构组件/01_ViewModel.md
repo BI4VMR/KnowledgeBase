@@ -40,7 +40,7 @@ public class MyViewModel extends ViewModel {
 }
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "MyViewModel.kt":
 
@@ -98,7 +98,7 @@ getSupportFragmentManager()
         .commit();
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "TestUIBase.kt":
 
@@ -133,7 +133,7 @@ int data = vm.getNum();
 Log.i(TAG, "Get data in Activity's VM: " + data);
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "TestFragment.kt":
 
@@ -211,7 +211,7 @@ public void onCreate(@Nullable Bundle savedInstanceState) {
 }
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "TestFragment.kt":
 
@@ -283,7 +283,7 @@ public class AndroidVM extends AndroidViewModel {
 }
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "AndroidVM.kt":
 

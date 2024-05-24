@@ -39,7 +39,7 @@ public class MyVPAdapter extends FragmentStatePagerAdapter {
 }
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "MyVPAdapterKT.kt":
 
@@ -99,7 +99,7 @@ MyVPAdapter adapter = new MyVPAdapter(this, pages);
 viewpager.setAdapter(adapter);
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "TestUIBaseKT.kt":
 
@@ -209,7 +209,7 @@ public class VPTouchMaskView extends View {
 }
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "VPTouchMaskViewKT.kt":
 
@@ -267,7 +267,7 @@ viewpager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
 });
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "TestUISwipe1PageKT.kt":
 

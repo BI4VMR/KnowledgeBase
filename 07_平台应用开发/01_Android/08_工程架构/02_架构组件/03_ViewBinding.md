@@ -25,7 +25,7 @@ android {
 }
 ```
 
-上述内容也可以使用Kotlin语言进行书写：
+上述内容也可以使用Kotlin语言书写：
 
 "build.gradle.kts":
 
