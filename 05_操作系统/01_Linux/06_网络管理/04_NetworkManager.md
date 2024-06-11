@@ -5,7 +5,7 @@ NetworkManager主要包括 `nmcli` 和 `nmtui` 两个命令，前者为CLI配置
 
 # 网络设备管理
 ## 查看设备信息
-执行 `nmcli device` 可以查看网络设备概要信息：
+执行 `nmcli device` 命令可以查看网络设备的概要信息：
 
 ```text
 [root@Fedora ~]# nmcli device
@@ -15,9 +15,9 @@ wlan0   wifi      connected  Guest
 lo      loopback  unmanaged  --
 ```
 
-"DEVICE"列表示设备名称；"TYPE"列表示设备类型；"CONNECTION"列表示当前与该设备关联的配置文件名称。
+`DEVICE` 列表示设备名称； `TYPE` 列表示设备类型； `CONNECTION` 列表示当前与该设备关联的配置文件名称。
 
-"STATE"列表示设备的状态，共有以下四种取值：
+`STATE` 列表示设备状态，共有以下四种取值：
 
 🔷 `connected`
 
@@ -37,7 +37,7 @@ lo      loopback  unmanaged  --
 
 <br />
 
-执行 `nmcli device show {设备名称}` 可以查看指定设备的详细信息：
+执行 `nmcli device show [设备名称]` 命令可以查看指定设备的详细信息：
 
 ```text
 [root@Fedora ~]# nmcli device show lo
@@ -55,9 +55,9 @@ IP4.GATEWAY:                       --
 ## 激活或断开连接
 一个设备只能激活一个连接配置，但可以拥有多个备选配置。
 
-执行 `nmcli device connect <设备名称>` 可以使设备激活连接，若设备拥有多个连接配置，优先选择上次使用的配置，其次选择优先级数值较低的配置；若没有连接配置，则自动生成一个空的配置并将其激活。
+执行 `nmcli device connect <设备名称>` 命令可以使设备激活连接，若设备拥有多个连接配置，优先选择上次使用的配置，其次选择优先级数值较低的配置；若没有连接配置，则自动生成一个空的配置并将其激活。
 
-执行 `nmcli device disconnect <设备名称>` 可以使设备断开连接。
+执行 `nmcli device disconnect <设备名称>` 命令可以使设备断开连接。
 
 > ⚠️ 警告
 >
@@ -65,7 +65,7 @@ IP4.GATEWAY:                       --
 
 # 连接配置管理
 ## 查看配置信息
-执行 `nmcli connection` 可以查看连接配置的状态：
+执行 `nmcli connection` 命令可以查看连接配置的状态：
 
 ```text
 [root@Fedora ~]# nmcli connection
@@ -73,19 +73,46 @@ NAME   UUID                                  TYPE      DEVICE
 ens32  efb3377e-7bcf-4594-8c6d-e6880cbaa150  ethernet  ens32
 ```
 
-执行 `nmcli connection show {配置名称}` 可以查看指定配置的详细信息。
+执行 `nmcli connection show [配置名称]` 命令可以查看指定配置的详细信息。
 
 ## 修改配置
-执行 `nmcli connection edit <配置名称>` 可以进入交互式命令行，根据文本提示操作即可。这种方式类似于网络设备的CLI，"goto"表示进入子菜单；"back"表示返回上一级；"change"表示更改当前属性；"save"表示保存所有变更；"quit"表示退出程序。
+执行 `nmcli connection edit <配置名称>` 命令可以进入交互式命令行，根据文本提示操作即可。这种方式类似于网络设备的CLI，"goto"表示进入子菜单；"back"表示返回上一级；"change"表示更改当前属性；"save"表示保存所有变更；"quit"表示退出程序。
 
-执行 `nmcli connection modify <配置名称> <属性> <值>` 可以直接修改指定属性，这种方式适合在脚本中进行操作，常用的属性与输入格式见下文。
+```text
+[root@Fedora ~]# nmcli connection edit E1
+
+# 进入IPv4配置菜单
+nmcli> goto ipv4
+
+# 进入地址配置菜单
+nmcli ipv4> goto addresses
+
+# 修改当前配置
+nmcli ipv4.addresses> change
+编辑 "addresses" 值：172.18.6.2/16
+
+# 返回上一级菜单
+nmcli ipv4.addresses> back
+
+# 返回上一级菜单
+nmcli ipv4> back
+
+# 保存配置
+nmcli> save
+成功地更新了连接 "E1" (fe093b1e-ffd4-3ff5-b64d-d4546126c02f)。
+
+# 退出命令行
+nmcli> quit
+```
+
+执行 `nmcli connection modify <配置名称> <属性> <值>` 命令可以直接修改指定属性，这种方式适合在脚本中进行操作，常用的属性与输入格式见下文代码块：
 
 ```text
 # 修改配置名称
 [root@Fedora ~]# nmcli connection modify <配置名称> connection.id <新的名称>
 
 # 修改地址配置方式
-[root@Fedora ~]# nmcli connection modify <配置名称> ipv4.method { <auto> | <manual> }
+[root@Fedora ~]# nmcli connection modify <配置名称> ipv4.method <auto | manual>
 
 # 修改IP地址
 [root@Fedora ~]# nmcli connection modify <配置名称> ipv4.addresses <IP地址>/<前缀长度>
@@ -107,7 +134,7 @@ ens32  efb3377e-7bcf-4594-8c6d-e6880cbaa150  ethernet  ens32
 ```
 
 ## 应用配置
-使用 `nmcli connection { <up> | <down> } <配置名称>` 可以启用或禁用配置，"up"操作还可以更新设备已加载的配置，使管理员的修改立即生效。
+使用 `nmcli connection <up | down> <配置名称>` 命令可以启用或禁用配置，"up"操作还可以更新设备已加载的配置，使管理员的修改立即生效。
 
 ## 新建配置
 使用 `nmcli connection add` 命令可以新建配置，我们必须指定连接名称、关联的设备和链路层类型三个属性，其它属性可以创建配置后再按需修改。
