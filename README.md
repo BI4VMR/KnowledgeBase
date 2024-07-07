@@ -247,6 +247,8 @@ TODO 此处填写【结果分析】
 
 </div>
 
+VSCode插件格式化表格的快捷键：Windows - `Alt + Shift + F` ;Linux - `Ctrl + Shift + I` 。
+
 <!-- Hide
 
 # 提交命令

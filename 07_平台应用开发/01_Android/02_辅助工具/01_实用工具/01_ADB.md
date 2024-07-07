@@ -365,3 +365,28 @@ Mem:             5.5G        5.0G        502M        1.4M         80M
 -/+ buffers/cache:           4.9G        581M
 Swap:            2.0G        0.9G        1.0G
 ```
+
+# 疑难解答
+## 索引
+
+<div align="center">
+
+|       序号        |                      摘要                       |
+| :---------------: | :---------------------------------------------: |
+| [案例一](#案例一) | 在Linux环境中，PC无法识别通过USB连接的ADB设备。 |
+
+</div>
+
+## 案例一
+### 问题描述
+Android设备已经开启了ADB，当我们将其使用USB方式连接至Linux系统的PC时，PC无法识别该设备。
+
+### 问题分析
+部分版本的Linux系统没有内置Android设备对应的USB配置，因此无法识别设备。
+
+### 解决方案
+以下项目包含众多Android设备厂商对应的USB识别码：
+
+[🔗 GitHub - 51-android - snowdream](https://github.com/snowdream/51-android)
+
+我们可以访问该项目的网页，并下载 `51-android` 配置文件，然后将其放置到PC的 `/etc/udev/rules.d/` 目录中，并打开终端执行 `systemctl restart udevd` 命令加载配置文件。
