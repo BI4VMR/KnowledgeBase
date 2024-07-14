@@ -111,7 +111,7 @@
 
 ❌ 错误
 
-VSCode插件格式化表格的快捷键：Windows - `Alt + Shift + F` ;Linux - `Ctrl + Shift + I` 。
+VSCode插件格式化表格的快捷键：Windows - `Alt + Shift + F` ; Linux - `Ctrl + Shift + I` 。
 
 # 标识信息格式
 ## 链接
