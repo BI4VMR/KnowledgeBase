@@ -1,7 +1,8 @@
 # 简介
-Timer是JDK内置的定时任务管理工具，可以在特定时刻或以固定间隔循环执行任务。
+Timer是JDK内置的定时任务管理工具，可以在特定时刻单次执行任务，或以固定间隔循环执行任务。
 
-每个Timer实例将会与一个线程关联，用于执行TimerTask。Timer的队列可以被添加多个计划任务，但TimerTask实例不可复用，如果我们重复将其添加到Timer队列中，则会出现异常： `IllegalStateException(Task already scheduled or cancelled)` 。
+Timer的任务使用TimerTask表示，
+每个Timer对象将会创建一个工作线程，用于执行TimerTask任务。Timer的任务队列可以被添加多个计划任务，但TimerTask对象不可复用，如果我们将同一个TimerTask对象重复添加到Timer队列中，则会出现异常： `IllegalStateException(Task already scheduled or cancelled)` 。
 
 # 基本应用
 Timer的任务使用TimerTask承载，该类是Runnable接口的实现类，我们首先需要创建自定义类继承自TimerTask类，并实现 `run()` 方法。
