@@ -267,4 +267,17 @@ msg=$(uuidgen | awk '{print toupper($0)}'); git add .; git commit -m "$msg"; git
 msg=$(uuidgen | awk '{print toupper($0)}'); git add .; git commit -m "$msg";git push github; git push private;
 ```
 
+多个模块的BuildConfig冲突导致编译失败
+
+> Task :sample:mergeLibDexDebug FAILED
+ERROR: /home/bi4vmr/Project/Pateo/Gerrit212/Pateo-APP-COMMON/packages/common/PateoWeUI/libs/weui-core/build/.transforms/655facb923193c287625cad02831b812/transformed/debug/com/pateo/weui/BuildConfig.dex: D8: Type com.pateo.weui.BuildConfig is defined multiple times: /home/bi4vmr/Project/Pateo/Gerrit212/Pateo-APP-COMMON/packages/common/PateoWeUI/libs/weui-core/build/.transforms/655facb923193c287625cad02831b812/transformed/debug/com/pateo/weui/BuildConfig.dex, /home/bi4vmr/Project/Pateo/Gerrit212/Pateo-APP-COMMON/packages/common/PateoWeUI/libs/weui-tabs/build/.transforms/ca879f93720342f59730dd93cd3050a2/transformed/debug/com/pateo/weui/BuildConfig.dex
+com.android.builder.dexing.DexArchiveMergerException: Error while merging dex archives: 
+Learn how to resolve the issue at https://developer.android.com/studio/build/dependencies#duplicate_classes.
+Type com.pateo.weui.BuildConfig is defined multiple times: /home/bi4vmr/Project/Pateo/Gerrit212/Pateo-APP-COMMON/packages/common/PateoWeUI/libs/weui-core/build/.transforms/655facb923193c287625cad02831b812/transformed/debug/com/pateo/weui/BuildConfig.dex, /home/bi4vmr/Project/Pateo/Gerrit212/Pateo-APP-COMMON/packages/common/PateoWeUI/libs/weui-tabs/build/.transforms/ca879f93720342f59730dd93cd3050a2/transformed/debug/com/pateo/weui/BuildConfig.dex
+
+
+android {
+    namespace = "com.aaa.rounded"
+}
+
 -->
