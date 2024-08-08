@@ -111,8 +111,6 @@
 
 ❌ 错误
 
-VSCode插件格式化表格的快捷键：Windows - `Alt + Shift + F` ; Linux - `Ctrl + Shift + I` 。
-
 # 标识信息格式
 ## 链接
 
@@ -250,6 +248,10 @@ TODO 此处填写【结果分析】
 🔺 `<异常名称>`
 
 <!-- TODO 此处填写【异常说明】 -->
+
+
+# 插件技巧
+VSCode插件格式化表格的快捷键：Windows - `Alt + Shift + F` ; Linux - `Ctrl + Shift + I` 。
 
 
 <!-- Hide
