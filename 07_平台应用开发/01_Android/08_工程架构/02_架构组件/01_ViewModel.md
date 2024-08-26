@@ -3,9 +3,9 @@ ViewModel是Jetpack提供的架构组件，可供开发者创建MVVM架构的应
 
 在采用MVVM架构的应用程序中，Activity不再直接持有数据，而是观察ViewModel中的可观察变量；当这些变量的值发生改变时，可观察对象将会通知Activity刷新界面。
 
-本章示例代码详见以下链接：
+本章的示例工程详见以下链接：
 
-- [🔗 示例工程：ViewModel](https://github.com/BI4VMR/Study-Android/tree/master/M08_Architecture/C01_Component/S01_ViewModel)
+- [🔗 示例工程：ViewModel](https://github.com/BI4VMR/Study-Android/tree/master/M08_Architecture/C02_Component/S01_ViewModel)
 
 # 基本应用
 下文示例展示了ViewModel的基本使用方法。
