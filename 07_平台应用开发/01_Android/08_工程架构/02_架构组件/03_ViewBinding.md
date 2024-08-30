@@ -38,6 +38,32 @@ android {
 }
 ```
 
+在较新版本的项目中，可以在 `buildFeatures {}` 中开启ViewBinding特性：
+
+"build.gradle":
+
+```groovy
+android {
+    buildFeatures {
+        // 开启ViewBinding
+        viewBinding = true
+    }
+}
+```
+
+上述内容也可以使用Kotlin语言书写：
+
+"build.gradle.kts":
+
+```kotlin
+android {
+    buildFeatures {
+        // 开启ViewBinding
+        viewBinding = true
+    }
+}
+```
+
 接着我们编写一个登录界面布局文件，为了缩短篇幅，此处只列出关键的属性。
 
 "testui_base.xml":
