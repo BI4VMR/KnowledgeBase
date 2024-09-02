@@ -1,7 +1,33 @@
 # 简介
-Handler是Android中的一种消息队列机制，也是UI体系的基础工具。
+Handler是Android中的一种消息队列机制，能够对多个任务进行排序，并按照顺序依次处理每个任务。Handler是Android Framework处理事件序列的常用工具，也是Android UI体系的基础工具。
 
-与大多数操作系统相同，Android的UI体系也采用了单线程模型；各个组件将更新指令通过Handler发送至事件队列中，事件循环不断地从队列中检索待处理的更新指令，然后依次进行处理，确保有序性。
+与绝大多数操作系统相同，为了避免多线程更新UI导致状态不一致、死锁等问题，Android也采用了单线程UI模型。各个组件通过Handler将更新指令发送至事件队列中，事件循环不断地从队列中检索待处理的更新指令，然后依次进行处理，确保指令的有序性。
+
+
+
+
+
+```text
+
+08-22 05:52:14.065 25317 25370 E AndroidRuntime: FATAL EXCEPTION: Thread-2
+08-22 05:52:14.065 25317 25370 E AndroidRuntime: Process: net.bi4vmr.study.system.concurrent.handler, PID: 25317
+08-22 05:52:14.065 25317 25370 E AndroidRuntime: android.view.ViewRootImpl$CalledFromWrongThreadException: Only the original thread that created a view hierarchy can touch its views.
+08-22 05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.ViewRootImpl.checkThread(ViewRootImpl.java:9526)
+08-22 05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.ViewRootImpl.invalidateChildInParent(ViewRootImpl.java:1931)
+08-22 05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.ViewGroup.invalidateChild(ViewGroup.java:6147)
+08-22 05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.View.invalidateInternal(View.java:18857)
+08-22 05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.View.invalidate(View.java:18817)
+08-22 05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.View.invalidate(View.java:18799)
+08-22 05:52:14.065 25317 25370 E AndroidRuntime:        at net.bi4vmr.study.base.TestUIBaseKT$onCreate$1$1$1.invoke(TestUIBaseKT.kt:64)
+08-22 05:52:14.065 25317 25370 E AndroidRuntime:        at net.bi4vmr.study.base.TestUIBaseKT$onCreate$1$1$1.invoke(TestUIBaseKT.kt:62)
+08-22 05:52:14.065 25317 25370 E AndroidRuntime:        at kotlin.concurrent.ThreadsKt$thread$thread$1.run(Thread.kt:30)
+
+```
+
+
+
+
+
 <!-- TODO
 
 APP的主线程通常就是控制UI更新的线程，因此我们需要在主线程中进行UI更新操作；对于耗时较长的任务（例如：下载图片、统计数据等），我们
@@ -12,24 +38,24 @@ Android中的消息通信机制，用于 子线程与主线程间的通讯，实
 
 
 
+Handler机制所涉及的组件及工作原理可参考下文图片：
+
 <div align="center">
 
 ![Handler的工作原理](./Assets_Handler/简介_Handler的工作原理.jpg)
 
 </div>
 
+下文列表对Handler机制的各个组件进行了详细的说明：
+
+- `Message` : 消息。
+- `MessageQueue` : 消息队列
+- `Looper` : 消息的遍历者
+- `Handler` : 消息的发起者
 
 
-    Message：消息
-    Hanlder：消息的发起者
-    Looper：消息的遍历者
-    MessageQueue：消息队列
 
 
-Handler的主要功能包括：
-消息传递：在不同线程之间传递消息。
-任务调度：在指定时间执行任务。
-线程同步：协调不同线程之间的操作。
 Handler 的主要组成部分
 Looper：每个线程都有一个Looper对象，负责管理该线程的消息队列（MessageQueue）。
 MessageQueue：存放消息的队列，Looper从队列中取出消息并交给Handler处理。
