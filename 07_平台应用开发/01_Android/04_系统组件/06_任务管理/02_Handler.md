@@ -1,43 +1,6 @@
 # 简介
 Handler是Android中的一种消息队列机制，能够对多个任务进行排序，并按照顺序依次处理每个任务。Handler是Android Framework处理事件序列的常用工具，也是Android UI体系的基础工具。
 
-与绝大多数操作系统相同，为了避免多线程更新UI导致状态不一致、死锁等问题，Android也采用了单线程UI模型。各个组件通过Handler将更新指令发送至事件队列中，事件循环不断地从队列中检索待处理的更新指令，然后依次进行处理，确保指令的有序性。
-
-
-
-
-
-```text
-
-08-22 05:52:14.065 25317 25370 E AndroidRuntime: FATAL EXCEPTION: Thread-2
-08-22 05:52:14.065 25317 25370 E AndroidRuntime: Process: net.bi4vmr.study.system.concurrent.handler, PID: 25317
-08-22 05:52:14.065 25317 25370 E AndroidRuntime: android.view.ViewRootImpl$CalledFromWrongThreadException: Only the original thread that created a view hierarchy can touch its views.
-08-22 05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.ViewRootImpl.checkThread(ViewRootImpl.java:9526)
-08-22 05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.ViewRootImpl.invalidateChildInParent(ViewRootImpl.java:1931)
-08-22 05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.ViewGroup.invalidateChild(ViewGroup.java:6147)
-08-22 05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.View.invalidateInternal(View.java:18857)
-08-22 05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.View.invalidate(View.java:18817)
-08-22 05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.View.invalidate(View.java:18799)
-08-22 05:52:14.065 25317 25370 E AndroidRuntime:        at net.bi4vmr.study.base.TestUIBaseKT$onCreate$1$1$1.invoke(TestUIBaseKT.kt:64)
-08-22 05:52:14.065 25317 25370 E AndroidRuntime:        at net.bi4vmr.study.base.TestUIBaseKT$onCreate$1$1$1.invoke(TestUIBaseKT.kt:62)
-08-22 05:52:14.065 25317 25370 E AndroidRuntime:        at kotlin.concurrent.ThreadsKt$thread$thread$1.run(Thread.kt:30)
-
-```
-
-
-
-
-
-<!-- TODO
-
-APP的主线程通常就是控制UI更新的线程，因此我们需要在主线程中进行UI更新操作；对于耗时较长的任务（例如：下载图片、统计数据等），我们
-
-在Android中，Handler机制是用于在不同线程之间传递消息和调度任务的核心组件。它主要用于解决线程间的通信问题，特别是在Android应用程序中，它常用于实现异步任务和UI更新。
-
-Android中的消息通信机制，用于 子线程与主线程间的通讯，实现了一种 非堵塞的消息传递机制，把子线程中的 UI更新信息 发送给主线程(UI线程)，以此完成UI更新操作。Android中主线程不能进行耗时操作，所有的耗时操作都需要在子线程中进行，耗时操作完成后如果需要更新ui，就需要把信息传给主线程更新ui。
-
-
-
 Handler机制所涉及的组件及工作原理可参考下文图片：
 
 <div align="center">
@@ -46,32 +9,31 @@ Handler机制所涉及的组件及工作原理可参考下文图片：
 
 </div>
 
-下文列表对Handler机制的各个组件进行了详细的说明：
+下文列表将对Handler机制中的各个组件进行详细说明：
 
-- `Message` : 消息。
-- `MessageQueue` : 消息队列
-- `Looper` : 消息的遍历者
-- `Handler` : 消息的发起者
+- `Message` : 消息，包括消息类型标识符、参数、回调方法等。
+- `MessageQueue` : 消息队列，用于管理尚未被处理的消息；所有消息将按照它们预计被处理的时刻排序。
+- `Looper` : 调度器，消息队列中有消息时处理消息，无消息时阻塞等待新的消息。每个线程只有一个Looper对象。
+- `Handler` : 消息发送者，是我们向MessageQueue发送消息与处理消息的访问点。
 
+与绝大多数操作系统相同，为了避免多线程更新UI导致状态不一致、死锁等问题，Android也采用了单线程UI模型。各个组件通过Handler将更新指令发送到UI事件队列中，调度器不断地从队列中检索待处理的指令，然后依次进行处理，确保指令的有序性。
 
+每当我们发起UI更新请求时，ViewRootImpl的 `checkThread()` 方法会检查创建View的线程与请求更新的线程是否一致，如果两者不一致，将会抛出以下异常：
 
+```text
+05:52:14.065 25317 25370 E AndroidRuntime: Process: net.bi4vmr.study.system.concurrent.handler, PID: 25317
+05:52:14.065 25317 25370 E AndroidRuntime: android.view.ViewRootImpl$CalledFromWrongThreadException: Only the original thread that created a view hierarchy can touch its views.
+05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.ViewRootImpl.checkThread(ViewRootImpl.java:9526)
+05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.ViewRootImpl.invalidateChildInParent(ViewRootImpl.java:1931)
+05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.ViewGroup.invalidateChild(ViewGroup.java:6147)
+05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.View.invalidateInternal(View.java:18857)
+05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.View.invalidate(View.java:18817)
+05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.View.invalidate(View.java:18799)
+05:52:14.065 25317 25370 E AndroidRuntime:        at net.bi4vmr.study.base.TestUIBase$onCreate$1.invoke(TestUIBaseKT.kt:62)
+05:52:14.065 25317 25370 E AndroidRuntime:        at kotlin.concurrent.ThreadsKt$thread$thread$1.run(Thread.kt:30)
+```
 
-Handler 的主要组成部分
-Looper：每个线程都有一个Looper对象，负责管理该线程的消息队列（MessageQueue）。
-MessageQueue：存放消息的队列，Looper从队列中取出消息并交给Handler处理。
-Message：消息对象，包含数据和处理逻辑。
-Handler：负责处理消息的对象。
-
-
-
-
-这里主要就是创建了消息队列MessageQueue，并让它供Looper持有，因为一个线程最大只有一个Looper对象，所以一个线程最多也只有一个消息队列。然后再把当前线程赋值给mThread。
-
-无消息，阻塞，有消息，工作
-
-
-
--->
+APP的主线程通常就是创建View的线程，因此我们需要在主线程中进行UI更新操作；对于耗时较长的任务（例如：下载图片、统计数据等），我们应当开启子线程进行处理，并将结果通过Handler从子线程发送至主线程，才能成功地更新UI并避免前文的异常。
 
 # 基本应用
 以下示例展示了Handler的基本使用方法：
@@ -204,9 +166,9 @@ msg.arg2 = 1919810;
 mHandler.sendMessage(msg);
 ```
 
-在上述代码中，我们使用Message的静态方法 `obtain()` 获取Message对象，然后设置其他参数并将其提交到MessageQueue中。
+在上述代码中，我们使用Message的静态方法 `obtain()` 获取Message对象，然后设置参数并通过Handler的 `sendMessage()` 方法将Message提交到MessageQueue中。
 
-Message对象被使用完毕后，系统不会立刻将其回收，而是放置在缓存池中；当我们调用 `obtain()` 方法时，系统会从缓存池中取出已缓存的Message对象，将旧内容清空后返回。因此我们推荐使用 `obtain()` 方法获取Message对象，而不是手动创建Message对象。
+Message对象被使用完毕后，系统不会立刻将其回收，而是放置在缓存池中；当我们调用 `obtain()` 方法时，系统会从缓存池中取出已缓存的Message对象。因此我们推荐使用 `obtain()` 方法获取Message对象，而不是手动创建Message对象。
 
 Message对象的 `arg1` 与 `arg2` 属性是两个"int"型变量，它们可以携带一些简单的参数，以便 `handleMessage()` 回调方法处理这种Message时进行对应的操作。
 
@@ -239,17 +201,41 @@ mHandler.sendMessage(msg)
 - `Object obj` 属性：该属性可以携带单个Object数据；它的访问修饰符为"public"，我们可以直接读写。
 - `Bundle data` 属性：该属性可以携带一组Bundle数据；我们需要使用 `setData()` 和 `getData()` 方法读写。
 
-
-
 <!-- TODO
-
-
-
 
 # 延时
 
 Message在MessageQueue中是根据when从小到大来排队的，when是开机到现在的时间+延时时间。
 
+
+
+🟡 示例三：发送延时消息。
+
+在本示例中，我们通过Handler发送
+
+
+"TestUIBase.java":
+
+```java
+
+```
+
+
+
+
+上述内容也可以使用Kotlin语言书写：
+
+"TestUIBase.kt":
+
+```kotlin
+
+```
+
+此时运行示例程序，并查看控制台输出信息与界面外观：
+
+```text
+
+```
 
 
 # 取消
