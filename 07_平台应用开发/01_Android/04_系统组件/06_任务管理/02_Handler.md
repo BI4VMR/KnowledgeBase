@@ -36,7 +36,7 @@ Handler机制所涉及的组件及工作原理可参考下文图片：
 APP的主线程通常就是创建View的线程，因此我们需要在主线程中进行UI更新操作；对于耗时较长的任务（例如：下载图片、统计数据等），我们应当开启子线程进行处理，并将结果通过Handler从子线程发送至主线程，才能成功地更新UI并避免前文的异常。
 
 # 基本应用
-以下示例展示了Handler的基本使用方法：
+以下示例展示了Handler的基本使用方法。
 
 🔴 示例一：使用Handler处理自定义消息。
 
@@ -115,8 +115,7 @@ private val mHandler: Handler = object : Handler(Looper.getMainLooper()) {
 }
 ```
 
-第二步，我们通过 `mHandler` 向MessageQueue发送一条消息1。
-
+第二步，我们通过 `mHandler` 向MessageQueue发送一条“消息1”。
 
 "TestUIBase.java":
 
@@ -147,9 +146,9 @@ mHandler.sendEmptyMessage(MSG_TEST_01)
 
 🟠 示例二：发送携带额外数据的消息。
 
-在前文“示例一”中，我们创建的Handler对象实现了处理编号为2消息的逻辑，能够将消息携带的两个参数输出到控制台与界面上。
+在前文“示例一”中，Handler对象实现了处理“消息2”的逻辑，能够将消息携带的两个参数输出到控制台与界面上。
 
-在本示例中，我们通过Handler发送编号为2的消息，并设置两个参数。
+在本示例中，我们通过Handler发送“消息2”，并设置两个参数。
 
 "TestUIBase.java":
 
@@ -201,49 +200,113 @@ mHandler.sendMessage(msg)
 - `Object obj` 属性：该属性可以携带单个Object数据；它的访问修饰符为"public"，我们可以直接读写。
 - `Bundle data` 属性：该属性可以携带一组Bundle数据；我们需要使用 `setData()` 和 `getData()` 方法读写。
 
-<!-- TODO
+# 发送延时消息
+有时我们希望Message被发送后经过一段时间再进行处理，此时可以使用延时机制。
 
-# 延时
-
-Message在MessageQueue中是根据when从小到大来排队的，when是开机到现在的时间+延时时间。
-
-
+Message的 `when` 属性指定了该消息期望被处理的时刻，当我们向MessageQueue中发送Message时， `when` 属性的值为“开机到当前时刻的时长 + 延时时间”；MessageQueue会根据Message的 `when` 属性，从早到晚顺次排列所有消息。
 
 🟡 示例三：发送延时消息。
 
-在本示例中，我们通过Handler发送
-
+在本示例中，我们通过Handler发送一些需要延时执行的消息。
 
 "TestUIBase.java":
 
 ```java
+Log.i(TAG, "--- 向队列中发送消息（延时执行） ---");
 
+// 向队列发送消息，延时4秒后执行。
+mHandler.sendEmptyMessageDelayed(MSG_TEST_01, 4000L);
+mHandler.sendEmptyMessageDelayed(MSG_TEST_02, 4000L);
+
+// 向队列发送消息，延时8秒后执行。
+Message msg = Message.obtain();
+msg.what = MSG_TEST_01;
+mHandler.sendMessageDelayed(msg, 8000L);
 ```
 
-
-
+在上述代码中，我们使用Handler的 `sendMessageDelayed()` 和 `sendEmptyMessageDelayed()` 方法向消息队列中发送了一些消息，并通过第二参数设置延时时间。
 
 上述内容也可以使用Kotlin语言书写：
 
 "TestUIBase.kt":
 
 ```kotlin
+Log.i(TAG, "--- 向队列中发送消息（延时执行） ---")
 
+// 向队列发送消息，延时4秒后执行。
+mHandler.sendEmptyMessageDelayed(MSG_TEST_01, 4000L)
+mHandler.sendEmptyMessageDelayed(MSG_TEST_02, 4000L)
+
+// 向队列发送消息，延时8秒后执行。
+val msg: Message = Message.obtain()
+msg.what = MSG_TEST_01
+mHandler.sendMessageDelayed(msg, 8000L)
 ```
 
 此时运行示例程序，并查看控制台输出信息与界面外观：
 
 ```text
-
+23:07:09.125 11167 11167 I TestUIBase: --- 向队列中发送消息（延时执行） ---
+23:07:13.193 11167 11167 D TestUIBase: HandleMessage 1.
+23:07:13.215 11167 11167 D TestUIBase: HandleMessage 2. Arg1:[0] Arg2:[0]
+23:07:17.192 11167 11167 D TestUIBase: HandleMessage 1.
 ```
 
+根据上述输出内容可知：
 
-# 取消
+在消息被发送后的第4秒，“消息1”和“消息2”被处理了；在消息被发送后的第8秒，“消息1”被处理了。
 
-其实就是在Activity的onDestroy方法中调用mHandler.removeCallbacksAndMessages(null)，这样就移除了MessageQueue中target为该mHandler的Message，因为MessageQueue没有引用该Handler发送的Message了，所以当Activity退出时，Message、Handler、Activity都是可回收的了，这样就能解决内存泄漏的问题了。
+# 移除队列中的消息
+在以下场景中，我们需要移除MessageQueue中尚未被处理的Message：
 
-WeakReference<OuterClass>
+- 业务逻辑所需：MessageQueue中的Message由用户预约某些业务而发起，一段时间后用户希望取消预约这些业务。在此场景中，我们可以移除业务对应的Message，实现取消预约功能。
+- 避免内存泄漏：MessageQueue中部分需要延时执行的Message持有了Activity或View的引用，当Activity被关闭之后，Message仍未被处理，此时Activity就无法被系统回收，造成了暂时的内存泄漏；直到Message延时结束并被处理完毕时，Activity的引用才会被释放。在此场景中，当Activity被关闭时，我们应当同步清空MessageQueue。
 
+下文示例展示了移除队列中消息的方法。
+
+🟢 示例四：移除MessageQueue中的消息。
+
+在本示例中，我们通过Handler发送一些需要延时处理的消息，然后再移除其中的部分消息。
+
+第一步，我们通过前文“示例三”中的代码，发送3条延时消息。
+
+第二步，我们调用Handler对象的 `removeMessages(int what)` 方法，取消MessageQueue中所有的“消息1”。
+
+"TestUIBase.java":
+
+```java
+Log.i(TAG, "--- 移除队列中尚未执行的消息1 ---");
+
+// 移除所有编号为1的消息
+mHandler.removeMessages(MSG_TEST_01);
+```
+
+上述内容也可以使用Kotlin语言书写：
+
+"TestUIBase.kt":
+
+```kotlin
+Log.i(TAG, "--- 移除队列中尚未执行的消息1 ---")
+
+// 移除所有编号为1的消息
+mHandler.removeMessages(MSG_TEST_01)
+```
+
+此时运行示例程序，并查看控制台输出信息与界面外观：
+
+```text
+00:02:33.448 11167 11167 I TestUIBaseKT: --- 向队列中发送消息（延时执行） ---
+00:02:35.377 11167 11167 I TestUIBaseKT: --- 移除队列中尚未执行的消息1 ---
+00:02:37.462 11167 11167 D TestUIBaseKT: HandleMessage 2. Arg1:[0] Arg2:[0]
+```
+
+根据上述输出内容可知：
+
+当我们调用 `removeMessages(MSG_TEST_01)` 方法后，队列中的“消息1”都被清除了，Handler对象的 `handleMessage()` 回调方法没有被触发；队列中的“消息2”则不受影响，预定时刻到达后被处理并输出了日志信息。
+
+
+
+<!-- TODO
 
 # 在子线程中更新UI
 
