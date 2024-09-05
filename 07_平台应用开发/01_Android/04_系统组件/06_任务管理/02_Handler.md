@@ -40,11 +40,11 @@ Handler所涉及的组件及工作原理可参考下文图片：
 - [🔗 示例工程：Handler](https://github.com/BI4VMR/Study-Android/tree/master/M04_System/C06_Concurrent/S02_Handler)
 
 # 基本应用
-以下示例展示了Handler的基本使用方法。
+下文示例展示了Handler的基本使用方法。
 
-🔴 示例一：使用Handler处理自定义消息。
+🔴 示例一：Handler的基本应用。
 
-在本示例中，我们通过Handler处理自定义消息，实现更新界面的功能。
+在本示例中，我们通过Handler处理自定义消息，实现更新UI的功能。
 
 第一步，我们在测试Activity中声明一个Handler对象 `mHandler` ，并重写它的 `handleMessage()` 方法，实现自定义消息处理逻辑。
 
@@ -77,13 +77,13 @@ private final Handler mHandler = new Handler(Looper.getMainLooper()) {
 };
 ```
 
-在上述代码中，Handler的构造方法唯一参数为 `Looper.getMainLooper()` ，表示该Handler将关联到主线程。
+在上述代码中，Handler的构造方法唯一参数为 `Looper.getMainLooper()` ，表示将该Handler关联到主线程。
 
 `handleMessage(Message msg)` 是一个回调方法，当Looper开始处理MessageQueue首部的Message时，该方法将被触发，唯一参数 `msg` 即正被处理的Message。
 
-Handler通过数字序号区分不同的Message，我们通常将序号定义为常量或枚举，以便规范地引用，明确消息的用途。
+Handler通过数字编号区分不同的Message，我们通常将序号定义为常量或枚举，以便规范地引用，明确消息的用途。
 
-由于此处的Handler与主线程相关联，我们可以在 `handleMessage()` 方法中进行更新界面的操作。此处的 `tvLog` 是一个TextView，Handler收到消息后会将文本更新到TextView中。
+由于此处的Handler与主线程相关联，我们可以在 `handleMessage()` 方法中进行更新UI的操作。此处的 `tvLog` 是一个TextView，Handler收到消息后会将文本更新到TextView中。
 
 上述内容也可以使用Kotlin语言书写：
 
@@ -129,7 +129,7 @@ Log.i(TAG, "--- 向队列中发送消息1 ---");
 mHandler.sendEmptyMessage(MSG_TEST_01);
 ```
 
-Handler对象的 `sendEmptyMessage(int what)` 方法用于向MessageQueue发送内容为空的消息，唯一参数 `what` 指明了消息的数字序号，这种消息不包含任何参数，仅用于触发Handler对象的 `handleMessage()` 回调方法。
+Handler对象的 `sendEmptyMessage(int what)` 方法用于向MessageQueue发送内容为空的Message，唯一参数 `what` 指明了Message的数字编号，这种Message不包含任何参数，仅用于触发Handler对象的 `handleMessage()` 回调方法。
 
 上述内容也可以使用Kotlin语言书写：
 
@@ -150,7 +150,7 @@ mHandler.sendEmptyMessage(MSG_TEST_01)
 
 🟠 示例二：发送携带额外数据的消息。
 
-在前文“示例一”中，Handler对象实现了处理“消息2”的逻辑，能够将消息携带的两个参数输出到控制台与界面上。
+在前文“示例一”中，Handler对象已经实现了处理“消息2”的逻辑，能够将消息携带的两个参数输出到控制台与界面上。
 
 在本示例中，我们通过Handler发送“消息2”，并设置两个参数。
 
@@ -169,11 +169,11 @@ msg.arg2 = 1919810;
 mHandler.sendMessage(msg);
 ```
 
-在上述代码中，我们使用Message的静态方法 `obtain()` 获取Message对象，然后设置参数并通过Handler的 `sendMessage()` 方法将Message提交到MessageQueue中。
+在上述代码中，我们使用Message的静态方法 `obtain()` 获取Message对象，然后设置参数并通过Handler的 `sendMessage()` 方法发送Message。
 
-Message对象被使用完毕后，系统不会立刻将其回收，而是放置在缓存池中；当我们调用 `obtain()` 方法时，系统会从缓存池中取出已缓存的Message对象。因此我们推荐使用 `obtain()` 方法获取Message对象，而不是手动创建Message对象。
+Message对象被使用完毕后，系统不会立刻将其回收，而是放置在缓存池中，缓存池的容量上限为50；当我们调用 `obtain()` 方法时，系统会从缓存池中取出已缓存的Message对象。因此我们推荐使用 `obtain()` 方法获取Message对象，而不是手动创建Message对象。
 
-Message对象的 `arg1` 与 `arg2` 属性是两个"int"型变量，它们可以携带一些简单的参数，以便 `handleMessage()` 回调方法处理这种Message时进行对应的操作。
+Message对象的 `arg1` 与 `arg2` 属性是两个"int"型变量，它们可以携带一些简单的参数，以便 `handleMessage()` 回调方法处理这种Message时根据参数作出对应的操作。
 
 上述内容也可以使用Kotlin语言书写：
 
@@ -207,11 +207,11 @@ mHandler.sendMessage(msg)
 # 发送延时消息
 有时我们希望发送Message后经过一段时间再被处理，此时可以使用延时机制。
 
-Message的 `when` 属性指定了该消息期望被处理的时刻，当我们向MessageQueue中发送Message时， `when` 属性的值为“开机到当前时刻的时长 + 延时时间”；MessageQueue会根据Message的 `when` 属性，从早到晚顺次排列所有消息。
+Message的 `when` 属性指定了期望被处理的时刻，当我们向MessageQueue中发送Message时， `when` 属性的值为“开机到当前时刻的时长 + 延时时长”；MessageQueue会根据Message的 `when` 属性，从小到大依次排列所有消息。
 
 🟡 示例三：发送延时消息。
 
-在本示例中，我们通过Handler发送一些需要延时执行的消息。
+在本示例中，我们通过Handler发送一些需要被延时处理的消息。
 
 "TestUIBase.java":
 
@@ -228,7 +228,7 @@ msg.arg1 = -100;
 mHandler.sendMessageDelayed(msg, 8000L);
 ```
 
-在上述代码中，我们使用Handler的 `sendMessageDelayed()` 和 `sendEmptyMessageDelayed()` 方法向消息队列中发送两条消息，并通过第二参数设置了延时时间。
+在上述代码中，我们使用Handler的 `sendMessageDelayed()` 和 `sendEmptyMessageDelayed()` 方法向消息队列中发送了两条消息，并通过第二参数设置延时时间，单位为毫秒。
 
 上述内容也可以使用Kotlin语言书写：
 
@@ -260,9 +260,9 @@ mHandler.sendMessageDelayed(msg, 8000L)
 在消息被发送后的第4秒，“消息1”被处理了；在消息被发送后的第8秒，“消息2”被处理了。
 
 # 提交回调方法
-在前文示例中，我们通过重写Handler的 `handleMessage()` 方法定义消息以及对应的操作，这种方式适用于封装被多处调用的、较为复杂的代码语句；有时我们只需通过Handler绑定的线程单次调用某些代码语句，此时我们可以向MessageQueue提交回调方法来简化操作。
+在前文示例中，我们通过重写Handler的 `handleMessage()` 方法定义消息以及对应的操作，这种方式适用于封装被多处调用的、较为复杂的代码语句；有时我们只需通过Handler绑定的线程单次调用某些代码语句，此时我们可以向MessageQueue提交回调方法以简化操作。
 
-提交回调方法这一操作实际上也是向MessageQueue中发送消息，Looper处理这种消息时不会触发Handler对象的 `handleMessage()` 方法，而是直接执行Runnable的 `run()` 方法。
+提交回调方法这一操作实际上也是向MessageQueue中发送Message，Looper处理这种Message时不会触发Handler对象的 `handleMessage()` 方法，而是直接执行Runnable的 `run()` 方法。
 
 🟢 示例四：提交回调方法。
 
@@ -290,7 +290,7 @@ mHandler.postDelayed(() -> {
 
 在上述代码中，我们使用Handler对象的 `post(Runnable r)` 方法提交需要立刻执行的回调方法，唯一参数 `r` 是Runnable接口的实现类，我们应当将待执行的语句放置在 `run()` 方法内。
 
-Handler对象的 `postDelayed(Runnable r, long delayMillis)` 方法用于向消息队列中提交回调方法，第二参数 `delayMillis` 指定了回调方法需要被延时执行的时长。
+Handler对象的 `postDelayed(Runnable r, long delayMillis)` 方法用于向消息队列中提交需要被延时执行的回调方法，第二参数 `delayMillis` 指定了延时时长。
 
 上述内容也可以使用Kotlin语言书写：
 
@@ -323,7 +323,7 @@ mHandler.postDelayed({
 
 根据上述输出内容可知：
 
-在两个回调方法被提交后，回调方法A立刻被执行；4秒后，回调方法B被执行。
+在两个回调方法被提交后，回调方法A立刻被执行；经过4秒后，回调方法B被执行。
 
 # 移除队列中的消息
 在以下场景中，我们需要移除MessageQueue中尚未被处理的Message：
@@ -335,15 +335,11 @@ mHandler.postDelayed({
 >
 > 我们只能移除MessageQueue中尚未被处理的Message，如果Message正在被Looper处理，移除指令对它们是无效的。
 
-下文示例展示了移除MessageQueue中消息的方法。
+下文示例展示了移除Message的方法。
 
-🔵 示例五：移除MessageQueue中的消息。
+🔵 示例五：移除指定的消息。
 
 在本示例中，我们通过Handler发送一些需要延时处理的消息，然后再移除其中的部分消息。
-
-第一步，我们通过前文“示例三”中的代码，发送3条延时消息。
-
-第二步，我们调用Handler对象的 `removeMessages(int what)` 方法，取消MessageQueue中所有的“消息1”。
 
 "TestUIBase.java":
 
@@ -357,6 +353,8 @@ mHandler.sendEmptyMessageDelayed(MSG_TEST_02, 8000L);
 Log.i(TAG, "--- 移除队列中尚未执行的消息1 ---");
 mHandler.removeMessages(MSG_TEST_01);
 ```
+
+Handler对象的 `removeMessages(int what)` 方法用于移除指定的消息，此处我们移除了所有的“消息1”。
 
 上述内容也可以使用Kotlin语言书写：
 
@@ -391,49 +389,16 @@ Handler还提供了一些移除MessageQueue中回调方法的方法：
 - `removeCallbacks(Runnable r, Object token)` ：移除Runnable对象和 `token` 所关联的Message。我们可以使用Handler的 `postDelayed(Runnable r, Object token, long delayMillis)` 方法提交回调方法，并通过 `token` 标记该Message；当我们需要移除Message时，再传入 `token` 筛选指定的Message。
 - `removeCallbacksAndMessages(Object token)` ：移除 `token` 所关联的Message，包括普通的Message和回调方法的Message。如果 `token` 为空值，将会清空MessageQueue，我们通常会在界面退出时调用该方法以防止内存泄漏。
 
+# 更新UI的快捷方法
+当我们需要更新UI时，除了创建绑定主线程的Handler对象并提交回调方法之外，还可以使用以下快捷方法：
+
+- Activity的 `runOnUiThread(Runnable action)` 方法。
+- View的 `post(Runnable action)` 方法。
+- View的 `post(Runnable action, long delayMillis)` 方法。
+
+上述方法均为SDK对UI线程Handler的封装，第一参数 `action` 的 `run()` 方法即需要在主线程执行的更新操作；其中View的两个方法能够确保更新操作在布局测量、绘制完成之后再被执行，因此我们能够在此处获取到View的宽高等属性。
 
 <!-- TODO
-
-# 在子线程中更新UI
-
-    Activity的runOnUiThread方法
-    View的post方式
-
-onCreate方法中，子线程可能可以更新UI，因为子线程不能更新UI的检测是在ViewRootImpl的checkThread完成的，而onCreate方法中，ViewRootImpl还没有创建，所以不会去检测。
-
-Android系统中创建子线程的基本方式与Java一致，我们通常创建Thread类的匿名内部类，在"run()"方法内填写业务操作，再调用"start()"方法启动任务。
-
-Android应用程序的主线程是UI线程，负责第一时间对用户交互进行响应。多个线程同时更新UI可能会造成死锁，因此Android系统不允许非主线程更新UI，需要借助Android提供的消息机制。
-
-```java
-// 文本框
-TextView textView=findViewById(R.id.tv_text);
-// 按钮
-Button bt=findViewById(R.id.bt_chtext);
-bt.setOnClickListener(v -> {
-    // 开启新线程，隐藏文本框。
-    new Thread(new Runnable() {
-        @Override
-        public void run() {
-            textView.setVisibility(View.INVISIBLE);
-        }
-    }).start();
-});
-```
-
-上述代码中，用户点击按钮后将会开启子线程，并在其中更新UI，运行此代码后程序将会退出，查看Logcat可以发现：
-
-```text
-2022-03-21 14:00:26.074 8061-8088/net.bi4vmr.study.service_base E/AndroidRuntime: FATAL EXCEPTION: Thread-2
-    Process: net.bi4vmr.study.service_base, PID: 8061
-    android.view.ViewRootImpl$CalledFromWrongThreadException: Only the original thread that created a view hierarchy can touch its views.
-        at android.view.ViewRootImpl.checkThread(ViewRootImpl.java:9316)
-        at android.view.ViewRootImpl.requestLayout(ViewRootImpl.java:1772)
-        at android.view.View.requestLayout(View.java:25697)
-[省略部分内容...]
-```
-
-
 
 # 非主线程的Handler
 
@@ -493,11 +458,5 @@ bt.setOnClickListener(v -> {
         }).start();
 
 这时候再点击按钮，在主线程向子线程发送消息，log如下图。
-
-
-
-
-
-
 
 -->
