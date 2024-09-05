@@ -398,65 +398,79 @@ Handler还提供了一些移除MessageQueue中回调方法的方法：
 
 上述方法均为SDK对UI线程Handler的封装，第一参数 `action` 的 `run()` 方法即需要在主线程执行的更新操作；其中View的两个方法能够确保更新操作在布局测量、绘制完成之后再被执行，因此我们能够在此处获取到View的宽高等属性。
 
-<!-- TODO
+# 创建子线程Handler
+有时我们需要通过消息队列处理一系列事件序列，这些事件都与UI无关，此时我们便可以使用子线程的Handler。
 
-# 非主线程的Handler
+🔵 示例六：创建并使用子线程的Handler。
 
-原因也说得很清楚了，说的是我们不能在一个没有调用Looper.prepare()的线程去创建Handler对象。那为什么主线程我们不需要去手动调用Looper.prepare()就可以直接使用Handler呢？原来是启动App时，系统帮我们创建好了，App的入口，是ActivityThread.main方法，代码如下：
-   public static void main(String[] args) {
-       // 不相干代码
-       ......
-       // 1.调用Looper.prepareMainLooper，其实也就是调用的Looper.loop，初始化Looper、MessageQueue等
-       Looper.prepareMainLooper();
-       // 2.创建ActivityThread的同时，初始化了成员变量Handler mH
-       ActivityThread thread = new ActivityThread();
-       thread.attach(false);
-       // 
-       if (sMainThreadHandler == null) {
-           // 把创建的Handler mH赋值给sMainThreadHandler
-           sMainThreadHandler = thread.getHandler();
-       }
+在本示例中，我们创建子线程的Handler对象，并向其中发送一些消息。
 
-       if (false) {
-           Looper.myLooper().setMessageLogging(new
-                   LogPrinter(Log.DEBUG, "ActivityThread"));
-       }
-       // 3.调用Looper.loop()方法，开启死循环，从MessageQueue中不断取出Message来处理
-       Looper.loop();
+"TestUIBase.java":
 
-       throw new RuntimeException("Main thread loop unexpectedly exited");
-   }
+```java
+// 子线程的Handler
+private Handler mSubHandler = null;
 
-看样子，创建Handler还是需要调用Looper.prepare的，我们平常在主线程不需要手动调用，是因为系统在启动App时，就帮我们调用了。并且还需要调用Looper.loop方法，这个方法后面我们会讲到。所以使用Handler通信之前需要有以下三步：
+{
+    // 在子线程中初始化Handler
+    new Thread(() -> {
+        // 创建本线程的Looper对象
+        Looper.prepare();
+        // 使用当前线程的Looper创建Handler对象
+        Looper looper = Looper.myLooper();
+        if (looper != null) {
+            mSubHandler = new Handler(looper);
+        }
+        // 开始事件循环
+        Looper.loop();
+    }).start();
+}
 
-    调用Looper.prepare()
-    创建Handler对象
-    调用Looper.loop()
 
-那按照这个套路，我们完善下之前的代码，其实就是在子线程中创建Handler之前调用Looper.prepare()，之后调用Looper.loop()方法，如下：
-// 创建一个子线程，并在子线程中创建一个Handler，且重写handleMessage
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Looper.prepare();
-                subHandler = new Handler() {
-                    @Override
-                    public void handleMessage(Message msg) {
-                        super.handleMessage(msg);
-                        // 处理消息
-                        switch (msg.what) {
-                            case MSG_MAIN_TO_SUB:
-                                Log.e(TAG, "接收到消息： " +  Thread.currentThread().getName() + ","+ msg.obj);
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                };
-                Looper.loop();
-            }
-        }).start();
+// 向队列提交回调方法，立刻执行。
+mSubHandler.post(() -> Log.i(TAG, "HandleCallback A"));
+// 向队列提交回调方法，延时4秒后执行。
+mSubHandler.postDelayed(() -> Log.i(TAG, "HandleCallback B"), 4000L);
+```
 
-这时候再点击按钮，在主线程向子线程发送消息，log如下图。
+在上述代码中，我们创建了一个子线程，首先调用 `Looper.prepare()` 方法为当前线程创建Looper对象；然后创建Handler对象，在其构造方法中通过 `Looper.myLooper()` 方法获取当前线程的Looper对象；最后调用 `Looper.loop()` 方法使Looper开始循环处理事件。
 
--->
+当我们创建子线程的Handler时，必须按照顺序调用Looper的 `prepare()` 和 `loop()` 方法，否则会出现异常；当我们创建主线程的Handler时，则可以直接调用 `Looper.getMainLooper()` ，这是因为当应用程序启动时，ActivityThread已经执行过 `prepare()` 和 `loop()` 方法了。
+
+上述内容也可以使用Kotlin语言书写：
+
+"TestUIBase.kt":
+
+```kotlin
+// 子线程的Handler
+private lateinit var mSubHandler: Handler
+
+init {
+    // 在子线程中初始化Handler
+    thread {
+        // 创建本线程的Looper对象
+        Looper.prepare()
+        // 使用当前线程的Looper创建Handler对象
+        Looper.myLooper()?.let {
+            mSubHandler = Handler(it)
+        }
+        // 开始事件循环
+        Looper.loop()
+    }
+}
+
+
+// 向队列提交回调方法，立刻执行。
+mSubHandler.post { Log.i(TAG, "HandleCallback A") }
+// 向队列提交回调方法，延时4秒后执行。
+mSubHandler.postDelayed({ Log.i(TAG, "HandleCallback B") }, 4000L)
+```
+
+此时运行示例程序，并查看控制台输出信息与界面外观：
+
+```text
+22:23:11.040  6795  6867 I TestUIBase: HandleCallback A
+22:23:15.045  6795  6867 I TestUIBase: HandleCallback B
+```
+
+上述代码只是为了演示在非UI线程中创建Handler的方法，在实际应用中，我们不必书写该逻辑，可以使用SDK提供的HandlerThread工具。
