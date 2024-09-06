@@ -316,9 +316,9 @@ mHandler.postDelayed({
 此时运行示例程序，并查看控制台输出信息与界面外观：
 
 ```text
-22:13:23.115  2956  2956 I TestUIBaseKT: --- 向队列中提交回调方法 ---
-22:13:23.208  2956  2956 I TestUIBaseKT: HandleCallback A
-22:13:27.185  2956  2956 I TestUIBaseKT: HandleCallback B
+22:13:23.115  2956  2956 I TestUIBase: --- 向队列中提交回调方法 ---
+22:13:23.208  2956  2956 I TestUIBase: HandleCallback A
+22:13:27.185  2956  2956 I TestUIBase: HandleCallback B
 ```
 
 根据上述输出内容可知：
