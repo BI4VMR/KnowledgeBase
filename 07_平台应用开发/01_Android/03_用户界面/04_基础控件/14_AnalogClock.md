@@ -1,49 +1,35 @@
-
 # 简介
+AnalogClock是Android SDK提供的模拟时钟控件，我们只能设置表盘、时针、分针样式，可定制程度较低。
 
-AnalogClock是模拟时钟,继承了view类,重写了OnDraw函数实现显示时钟.
+为了实现显示秒针等更多功能，我们可以创建自定义控件，详见相关章节： [🧭 自定义控件 - AnalogClock](【TODO_链接地址】) 。
 
-使用时,在xml文件中添加:
-代码语言：javascript
-复制
+本章的示例工程详见以下链接：
 
-    <AnalogClock
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+- [🔗 示例工程：AnalogClock](https://github.com/BI4VMR/Study-Android/tree/master/M03_UI/C04_CtrlBase/S14_AnalogClock)
 
-运行后效果:
+# 基本应用
+TextClock在布局文件中的典型配置如下文代码块所示：
 
-image.png
+"testui_base.xml":
 
-下面来修改三个属性来设定模拟时钟的效果.
-AnalogClock的属性
+```xml
+<AnalogClock
+    android:layout_width="200dp"
+    android:layout_height="200dp" />
+```
 
-属性
-	
+此时运行示例程序，并查看界面外观：
 
-描述
+<div align="center">
 
-android:dial
-	
+<!-- TODO ![默认样式](./Assets_TextView/基本应用_默认样式.jpg) -->
 
-模拟时钟的表背景。
+</div>
 
-android:hand_hour
-	
+# 外观定制
+## 基本样式
+以下属性用于设置AnalogClock中的表盘、指针样式：
 
-模拟时钟的表时针。
-
-android:hand_minute
-	
-
-模拟时钟的表分针。
-
-根据需求设定这两个属性:
-代码语言：javascript
-复制
-
-    <AnalogClock
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:dial="@drawable/timg"
-        android:hand_minute="@drawable/handle" />
+- XML - 设置表盘样式 : `android:dial="<图像资源>"`
+- XML - 设置表盘样式 : `android:hand_hour="<图像资源>"`
+- XML - 设置表盘样式 : `android:hand_minute="<图像资源>"`
