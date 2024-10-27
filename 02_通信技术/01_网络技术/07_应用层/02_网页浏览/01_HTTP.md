@@ -3,7 +3,7 @@
 TODO -->
 
 # 理论基础
-# URI与URL
+## URI与URL
 统一资源定位器(Uniform Resource Locator, URL)用于表示网络节点中的资源，最常见的用途就是表示Web页面，例如：我们在浏览器地址栏中输入 `https://www.bing.com/` 能够访问必应主页。除此之外，URL也可以表示其他资源，例如：SSH地址、邮箱地址等。
 
 URL的通用语法如下文代码块所示：
@@ -80,6 +80,57 @@ file:///d:/Download/Document.pdf
 
 统一资源标识符(Uniform Resource Identifier, URI)是URL的超集，所有的URL都属于URI，但URI不一定符合URL标准。每种URI只在其特定的领域有意义，例如：在Android系统中， [🧭 Content URI](../../../../07_平台应用开发/01_Android/04_系统组件/03_ContentProvider/01_概述.md#uri) 用于表示应用程序数据，我们无法通过Web浏览器访问这种URI。
 
+## UserAgent
+用户代理(User Agent, UA)是HTTP请求报文头部的一个字段，用于声明客户端与操作系统的环境信息；Web服务器可以根据UA动态返回相应的内容，以提升用户体验，例如：当我们用PC浏览器与手机浏览器访问同一网站时，服务器所返回的页面布局是不同的；当我们用Windows与Linux系统访问同一软件的下载地址时，服务器所返回的软件包格式也是不同的。
+
+有时服务器会利用UA判断请求者是人类用户还是爬虫等自动化工具，但这种方式无法精确区分用户类型，因为自动化工具可以将UA设为常见浏览器的值，以此伪装自己。
+
+UA的语法如下文代码块所示：
+
+```text
+# 语法
+Mozilla/5.0 ([平台信息1]; [平台信息2]; [平台信息...]) [<引擎名称>/<引擎版本>] [<浏览器名称>/<浏览器版本>]
+
+# Chrome
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36
+
+# Firefox
+Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0
+Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0
+
+# Safari
+Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50
+
+# Android
+Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Mobile Safari/537.36
+
+# iPhone
+Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1
+
+# iPad
+Mozilla/5.0 (iPad; CPU OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1
+```
+
+UA语法中各个部分的含义详见下文内容：
+
+🔷 Mozilla/5.0
+
+这是所有浏览器的通用标记，表示浏览器与Mozilla兼容。
+
+由于历史遗留问题，不论是Mozilla Firefox、Google Chrome还是其他浏览器，它们都会将自己声明为"Mozilla/5.0"。对于主要功能并非显示网页的工具，它们不会携带该标记，只是简单的声明工具名称与版本号，例如： `qBittorrent/4.4.5.10` 、 `python-requests/2.18.4` 。
+
+🔷 平台信息
+
+本部分指明了客户端的操作系统与硬件架构等信息，可能包含多个子项，子项之间以分号( `;` )分隔。
+
+🔷 引擎信息
+
+本部分指明了客户端Web渲染引擎的相关信息。
+
+🔷 浏览器信息
+
+本部分指明了客户端的相关信息。
+
 ## MIME
 多用途互联网邮件扩展(Multipurpose Internet Mail Extensions, MIME)也被称为“IANA媒体类型”，用于描述电子邮件中各部分内容的格式。相关标准在RFC 2045、RFC 2046、RFC 2047、RFC 2048、RFC 2049等文档中定义与演进。
 
@@ -148,6 +199,115 @@ MIME的常见概略类型如下文内容所示：
 <br />
 
 MIME的作用与文件扩展名类似，但它们之间并不能直接转换，例如：MP3文件所对应的MIME不是 `audio/mp3` ，应当写作 `audio/mpeg` 。MIME与常见文件格式的对应关系可参考 [🔗 Mozilla - MIME与常见文件格式的对应关系](https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types) 页面。
+
+# 报文结构
+HTTP报文由报文头部与报文体组成，报文头部包含控制信息，每个字段的长度都是可变的，末尾固定为换行符CRLF( `\r\n` )；报文体包含业务数据，报文头部与报文体之间以一个空行作为分隔符。
+
+HTTP报文体可以根据业务需要使用任意字符编码表示，但报文头部则必须使用ASCII编码，因此若URI中包含中文等非ASCII字符，客户端必须首先使用RFC 3986中定义的“百分号编码”方式将非ASCII字符编码，才能将报文发送给服务端。
+
+“百分号编码”的转换规则为： `%<原始数据的十六进制数值>` ，例如：中文字符串“网站”的UTF-8编码为： `E7BD91 E7AB99` ，编码后表示为： `%E7%BD%91%E7%AB%99` 。
+
+> 🚩 提示
+>
+> RFC 3986只是推荐使用UTF-8编码的十六进制数值进行百分号编码，有些客户端可能会使用其他编码进行转换，服务端应当采取一些兼容性措施，防止发生异常。
+ 
+除了非ASCII字符之外，部分特殊符号也需要进行编码，例如：当查询参数的值中出现空格、 `&` 等符号时，就会和参数分隔符产生歧义，这些符号也应当进行编码，相关编码规则可参考 [🔗 Mozilla - 百分号编码](https://developer.mozilla.org/zh-CN/docs/Glossary/Percent-encoding) 页面。
+
+# 报文类型
+## 请求报文
+客户端发起的HTTP请求报文格式如下文图片所示：
+
+<div align="center">
+
+![RIP报文格式](./Assets_HTTP/报文类型_HTTP请求报文格式.jpg)
+
+</div>
+
+上述报文中的各个字段含义详见下文内容：
+
+🔷 请求行
+
+该部分包含请求方法、URI、协议版本三个字段，每个字段之间以“空格”作为分隔符，各部分的含义详见下文列表：
+
+- 请求方法：表示对资源的操作类型。通常获取资源的方法是"GET"、更新资源的方法是"POST"，但每种方法的实际动作是由HTTP服务端程序定义的，客户端应当根据服务端API文档选择所需的方法。
+- URI：表示资源的路径。当我们使用浏览器请求 `http://www.example.com/share/music.zip` 时，该字段的值为 `/share/music.zip` ，并不包含主机地址，因为主机地址在请求头中另有字段表示。
+- 协议版本：表示HTTP协议版本，常见的值为： `HTTP/1.1` 。
+
+🔷 请求头
+
+协议版本，长度2字节。
+
+取值为协议的版本号。
+
+🔷 请求体
+
+客户端需要发送给服务器的消息内容，该部分与请求头之间以一个空行作为分界符，并且可以为空。
+
+
+①是请求方法，GET和POST是最常见的HTTP方法，除此以外还包括DELETE、HEAD、OPTIONS、PUT、TRACE。不过，当前的大多数浏览器只支持GET和POST，Spring 3.0提供了一个HiddenHttpMethodFilter，允许你通过“_method”的表单参数指定这些特殊的HTTP方法（实际上还是通过POST提交表单）。服务端配置了HiddenHttpMethodFilter后，Spring会根据_method参数指定的值模拟出相应的HTTP方法，这样，就可以使用这些HTTP方法对处理方法进行映射了。
+
+请求方法详解一篇让你彻底搞定HTTP方法与状态码​
+
+②为请求对应的URL地址，它和报文头的Host属性组成完整的请求URL，
+
+③是协议名称及版本号。
+
+④是HTTP的报文头 ，报文头包含若干个属性，格式为“属性名:属性值”，服务端据此获取客户端的信息。
+
+    Client-IP：提供了运行客户端的机器的IP地址
+    From：提供了客户端用户的E-mail地址
+    Host：给出了接收请求的服务器的主机名和端口号
+
+Referer：提供了包含当前请求URI的文档的URL
+UA-Color：提供了与客户端显示器的显示颜色有关的信息
+UA-CPU：给出了客户端CPU的类型或制造商
+UA-OS：给出了运行在客户端机器上的操作系统名称及版本
+User-Agent：将发起请求的应用程序名称告知服务器
+Accept：告诉服务器能够发送哪些媒体类型
+Accept-Charset：告诉服务器能够发送哪些字符集
+Accept-Encoding：告诉服务器能够发送哪些编码方式
+Accept-Language：告诉服务器能够发送哪些语言
+TE：告诉服务器可以使用那些扩展传输编码
+Expect：允许客户端列出某请求所要求的服务器行为
+Range：如果服务器支持范围请求，就请求资源的指定范围
+Cookie：客户端用它向服务器传送数据
+Cookie2：用来说明请求端支持的cookie版本
+
+
+
+## 响应报文
+
+
+服务端发送给客户端的HTTP响应报文格式如下文图片所示：
+
+<div align="center">
+
+![RIP报文格式](./Assets_HTTP/报文类型_HTTP响应报文格式.jpg)
+
+</div>
+
+
+
+①报文协议及版本；
+②状态码及状态描述；
+状态码详解https://mp.weixin.qq.com/s/xxxS5qG244F6L10Y_ZxyGQ
+③响应报文头，也是由多个属性组成；
+
+    Age：(从最初创建开始)响应持续时间
+    Public：服务器为其资源支持的请求方法列表
+    Retry-After：如果资源不可用的话，在此日期或时间重试
+    Server：服务器应用程序软件的名称和版本
+    Title：对HTML文档来说，就是HTML文档的源端给出的标题
+    Warning：比原因短语更详细一些的警告报文
+    Accept-Ranges：对此资源来说，服务器可接受的范围类型
+    Vary：服务器会根据这些首部的内容挑选出最适合的资源版本发送给客户端
+    Proxy-Authenticate：来自代理的对客户端的质询列表
+    Set-Cookie：在客户端设置数据，以便服务器对客户端进行标识
+    Set-Cookie2：与Set-Cookie类似
+    WWW-Authenticate：来自服务器的对客户端的质询列表
+
+④响应报文体，即我们真正要的“干货”。
+
 
 
 

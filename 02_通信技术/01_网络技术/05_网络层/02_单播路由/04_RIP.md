@@ -26,7 +26,7 @@ RIP协议的报文封装在UDP协议中，使用520端口进行通信。
 
 <div align="center">
 
-![RIP报文格式](./Assets-RIP/报文结构-RIP报文格式.jpg)
+![RIP报文格式](./Assets_RIP/报文结构_RIP报文格式.jpg)
 
 </div>
 
