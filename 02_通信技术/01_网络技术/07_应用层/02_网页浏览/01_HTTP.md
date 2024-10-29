@@ -45,7 +45,8 @@ URL语法中各个部分的含义详见下文内容：
 🔷 认证信息
 
 本部分指明了访问者的身份信息，用户名称与认证口令之间以冒号( `:` )分隔。
-对于公开的站点，该部分可以省略，例如： `https://www.bing.com/` ；对于受保护的站点，我们通常只在URL中声明用户名称，再通过其他方式进行认证，避免明文导致认证口令泄漏，例如： `ssh://root@192.168.1.1/` 。
+
+对于公开的站点，该部分可以省略，例如： `https://www.bing.com/` ；对于受保护的站点，我们通常只在URL中声明用户名称，再通过其他方式进行认证，避免明文的URL导致认证口令泄漏，例如： `ssh://root@192.168.1.1/` 。
 
 🔷 目标地址
 
@@ -350,18 +351,37 @@ GET和POST的区别：
     通过GET提交数据，用户名和密码将明文出现在URL上，如果登录页面有浏览器缓存，或者其他人查看浏览器的历史记录，那么就可以拿到用户的账号和密码了。安全性将会很差。
 
 
+# cookie和session
 
-
+cookie和session配合方式，客户端使用浏览器的cookie来存sessionId，服务端存session。由于结构可以泛化成两种：
+（1）单服务器的服务端，这种多在小型服务中，私有化部署，toB项目的服务中
+（2）分布式架构下的服务端，这种多是toC，大型服务，复杂系统，这种方式需要共享session，多个服务器都能访问，这样对于共享session的方式，可以是同步session，也可以是单独的服务做认证，类似redis集群存放认证信息，这种类似与网关的服务。就是说
+ 
 
 
 
 
 # 认证
 
-basic
+
     devops二开，用到nexusAPI ，之前get获取列表没有鉴权，新客户get也需要session，网上api资料较少，官网看到
     curl -u admin:admin123 -X GET 'http://localhost:8081/service/rest/v1/components?repository=maven-central' ; 链接后又查了 curl 转postman的地址链接；
     要添加请求头属性Authorization，value为"Basic "加 “admin:admin123” base64加密后的字符串 。注意Basic后有一个空格。
+
+
+
+## Basic
+
+
+
+
+1.客户端向服务器请求数据；
+2.服务器认为没有通过认证，向客户端发送401 （WWW-Authenticate: Basic realm=“XXXXXX”）；
+3.客户端将自动弹出一个登录窗口，要求用户输入用户名和密码；
+4.用户输入用户名和密码后，客户端将用户名及密码以BASE64编码加密，发请求（Authorization: Basic xxxxxxxxx）；
+5.服务器收到上述请求信息后，将Authorization字段后的用户信息取出、解密，将解密后的用户名及密码与用户数据库进行比较验证；
+
+
 
 
 
