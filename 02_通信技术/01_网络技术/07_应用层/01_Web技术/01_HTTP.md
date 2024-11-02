@@ -1,6 +1,6 @@
-<!--
+<!-- TODO
 # 简介
-TODO -->
+
 
 HTTP1.0/HTTP1.1的区别：
 
@@ -8,7 +8,7 @@ HTTP1.0/HTTP1.1的区别：
 
     而HTTP1.1在同一个连接中可以传送多个请求和响应，多个请求可以重叠和同时进行，HTTP1.1必须有Host字段。
 
-
+-->
 
 # 理论基础
 ## URI与URL
@@ -32,7 +32,7 @@ ftp://www.example.com/files
 # 示例：使用FTP访问"www.example.com"网站的"/files"目录，并使用特定的端口。
 ftp://www.example.com:2121/files
 
-# 示例：使用FTP访问"www.example.com"网站的"/files"目录，并设置用户名与登录口令。
+# 示例：使用FTP访问"www.example.com"网站的"/files"目录，并设置用户名称与认证口令。
 ftp://user:password@www.example.com/files
 ```
 
@@ -313,29 +313,22 @@ WWW-Authenticate：来自服务器的对客户端的质询列表
 
 # 数据存储
 ## Cookie
-HTTP协议是无状态的，服务端无法判断多个请求是否来自同一客户端，为了解决这一问题，Netscape公司提出了Cookie技术方案，后被IETF纳入 RFC 2109 RFC2965中。相关标准在RFC 2045、RFC 2046、RFC 2047、RFC 2048、RFC 2049等文档中定义与演进。
+### 简介
+HTTP协议是无状态的，这意味着服务端无法判断多个请求是否来自同一个客户端，为了解决此问题，Netscape公司首先提出了Cookie技术方案，该方案后来被IETF标准化，相关标准在RFC 2109、RFC 2965等文档中定义与演进。
 
-Cookie是一种轻量级键值对数据，由服务端发送给客户端，客户端应当保存，客户端后续再次请求同一URI时，将会自动携带Cookie数据。
+Cookie是一种轻量级键值对数据，通常由服务端下发给客户端，客户端需要将它们保存在本地，后续请求同一URI时，再次携带这些数据。
 
+Cookie技术被广泛应用于用户登录状态保持、用户偏好记忆等功能，例如：当我们登录某个网站之后，服务端可能会通过Cookie发送会话标识符，此时我们可以关闭浏览器；后续我们再次访问该网站时，会话标识符将被自动发送至服务端，服务端通过此标识符即可识别请求来源，避免反复要求用户登录，改善用户体验。
 
-Cookie有什么用
+Cookie仅能用于存取少量数据，客户端会忽略超过数量限制的Cookie。对于每个域名，所有键值对的总长度限制通常为4096字节，不同客户端对Cookie数量的限制如下文列表所示：
 
-        我们想象一个场景，当我们打开一个网站时，如果这个网站我们曾经登录过，那么当我们再次打开网站时，发现就不需要再次登录了，而是直接进入了首页。例如bilibili，csdn等网站。
+- Firefox：每个域名最多保存50条Cookie。
+- Chrome：每个域名最多保存53条Cookie。
+- Opera：每个域名最多保存30条Cookie。
+- Internet Explorer：每个域名最多保存50条Cookie。
 
-        这是怎么做到的呢？其实就是游览器保存了我们的cookie，里面记录了一些信息，当然，这些cookie是服务器创建后返回给游览器的。游览器只进行了保存。下面展示bilibili网站保存的cookie。
-
-
-InternetExplorer8每个域名50个。
-　　Firefox每个域名cookie限制为50个。
-       Chrome每个域名cookie限制为53个。
-　　Opera每个域名cookie限制为30个。
-
-
-数据总长度通常为4096字节。
-
-
-
-# 工作流程
+### 工作流程
+Cookie的下发与上报流程如下文图片所示：
 
 <div align="center">
 
@@ -343,24 +336,41 @@ InternetExplorer8每个域名50个。
 
 </div>
 
+上述流程图中的步骤详情如下文内容所示：
 
+🔷 客户端首次发送请求报文
+
+此时客户端还没有Cookie信息，因此请求报文中也不会携带任何Cookie数据。
+
+🔷 服务端首次发送响应报文
+
+服务端希望客户端保存一些Cookie数据，因此在响应头中使用 `Set-Cookie` 属性下发数据，格式示例详见下文图片：
 
 <div align="center">
 
-![服务端向客户端下发Cookie数据](./Assets_HTTP/数据存储_服务端向客户端下发Cookie数据.jpg)
+![服务端下发Cookie数据](./Assets_HTTP/数据存储_服务端下发Cookie数据.jpg)
 
 </div>
 
+每条 `Set-Cookie` 属性的开头是Cookie的键名与键值，二者以等号( `=` )作为分隔符，以分号( `;` )作为结束符；后续的内容为该Cookie的属性，例如：作用域、有效时间等。
+
+如果服务器需要一次性下发多条Cookie数据，则HTTP报文中会包含多条 `Set-Cookie` 属性。
+
+🔷 客户端再次发送请求报文
+
+当客户端请求某个URI时，其本地已有关联到该URI的若干Cookie数据，此时客户端会在请求报文中携带这些数据，格式示例详见下文图片：
 
 <div align="center">
 
-![客户端向服务端发送携带Cookie的请求报文](./Assets_HTTP/数据存储_客户端向服务端发送携带Cookie的请求报文.jpg)
+![客户端发送携带Cookie的请求报文](./Assets_HTTP/数据存储_客户端发送携带Cookie的请求报文.jpg)
 
 </div>
 
+请求头属性 `Cookie` 用于表示客户端拥有的Cookie数据，每个键值对以分号( `;` )作为分隔符。
+
+### 属性
 
 
-# 属性
 通常情况下，Cookie会包含如下信息：name expires domain path secure
 
 <div align="center">
@@ -369,28 +379,38 @@ InternetExplorer8每个域名50个。
 
 </div>
 
-    name:cookie 的名字
+🔷 键名
 
-    expires:过期时间。值是一个日期，一个时刻，而不是一个时长。在OkHttp中，你可以使用该字段在端上建立逻辑，也可以忽略该字段依靠server实现过期的逻辑。
+Cookie的名称。
 
-    domain：cookie的作用域，指定了cookie将要被发送至哪个域中。默认情况下，domain会被设置为创建该cookie的url所在的域名。但在OkHttp中默认是不存在Cookie机制的，因此这一点需要你来亲自实现完善。像百度这样的网站，会有很多name.baidu.com形式的站点，他们的顶级域名是一致的，但二级域名会有很多，比如waimai.baidu.com，bzclk.baidu.com等。domain的匹配通常是从域名的末尾开始匹配，并将命中的cookie作为有效cookie存储。
+🔷 键值
 
-    path:另一个控制cookie的发送时机的选项。类似于domain，path选项要求请求资源URL中必须存在指定的路径，才会发送cookie。通常是将path的值与请求的URL从开头开始逐个字符串比较完成匹配。如：Set-Cookie：name=Ghost;path=/ghost就要求URL的路径以/ghost开头，如/ghost,/ghostinmatrix都是命中的url。
+Cookie的值。
 
-需要注意的是：cookie匹配验证的顺序首先是domain，然后才会匹配path。
+🔷 域名
 
-    secure：该选项只是一给标记而没有值。只有当一个请求通过SSL或者HTTPS创建的时候，包含secure的cookie才能被发送至服务器。这种cookie内容具有很高价值，如果一纯文本形式传递很有可能被篡改。事实上，机密且敏感的数据是不应该再cookie中存储的，因为cookie整个机制本身就是不安全的。
+域名(Domain)属性是决定是否发送某条Cookie的先决条件，默认情况下属性值即当前URI中的域名。
 
+域名属性能够匹配当前域名与子域名，例如：域名属性为 `example.com` 的Cookie能够匹配 `www.example.com` 与 `email.example.com` 等。
 
+🔷 路径
 
-Cookie的生命周期
+路径(Path)属性是决定是否发送某条Cookie的次要条件，仅当域名属性已确认匹配后，客户端才会匹配此属性。
 
-        cookie有2种存储方式，一种是会话性，一种是持久性。
+路径属性的匹配规则为前缀匹配，例如：路径属性为 `/admin` 的Cookie能够匹配 `/admin` 与 `/admin/login` 等。
 
-    会话性：如果cookie为会话性，那么cookie仅会保存在客户端的内存中，当我们关闭客服端时cookie也就失效了
-    持久性：如果cookie为持久性，那么cookie会保存在用户的硬盘中，直至生存期结束或者用户主动将其销毁。
+🔷 有效期
 
-        cookie我们是可以进行设置的，我们可以人为设置cookie的有效时间，什么时候创建，什么时候销毁。
+Cookie的到期时刻。
+
+以客户端时间为准，在时刻到达之前，客户端请求均会携带该Cookie。如果服务器下发Cookie时没有指明有效期，则表示该Cookie仅对当前会话生效，客户端不会将其写入磁盘，会话结束后Cookie将被立刻销毁。
+
+🔷 Secure
+
+安全协议标志位。
+
+该属性没有具体的值，当Cookie具有该属性时，仅当连接基于HTTPS时，客户端才会随请求发送。当Cookie没有该属性时，
+
 
 
 
