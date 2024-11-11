@@ -1,9 +1,9 @@
 # 简介
-RecyclerView是Google官方推出的控件，用于展示大量的列表数据，可以取代ListView和GridView。传统的ListView和GridView性能不佳，且扩展性较差，而RecyclerView基于模块化设计，具有以下优点：
+RecyclerView是Google官方推出的新型控件，用于展示大量的列表数据，可以取代ListView和GridView。传统的ListView和GridView性能不佳，且扩展性较差，而RecyclerView采用了模块化设计，具有以下优点：
 
-- 拥有多种布局管理器，子元素的排列方式较为灵活。
-- 自带视图缓存与复用机制，性能较高。
-- 自带动画效果，并且可以方便地添加自定义动画。
+- 拥有多种布局管理器，表项的排列方式较为灵活。
+- 内置多种动画效果，包括表项的添加、删除、交换位置等动画。
+- 内置View的缓存与复用机制，性能较高。
 
 RecyclerView已包含在"androidx.appcompat"依赖中，我们可以直接使用。若需要单独指定版本，我们可以在项目的"build.gradle"文件中添加配置：
 
