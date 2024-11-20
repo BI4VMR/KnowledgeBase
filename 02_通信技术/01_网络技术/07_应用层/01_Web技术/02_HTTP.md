@@ -10,6 +10,58 @@ HTTP1.0/HTTP1.1的区别：
 
 -->
 
+# 理论基础
+## UserAgent
+用户代理(User Agent, UA)是HTTP请求报文头部的一个字段，用于声明客户端与操作系统的环境信息；Web服务器可以根据UA动态返回相应的内容，以提升用户体验，例如：当我们用PC浏览器与手机浏览器访问同一网站时，服务器所返回的页面布局是不同的；当我们用Windows与Linux系统访问同一软件的下载地址时，服务器所返回的软件包格式也是不同的。
+
+有时服务器会利用UA判断请求者是人类用户还是爬虫等自动化工具，但这种方式无法精确区分用户类型，因为自动化工具可以将UA设为常见浏览器的值，以此伪装自己。
+
+UA的语法如下文代码块所示：
+
+```text
+# 语法
+Mozilla/5.0 ([平台信息1]; [平台信息2]; [平台信息...]) [<引擎名称>/<引擎版本>] [<浏览器名称>/<浏览器版本>]
+
+# Chrome
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36
+
+# Firefox
+Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0
+Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0
+
+# Safari
+Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50
+
+# Android
+Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Mobile Safari/537.36
+
+# iPhone
+Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1
+
+# iPad
+Mozilla/5.0 (iPad; CPU OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1
+```
+
+UA语法中各个部分的含义详见下文内容：
+
+🔷 Mozilla/5.0
+
+这是所有浏览器的通用标记，表示浏览器与Mozilla兼容。
+
+由于历史遗留问题，不论是Mozilla Firefox、Google Chrome还是其他浏览器，它们都会将自己声明为"Mozilla/5.0"。对于主要功能并非显示网页的工具，它们不会携带该标记，只是简单的声明工具名称与版本号，例如： `qBittorrent/4.4.5.10` 、 `python-requests/2.18.4` 。
+
+🔷 平台信息
+
+本部分指明了客户端的操作系统与硬件架构等信息，可能包含多个子项，子项之间以分号( `;` )分隔。
+
+🔷 引擎信息
+
+本部分指明了客户端Web渲染引擎的相关信息。
+
+🔷 浏览器信息
+
+本部分指明了客户端的相关信息。
+
 # 报文结构
 HTTP报文由报文头部与报文体组成，报文头部包含控制信息，每个字段的长度都是可变的，末尾固定为换行符CRLF( `\r\n` )；报文体包含业务数据，报文头部与报文体之间以一个空行作为分隔符。
 
