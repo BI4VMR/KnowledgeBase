@@ -50,8 +50,8 @@ Deepin是由武汉深之度科技有限公司开发的Linux发行版，是Debian
 
 Deepin拥有自研的DDE桌面，美观程度极佳，但稳定性不如其它成熟的桌面环境。
 
-## Arch系列
-下文内容介绍了Arch系列发行版的基本信息：
+## Arch Linux系列
+下文内容介绍了Arch Linux系列发行版的基本信息：
 
 🔷 Arch Linux
 
