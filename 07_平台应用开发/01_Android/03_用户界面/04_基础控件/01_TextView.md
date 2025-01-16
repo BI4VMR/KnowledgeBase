@@ -159,6 +159,11 @@ tvMarquee.isSelected = true
 
 默认情况下滚动效果将在几个周期后停止，如果我们希望滚动效果无限循环，可以在XML配置中添加属性 `android:marqueeRepeatLimit="marquee_forever"` ，或者在逻辑代码中调用TextView的 `setMarqueeRepeatLimit(-1)` 方法。
 
+# 自动文本尺寸
+<!--  -->
+
+不能有android:singleLine="true"，如需要限制一行，可以使用android:maxLines="1"
+
 # SpannableString
 ## 简介
 有时我们需要为整段文本中的部分字符设置样式，此时可以通过多个TextView实现，但是这种方式不够灵活，无法适应动态内容的文本，我们推荐使用SpannableString实现该功能。
