@@ -160,7 +160,25 @@ tvMarquee.isSelected = true
 默认情况下滚动效果将在几个周期后停止，如果我们希望滚动效果无限循环，可以在XML配置中添加属性 `android:marqueeRepeatLimit="marquee_forever"` ，或者在逻辑代码中调用TextView的 `setMarqueeRepeatLimit(-1)` 方法。
 
 # 自动文本尺寸
-<!--  -->
+自从Android 8.0开始，系统提供了自动调整文本尺寸的能力，以便用户浏览较长的文本内容。
+
+[text](https://developer.android.google.cn/develop/ui/views/text-and-emoji/autosizing-textview?hl=zh-cn#setting-textview-autosize)
+
+以下属性与方法用于获取与设置TextView中的文本字号：
+
+- XML - 功能开关 : `android:autoSizeTextType="< none | uniform >"`
+- XML - 设置最大文本尺寸 : `android:autoSizeMaxTextSize="<尺寸>"`
+- XML - 设置文本尺寸 : `android:autoSizeMinTextSize="<尺寸>"`
+- XML - 设置文本尺寸 : `android:autoSizeStepGranularity="<尺寸>"`
+- Java - 功能开关 : `void setAutoSizeTextTypeWithDefaults(int type)`
+- Java - 功能开关 : `void setAutoSizeTextTypeUniformWithConfiguration(int minSize, int maxSize, int stepGranularity, int unit)`
+
+
+setAutoSizeTextTypeWithDefaults(int autoSizeTextType) 方法。提供AUTO_SIZE_TEXT_TYPE_NONE即可关闭 自动调整大小功能，或 AUTO_SIZE_TEXT_TYPE_UNIFORM 以 均匀缩放水平轴和垂直轴。
+
+注意：均匀缩放的默认尺寸为 minTextSize = 12sp、maxTextSize = 112sp 和 granularity = 1px. 
+
+
 
 不能有android:singleLine="true"，如需要限制一行，可以使用android:maxLines="1"
 
