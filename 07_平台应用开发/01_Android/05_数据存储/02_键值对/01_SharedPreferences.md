@@ -52,7 +52,7 @@ editor.putString("Data_String", "我能够吞下玻璃而不伤身。");
 editor.apply();
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "TestUIBaseKT.kt":
 
@@ -109,7 +109,7 @@ String log = "数字：" + i + "\n布尔值：" + b + "\n字符串：" + s;
 Log.i(TAG, log);
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "TestUIBaseKT.kt":
 

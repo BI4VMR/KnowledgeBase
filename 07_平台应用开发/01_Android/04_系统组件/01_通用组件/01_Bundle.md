@@ -35,7 +35,7 @@ intent.putExtras(bundle);
 startActivity(intent);
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "TestUIBase.kt":
 
@@ -75,7 +75,7 @@ if (bundle != null) {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "BookInfoActivity.kt":
 

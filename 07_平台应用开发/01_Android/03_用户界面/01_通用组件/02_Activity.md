@@ -22,7 +22,7 @@ public class MainActivity extends AppCompatActivity {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "TestUIBase.kt":
 
@@ -123,7 +123,7 @@ binding.btnClose.setOnClickListener(v -> {
 });
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "TestActivity.kt":
 
@@ -145,7 +145,7 @@ Intent intent = new Intent(getApplicationContext(), TestActivity.class);
 startActivity(intent);
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "TestUIGotoPage.kt":
 
@@ -195,7 +195,7 @@ try {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "TestUIGotoPage.kt":
 
@@ -250,7 +250,7 @@ try {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "TestUIGotoPage.kt":
 
@@ -295,7 +295,7 @@ intent.putExtra("PARAM_INIT", "测试文本");
 startActivity(intent);
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "TestUIGotoPage.kt":
 
@@ -328,7 +328,7 @@ if (intent != null) {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "TestActivity.kt":
 
@@ -400,7 +400,7 @@ public class TestUIGotoForResult extends AppCompatActivity {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "TestUIGotoForResult.kt":
 
@@ -464,7 +464,7 @@ setResult(999, intent);
 finish();
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "ResultActivity.kt":
 
@@ -548,7 +548,7 @@ public class TestUIGotoForResult2 extends AppCompatActivity {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "TestUIGotoForResult2.kt":
 
@@ -810,7 +810,7 @@ protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "TestUIViewState.kt":
 
@@ -969,7 +969,7 @@ public void onConfigurationChanged(@NonNull Configuration newConfig) {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "TestUIConfig.kt":
 

@@ -34,7 +34,7 @@ dependencies {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "build.gradle.kts":
 
@@ -86,7 +86,7 @@ public class Student {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "StudentKT.kt":
 
@@ -138,7 +138,7 @@ public interface StudentDAO {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "StudentDAOKT.kt":
 
@@ -197,7 +197,7 @@ public abstract class StudentDB extends RoomDatabase {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "StudentDBKT.kt":
 
@@ -288,7 +288,7 @@ dao.delStudent(student);
 List<Student> result = dao.getStudent();
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "TestUIBaseKT.kt":
 
@@ -363,7 +363,7 @@ defaultConfig {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "build.gradle.kts":
 
@@ -437,7 +437,7 @@ public class Student {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "StudentKT.kt":
 
@@ -505,7 +505,7 @@ public class Student {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "StudentKT.kt":
 
@@ -619,7 +619,7 @@ public interface StudentDAO {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "StudentDAOKT.kt":
 
@@ -667,7 +667,7 @@ List<Long> insertStudents(List<Student> students);
 void insertStudents(Student monitor, List<Student> students);
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "StudentDAOKT.kt":
 
@@ -720,7 +720,7 @@ public class MigrationV1ToV2 extends Migration {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "MigrationV1ToV2KT.kt":
 
@@ -747,7 +747,7 @@ Room.databaseBuilder(context.getApplicationContext(), StudentDB.class, "student.
     .build();
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "StudentDBKT.kt":
 

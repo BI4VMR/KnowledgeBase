@@ -197,7 +197,7 @@ Log.w(TAG, "Warn Log.");
 Log.e(TAG, "Error Log.");
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "TestUIBaseKT.kt":
 
@@ -253,7 +253,7 @@ for (int i = 0; i < 100; i++) {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "TestUIBaseKT.kt":
 
@@ -314,7 +314,7 @@ public static void myLog(String tag, String input){
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "TestUIBaseKT.kt":
 

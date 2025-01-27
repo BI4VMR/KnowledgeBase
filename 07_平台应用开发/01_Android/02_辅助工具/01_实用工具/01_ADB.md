@@ -305,7 +305,7 @@ try {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "TestUIBaseKT.kt":
 
@@ -344,7 +344,7 @@ if (resultCode == 0) {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "TestUIBaseKT.kt":
 

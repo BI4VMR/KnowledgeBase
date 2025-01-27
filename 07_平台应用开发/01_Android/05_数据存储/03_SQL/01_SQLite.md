@@ -52,7 +52,7 @@ public class StudentDBHelper extends SQLiteOpenHelper {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "StudentDBHelperKT.kt":
 
@@ -130,7 +130,7 @@ try {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "TestUIBaseKT.kt":
 
@@ -184,7 +184,7 @@ try {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "TestUIBaseKT.kt":
 
@@ -228,7 +228,7 @@ try {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "TestUIBaseKT.kt":
 
@@ -281,7 +281,7 @@ try (cursor) {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "TestUIBaseKT.kt":
 
@@ -398,7 +398,7 @@ public class StudentDBHelper extends SQLiteOpenHelper {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "StudentDBHelper.kt":
 
@@ -504,7 +504,7 @@ try (cursor) {
 }
 ```
 
-上述内容也可以使用Kotlin语言书写：
+上述内容也可以使用Kotlin语言编写：
 
 "TestUIUpgradeKT.kt":
 
