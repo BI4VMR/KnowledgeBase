@@ -695,6 +695,20 @@ fun insertStudents(monitor: StudentKT, students: List<StudentKT>)
 >
 > SQLite中的"RowID"不一定等同于主键，我们在使用该数值前需要注意鉴别，此处省略具体描述，详见相关章节： [🧭 SQLite - "RowID"字段](../../../../04_应用软件/08_存储工具/01_关系型数据库/01_SQLite/02_基本概念.md#rowid字段) 。
 
+<!-- TODO
+
+### 配置日志模式
+SQLite支持以下两种日志模式：
+
+`JournalMode.TRUNCATE` : SQLite的默认日志模式，向存储器写入数据时会阻塞其他读写操作，降低写入并发。
+
+`JournalMode.WRITE_AHEAD_LOGGING` : Room框架的默认模式(API Level > 16时)，WAL模式使得读与写操作之间不会阻塞，只会阻塞写与写操作，能够提高写入并发。
+
+setJournalMode(JournalMode journalMode)
+WAL模式比TRUNCATE模式写入速度更快，但由于读取数据时也需要读取WAL日志验证数据的正确性，所以读取数据较慢，我们应当根据实际使用场景进行选择。
+
+-->
+
 # 版本迁移
 Room对SQLite API进行了封装，我们无需在SQLiteOpenHelper类的 `onUpgrade()` 方法中书写各个版本的判断与升级逻辑，应当转而使用Migration类。
 

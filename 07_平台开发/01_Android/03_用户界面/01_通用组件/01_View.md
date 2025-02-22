@@ -7,13 +7,37 @@ View是单个控件，其内部无法容纳子控件，ViewGroup继承自View，
 
 控件在XML布局文件中的表示方式如下文代码片段所示：
 
+"testui_base.xml":
+
 ```xml
-<TextView
-    android:id="@+id/tvInfo"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="初始化"
-    tools:text="<文本框>" />
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:custom="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:ignore="HardcodedText">
+
+    <TextView
+        android:id="@+id/text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="我能够吞下玻璃而不伤身。"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:textColor="#F0F" />
+
+    <ImageView
+        android:id="@+id/image"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_funny_256"
+        custom:layout_constraintStart_toStartOf="parent"
+        custom:layout_constraintTop_toBottomOf="@id/text" />
+</androidx.constraintlayout.widget.ConstraintLayout>
 ```
 
 这是一个文本框控件，其代码实现位于"android"包中，因此标签 `<TextView>` 省略了包名，如果我们所使用的控件不在"android"包中，则需要申明完整的路径，例如： `<androidx.recyclerview.widget.RecyclerView>` 。
@@ -43,6 +67,42 @@ View是单个控件，其内部无法容纳子控件，ViewGroup继承自View，
 `tools:text` 属性是便于开发者调试的工具，此类属性仅在Android Studio的布局预览工具中显示，编译后的程序并不会携带这些属性。
 
 除了宽高属性，其它属性通常不是必选的，它们将采用默认值，我们可以根据实际需要进行配置。
+
+
+
+# NS
+
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <net.bi4vmr.study.xmlattrs.BusinessCard2
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:avatar="@drawable/ic_funny_256"
+        app:name="田所浩二"
+        app:phone="11451419198" />
+</LinearLayout>
+```
+
+xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+
+自定义NS
+
+xmlns:<自定义名称>="http://schemas.android.com/apk/res-auto"
+
+实际上编译器只识别 `xmlns` 后面的数值，所以该名称可以随意定义，同一个URI也可以定义多个不同的NS
+
+
+
+
 
 # 事件监听器
 ## 简介
