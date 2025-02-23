@@ -70,26 +70,6 @@ View是单个控件，其内部无法容纳子控件，ViewGroup继承自View，
 
 
 
-# NS
-
-
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <net.bi4vmr.study.xmlattrs.BusinessCard2
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:avatar="@drawable/ic_funny_256"
-        app:name="田所浩二"
-        app:phone="11451419198" />
-</LinearLayout>
-```
-
 xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -101,8 +81,8 @@ xmlns:<自定义名称>="http://schemas.android.com/apk/res-auto"
 实际上编译器只识别 `xmlns` 后面的数值，所以该名称可以随意定义，同一个URI也可以定义多个不同的NS
 
 
-
-
+部分属性在app和android NS都存在，例如app:tint和android:tint，我们应该注意区分它们，SDK中的组件会识别android属性，而第三方库(androidx materier等)会识别app。
+如果我们将appns的属性配置给andorid包中的组件，可能不会生效。
 
 # 事件监听器
 ## 简介
