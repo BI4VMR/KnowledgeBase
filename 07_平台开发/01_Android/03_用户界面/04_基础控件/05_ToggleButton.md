@@ -73,3 +73,5 @@ toggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListen
 ```
 
 当我们调用ToggleButton的 `setChecked(boolean state)` 或 `toggle()` 方法设置开关状态时，回调方法 `onCheckedChanged()` 也会触发，这在某些场景下可能导致逻辑错误。我们可以在回调方法中使用控件的 `isPressed()` 方法判断当前事件是否为用户输入。
+
+方法二：可以改变状态前先注销监听器，改变完成后再重新注册
