@@ -26,22 +26,21 @@ Mockito是一个针对Java语言的模拟工具，即使有KT扩展，对于Kotl
 
 🔴 示例一：使用参数捕获器验证回调方法。
 
-在本示例中，我们。
+在本示例中，我们使用参数捕获器验证回调方法的参数是否符合预期。
 
-第一步，我们在构建系统中声明对于JUnit4组件的依赖。
+第一步，编写业务代码。
+
+我们首先定义一个接口， `onResult()` 方法用于回调事件。
+
+"FileCallback.kt":
 
 ```kotlin
 interface FileCallback {
-
-    /**
-     * 回调方法。
-     *
-     * @param result  执行结果。
-     * @param message 消息。
-     */
     fun onResult(result: Boolean, message: String)
 }
 ```
+
+接下来，我们编写业务逻辑。
 
 "FileHelper.kt":
 
@@ -53,28 +52,99 @@ class FileHelper {
             File(path).createNewFile()
             callback.onResult(true, "OK!")
         } catch (e: Exception) {
-            callback.onResult(false, "Error!")
+            callback.onResult(false, "${e.message}")
             System.err.println("Save file failed! Reason:[${e.message}]")
         }
     }
 }
 ```
 
-第二步，编写业务代码。
+此处 `saveFile()` 方法的第二参数为FileCallback接口实现，文件操作结果将会通过 `onResult()` 方法反馈给调用者。
 
-此处我们实现一个简单的除法计算方法，如果除数为 `0` 则返回空值，避免整个程序终止。
+第二步，编写测试代码。
 
-"MathUtil.java":
+"FileHelperTest.kt":
 
-```java
-public class MathUtil {
+```kotlin
+@Test
+fun testSaveFile() {
+    val fileHelper = FileHelper()
+    // 创建Callback的Mock对象
+    val mockCallback: FileCallback = mockk(relaxed = true)
 
-    public static Integer divideSafe(int a, int b) {
-        if (b == 0) {
-            return null;
-        } else {
-            return a / b;
-        }
+    // 调用待测方法，传入Callback的Mock对象
+    val invalidPath = "/invalid_path.txt"
+    fileHelper.saveFile(invalidPath, mockCallback)
+
+    // 定义捕获器， `slot()` 方法的泛型即参数类型。
+    val captorResult = slot<String>()
+
+    // 验证回调方法已触发，并使用 `capture()` 方法捕获第二个参数。
+    verify {
+        mockCallback.onResult(any(), capture(captorResult))
+    }
+
+    // 查看捕获到的参数值
+    val capturedValue: String = captorResult.captured
+    println("捕获到的参数值:[$capturedValue]")
+    // 进一步验证该参数值
+    assertFalse(capturedValue.startsWith("OK"))
+}
+```
+
+
+
+
+当回调方法被触发后，我们可以在 `verify()` 方法中使用 `capture()` 方法配置参数捕获器，检测
+
+
+```text
+捕获到的参数值:[拒绝访问。]
+```
+
+
+
+
+🔴 示例一：使用参数捕获器记录所有参数。
+
+在本示例中，我们使用参数捕获器记录所有的参数值。
+
+我们在前文“示例”的基础上进行修改，在 `onResult()` 方法上设置捕获器。
+
+"FileHelperTest.kt":
+
+```kotlin
+@Test
+fun `testSaveFile2`() {
+    val capturedValues = mutableListOf<String>()
+
+    val fileHelper = FileHelper()
+    // 创建Callback的Mock对象
+    val mockCallback: FileCallback = mockk()
+    // Mock回调方法，使用List作为捕获接收器。
+    every { mockCallback.onResult(any(), capture(capturedValues)) } returns Unit
+
+    // 多次调用待测方法，传入Callback的Mock对象
+    val invalidPath = "/invalid_path.txt"
+    fileHelper.saveFile(invalidPath, mockCallback)
+    fileHelper.saveFile(invalidPath, mockCallback)
+    val validPath = "/tmp/valid_path.txt"
+    fileHelper.saveFile(validPath, mockCallback)
+    File(validPath).deleteOnExit()
+
+    // 查看捕获到的参数值
+    capturedValues.forEachIndexed { index, s ->
+        println("Index:[$index] Value:[$s]")
     }
 }
+```
+
+此处我们需要在Mock回调方法时设置捕获器，与先前在 `verify()` 中设置捕获器的操作不同，因为我们需要捕获所有参数，`verify()` 只能单次验证。
+
+
+
+```text
+Index:[0] Value:[拒绝访问。]
+Index:[1] Value:[拒绝访问。]
+Index:[2] Value:[系统找不到指定的路径。]
 ```
