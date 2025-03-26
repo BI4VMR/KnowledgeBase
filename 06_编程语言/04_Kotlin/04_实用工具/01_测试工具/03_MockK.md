@@ -6,19 +6,16 @@ Mockito是一个针对Java语言的模拟工具，即使有KT扩展，对于Kotl
 -->
 
 # 基本应用
-
 ## 依赖隔离
-下文示例展示了MockK的基本使用方法：
+Mock工具的基本用途是隔离依赖，模拟被测类调用的周边接口，
 
+🔴 示例一：模拟待测接口的依赖项。
 
+在本示例中，我们创建Mock对象，并将它们注入到待测对象中。
 
+第一步，编写业务代码。
 
-🔴 示例一：【标题】。
-
-在本示例中，【此处填写示例背景】。
-
-
-
+我们首先编写数据库访问类，对外提供一个查询用户信息的方法
 
 "DBHelper.kt":
 
@@ -29,6 +26,7 @@ class DBHelper {
 }
 ```
 
+接下来，我们编写用户管理类，调用数据库访问类的接口。
 
 "UserManager.kt":
 
@@ -47,7 +45,9 @@ class UserManager {
 }
 ```
 
+第二步，编写测试代码。
 
+此处我们对UserManager中的接口进行测试，因此需要隔离UserManager的依赖项DBHelper，我们创建DBHelper的Mock对象，并修改
 
 "UserManagerTest.kt":
 
@@ -117,32 +117,17 @@ Index:[2] Name:[用户B]
 
 ## 宽松模式
 
-1. 核心作用
-
 在 MockK 中，relaxed = true 表示创建一个宽松的 Mock 对象：
 
-    未明确 Stub 的方法不会抛出异常，而是返回默认值（如 null、0、false 或空集合）。
+未明确 Stub 的方法不会抛出异常，而是返回默认值（如 null、0、false 或空集合）。
 
-    适用于不需要测试所有交互的场景，避免为大量无关方法手动定义行为。
-
-kotlin
-复制
-
-val relaxedMock = mockk<SomeClass>(relaxed = true)
-relaxedMock.unstubbedMethod()  // 返回 null 或默认值，而非抛出异常
-
-2. 默认返回值规则
-
-    基本类型：0、false
-
-    引用类型：null
-
-    集合类型：空集合（如 emptyList()）
-
-    Unit 函数：直接通过，不抛异常
+适用于不需要测试所有交互的场景，避免为大量无关方法手动定义行为。
 
 
 
+
+
+```text
 io.mockk.MockKException: no answer found for DBHelper(#1).saveLog(GetUserNames) among the configured answers: (DBHelper(#1).queryUsers()))
 
 	at io.mockk.impl.stub.MockKStub.defaultAnswer(MockKStub.kt:93)
@@ -154,16 +139,13 @@ io.mockk.MockKException: no answer found for DBHelper(#1).saveLog(GetUserNames) 
 	at io.mockk.proxy.jvm.advice.Interceptor.call(Interceptor.kt:21)
 	at net.bi4vmr.study.mockk.base.DBHelper.saveLog(DBHelper.kt:34)
 	at net.bi4vmr.study.mockk.base.UserManager.getUserNames2(UserManager.kt:23)
+```
 
+默认返回值规则
 
-    /**
-     * 输出日志。
-     *
-     * @param[info] 消息内容。
-     */
-    fun saveLog(info: String) {
-        println(info)
-    }
+- 基本数据类型：数值型返回 `0` ；布尔型返回 `false` 。
+- 引用类型：返回空值。
+- 集合类型：内容为空的集合。
 
 
 ## MockK注解
