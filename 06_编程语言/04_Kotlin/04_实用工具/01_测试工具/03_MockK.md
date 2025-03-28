@@ -3,19 +3,26 @@
 
 Mockito是一个针对Java语言的模拟工具，即使有KT扩展，对于Kotlin的语法支持仍然有限，因此更建议使用MockK。
 
+
+1.13.17
+
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+
+
+
 -->
 
 # 基本应用
 ## 依赖隔离
-Mock工具的基本用途是隔离依赖，模拟被测类调用的周边接口，
+Mock工具的基本用途是模拟待测接口的周边接口，提供假数据与行为，使我们专注于待测接口本身，不必关心外围环境的变化。
 
 🔴 示例一：模拟待测接口的依赖项。
 
-在本示例中，我们创建Mock对象，并将它们注入到待测对象中。
+在本示例中，我们创建Mock对象，并将它们注入到待测对象中，实现依赖隔离。
 
-第一步，编写业务代码。
+第一步，我们编写业务代码。
 
-我们首先编写数据库访问类，对外提供一个查询用户信息的方法
+此处以用户管理功能为例，我们编写一个UserManager类提供用户信息查询接口，其依赖于数据库工具类DBHelper提供的接口。
 
 "DBHelper.kt":
 
@@ -25,8 +32,6 @@ class DBHelper {
     fun queryUsers(): Map<Long, String> = mapOf(1L to "张三", 2L to "李四")
 }
 ```
-
-接下来，我们编写用户管理类，调用数据库访问类的接口。
 
 "UserManager.kt":
 
@@ -45,9 +50,9 @@ class UserManager {
 }
 ```
 
-第二步，编写测试代码。
+第二步，我们编写测试代码。
 
-此处我们对UserManager中的接口进行测试，因此需要隔离UserManager的依赖项DBHelper，我们创建DBHelper的Mock对象，并修改
+我们的目标是测试UserManager中的接口是否正常，并不关心DBHelper连接何种数据库、用户信息表具有何种结构，因此我们需要创建DBHelper类的Mock对象，给UserManager提供预设的用户信息。
 
 "UserManagerTest.kt":
 
@@ -58,7 +63,7 @@ fun testGetUserNames() {
     val mockDatas: Map<Long, String> = mapOf(1L to "来宾账户", 2L to "用户A", 3L to "用户B")
 
     // 创建DBHelper的Mock对象
-    val mockDBHelper: DBHelper = mockk(relaxed = true)
+    val mockDBHelper: DBHelper = mockk()
     // 定义行为：如果 `queryUsers()` 方法被调用，则返回模拟数据。
     every { mockDBHelper.queryUsers() } returns mockDatas
 
@@ -80,27 +85,9 @@ fun testGetUserNames() {
 }
 ```
 
+我们首先通过 `mockk<T>()` 方法创建Mock对象，并通过 `every { mockDBHelper.queryUsers() } returns mockDatas` 语句定义Mock对象的行为：如果 `mockDBHelper` 对象的 `queryUsers()` 方法被调用，则返回 `mockDatas` 给调用者。
 
-
-"MockUtils.kt":
-
-```kotlin
-/**
- * 将Mock对象注入到目标对象中（非安全）。
- *
- * @param[target] 目标对象。
- * @param[fieldName] 目标属性名称。
- */
-inline fun <reified T : Any> T.injectMockUnsafe(target: Any, fieldName: String) {
-    target.javaClass.getDeclaredField(fieldName)
-        .apply {
-            isAccessible = true
-            set(target, this@injectMockUnsafe)
-        }
-}
-```
-
-
+接着，我们创建了待测接口所在类UserManager的对象，并通过反射将Mock对象注入到UserManager中，扩展方法 `injectMock()` 的具体实现详见本章示例工程。
 
 此时运行示例程序，并查看控制台输出信息：
 
@@ -110,54 +97,90 @@ Index:[1] Name:[用户A]
 Index:[2] Name:[用户B]
 ```
 
-
 根据上述输出内容可知：
 
-
+UserManager调用DBHelper中的接口后，输出内容确实为测试代码提供的模拟数据，并非DBHelper的内置数据，说明Mock操作成功。
 
 ## 宽松模式
+若待测方法调用了Mock对象中的某个方法，但我们没有预先为此Mock方法定义行为，MockK不知道应当执行何种动作，就会抛出异常提醒开发者。
 
-在 MockK 中，relaxed = true 表示创建一个宽松的 Mock 对象：
+Mock对象中的部分方法执行与否对测试逻辑没有负面影响，例如：日志记录，我们可以使用 `every { <日志记录方法> } just runs` 语句定义它们的行为：“什么都不做”，避免运行时出现异常；但有时这种方法数量较多，手动定义会产生大量重复代码，此时我们就可以使用宽松模式创建Mock对象。
 
-未明确 Stub 的方法不会抛出异常，而是返回默认值（如 null、0、false 或空集合）。
+宽松模式Mock对象会为每个方法添加默认行为：“什么都不做”，对于有返回值的方法，返回值内容如下文列表所示：
 
-适用于不需要测试所有交互的场景，避免为大量无关方法手动定义行为。
+- 数值型：返回 `0` 。
+- 布尔型：返回 `false` 。
+- 引用类型：返回 `null` 。
+- 集合类型：返回空集合。
 
+🟠 示例二：使用宽松模式创建Mock对象。
 
+在本示例中，我们使用宽松模式创建Mock对象，并调用未手动定义行为的Mock方法。
 
+第一步，我们对前文“示例一”的业务代码进行修改。
 
+我们在DBHelper类中新增一个日志记录方法 `saveLog()` ，然后在UserManager中调用该方法。
 
-```text
-io.mockk.MockKException: no answer found for DBHelper(#1).saveLog(GetUserNames) among the configured answers: (DBHelper(#1).queryUsers()))
+"UserManager.kt":
 
-	at io.mockk.impl.stub.MockKStub.defaultAnswer(MockKStub.kt:93)
-	at io.mockk.impl.stub.MockKStub.answer(MockKStub.kt:44)
-	at io.mockk.impl.recording.states.AnsweringState.call(AnsweringState.kt:16)
-	at io.mockk.impl.recording.CommonCallRecorder.call(CommonCallRecorder.kt:53)
-	at io.mockk.impl.stub.MockKStub.handleInvocation(MockKStub.kt:271)
-	at io.mockk.impl.instantiation.JvmMockFactoryHelper$mockHandler$1.invocation(JvmMockFactoryHelper.kt:24)
-	at io.mockk.proxy.jvm.advice.Interceptor.call(Interceptor.kt:21)
-	at net.bi4vmr.study.mockk.base.DBHelper.saveLog(DBHelper.kt:34)
-	at net.bi4vmr.study.mockk.base.UserManager.getUserNames2(UserManager.kt:23)
+```kotlin
+// 获取所有用户名称（新增了日志记录的步骤）
+fun getUserNames2(): List<String> {
+    // 新增日志记录操作
+    mDBHelper.saveLog("GetUserNames")
+    return mDBHelper.queryUsers()
+        .values
+        .toList()
+}
 ```
 
-默认返回值规则
+此时运行UserManagerTest中的测试方法，控制台就会输出以下错误信息：
 
-- 基本数据类型：数值型返回 `0` ；布尔型返回 `false` 。
-- 引用类型：返回空值。
-- 集合类型：内容为空的集合。
+```text
+io.mockk.MockKException: no answer found for DBHelper(#1).saveLog(GetUserNames) among the configured answers: (DBHelper(#1).queryUsers())
+```
 
+这是因为我们只定义了DBHelper中 `queryUsers()` 方法的行为，没有定义 `saveLog()` 方法的行为。
 
-## MockK注解
-在前文示例中，我们使用 `mockk()` 方法创建了一些Mock对象；如果需要Mock的类数量较多，我们也可以使用MockK提供的注解。
+第二步，我们使用宽松模式生成DBHelper的Mock对象。
 
-🔴 示例一：使用注解创建Mock对象。
+由于 `saveLog()` 方法对测试逻辑没有任何影响，我们可以用宽松模式创建DBHelper的Mock对象，为其定义“什么都不做”的默认行为。
 
-在本示例中，我们以JUnit4框架为例，使用MockK提供的注解创建Mock对象。
+"UserManagerTest.kt":
+
+```kotlin
+@Test
+fun testGetUserNames2() {
+    val mockDatas: Map<Long, String> = mapOf(1L to "来宾账户", 2L to "用户A", 3L to "用户B")
+
+    // 创建DBHelper的Mock对象（使用relaxed = true为没有明确定义行为的类添加默认行为）
+    val mockDBHelper: DBHelper = mockk(relaxed = true)
+    // 定义行为：如果 `queryUsers()` 方法被调用，则返回模拟数据。
+    every { mockDBHelper.queryUsers() } returns mockDatas
+
+    // 构造待测类的对象，并注入Mock对象作为依赖。
+    val manager = UserManager()
+    mockDBHelper.injectMock(manager, "mDBHelper")
+
+    // 调用待测方法
+    val users = manager.getUserNames2()
+}
+```
+
+`mockk()` 方法的 `relaxed` 参数用于控制是否需要启用宽松模式，默认为禁用，我们将其设为 `true` 即可为所有方法定义默认行为。
+
+有时宽松模式的默认返回值会误导我们编写错误的代码，为了解决此类问题， `mockk()` 方法提供了一个 `relaxUnitFun` 参数，这种模式只为Mock对象的无返回值方法定义默认行为，而有返回值方法则保持“若未定义行为则抛出异常”。我们可以根据实际情况选择 `relaxed` 或 `relaxUnitFun` 模式。
+
+## 常用注解
+在前文示例中，我们使用 `mockk()` 方法创建了一些Mock对象；如果需要Mock的对象数量较多，我们也可以使用MockK提供的注解。
+
+🟡 示例三：使用注解创建Mock对象。
+
+在本示例中，我们以JUnit4平台为例，使用MockK提供的注解创建Mock对象。
 
 "AnnotationTest.kt":
 
-```text
+```kotlin
 // 创建一个DBHelper类的Mock对象
 @MockK
 lateinit var mockDBHelper1: DBHelper
@@ -194,9 +217,55 @@ fun teardown() {
 上述注解默认没有任何效果，为了使它们生效，我们需要在测试代码执行前调用 `MockKAnnotations.init(this)` 方法；测试代码执行完毕后，我们还应该调用 `unmockkAll()` 方法撤销所有Mock行为。
 
 
+# 行为定义
+
+every{...} 语句 没有什么好解释的，它就是 Mockito 中的when，用来监听指定的代码语句，并做出接下来的动作，例如：
+
+    return value 返回某个值
+    just Runs 继续执行（仅用于 Unit 方法）
+    answer {} 执行某个语句块
+
+因为Kotlin中有 协程 这个特性（本质上是线程），所以单元测试在执行时可能会遇到执行协程中代码的问题，这个时候如果需要监听，则需要使用 coEvery{ ... }
+当然了除了 coEvery{...} ， 还有 coVerify{...}、 coRun、 coAssert 、 coAnswer、coInvoke 等用于协程中的方法，后面就不再赘述了。
+
+
+
 # 行为验证
 
 测试框架可以验证有直接返回值的方法，但是对于没有返回值的 void 方法应该如何测试呢？void 方法的输出结果其实是调用了另外一个方法，所以需要验证该方法是否有被调用，调用时参数是否正确。
+
+
+verify 是用来检查方法是否触发，当然它也很强大，它有许多参数可选，来看看这些参数：
+
+fun verify(
+    ordering: Ordering = Ordering.UNORDERED,
+    inverse: Boolean = false,
+    atLeast: Int = 1,
+    atMost: Int = Int.MAX_VALUE,
+    exactly: Int = -1,
+    timeout: Long = 0,
+    verifyBlock: MockKVerificationScope.() -> Unit
+){}
+
+他们作用如下：
+
+    ordering： 表示verify{ .. } 中的内容（下面简称语句块）是按照顺序执行。 默认是无序的
+    inverse：如果为true，表示语句块中的内容不发生（即方法不执行）
+    atLeast：语句块中方法最少执行次数
+    atMost：语句块中方法最多执行次数
+    exactly：语句块中的方法具体执行次数
+    timeout：语句块内容执行时间，如果超过该事件，则测试会失败
+    verifyBlock： Lambda表达式，语句块本身
+
+除了这些，还有别的 verify 语句，方便你使用：
+
+    verifySequence{...}：验证代码按顺序执行，而且要每一行的代码都要在语句块中指定出来。
+    verifyAll{...}：验证代码全部都执行，没有顺序的规定
+    verifyOrder{...}：验证代码按顺序执行
+
+
+
+
 
 # 参数匹配器
 
@@ -334,3 +403,43 @@ Index:[0] Value:[拒绝访问。]
 Index:[1] Value:[拒绝访问。]
 Index:[2] Value:[系统找不到指定的路径。]
 ```
+
+
+
+<!-- TODO
+
+2.3.7 mock 静态类
+
+和 Mockito 差不多： mockkStatic(StaticClass::class)
+2.3.8 mock Object类
+
+Kotlin 中 Object 类使用较多，而使用 Mockito 时不好对其进行mock，而 mockk 自然是完全支持啦，它通过下面语句mock一个object类：
+
+mockkObject(ObjectClass)
+every {...}
+
+如果你要验证、执行 object类里面的私有方法，你需要在mock的时候指定一个值 recordPrivateCalls， 它默认是false：
+
+mockkObject(ObjectClass, recordPrivateCalls = true)
+
+
+enum 类也是一样的mock方式
+
+
+
+
+验证mock对象私有方法
+
+验证是放在 verify{...} 中的，也是通过反射的方式来验证:
+
+verify{ mockClass["privateFunName"](arg1, arg2, ...) }
+
+主要分成三个部分：
+
+    mock类
+    中括号，里面填入双引号+私有方法名
+    小括号，里面填入传参，可以使用 allAny<T>()、mockk() … 或你想要的传入的实参
+
+
+
+-->
