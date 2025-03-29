@@ -12,8 +12,8 @@ Junit 官网：http://junit.org/
 
 本章的示例工程详见以下链接：
 
-- [🔗 【链接名称】](【链接地址】)
-- [🔗 【链接名称】](【链接地址】)
+- [🔗 示例工程：JUnit4](https://github.com/BI4VMR/Study-Java/tree/master/M04_Utils/C04_Test/S02_JUnit4)
+- [🔗 示例工程：JUnit5](https://github.com/BI4VMR/Study-Java/tree/master/M04_Utils/C04_Test/S03_JUnit5)
 
 
 # 基本应用
