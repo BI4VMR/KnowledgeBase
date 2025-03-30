@@ -58,7 +58,7 @@ dependencies {
 }
 ```
 
-第二步，编写业务代码。
+第二步，我们编写业务代码。
 
 此处我们实现一个简单的除法计算方法，如果除数为 `0` 则返回空值，避免整个程序终止。
 
@@ -77,7 +77,7 @@ public class MathUtil {
 }
 ```
 
-第三步，编写测试代码。
+第三步，我们编写测试代码。
 
 按照惯例，我们会在 `src/main` 目录中放置业务代码、在 `src/test` 目录中放置测试代码。
 
@@ -121,25 +121,35 @@ public class MathUtilTest {
 每个被 `@Test` 注解修饰的方法都是一个测试方法，它们是JUnit中的最小可执行单元，我们在测试方法中调用被测方法并传入预定参数，然后使用断言方法检查返回值是否与预期相符。在一个测试方法中，若所有断言均通过且没有出现异常，则测试结果为通过；若任意断言不通过或出现异常，则测试结果为不通过。
 
 
-# 条件判断
-<!-- TODO
-
+# 检测
+## 断言方法
+断言方法是JUnit提供的一种逻辑判断
 断言方法检测预期与实际值是否相同，不相同则抛出 `AssertionError` 异常。
 例如上文的 `assertEquals(s ,b)` ，系统将会比较a与b是否相等，若相等则不做任何处理，继续执行后续代码，若不相等则抛出异常提示用户。
 
+- `Assert.assertEquals(int expected, int actual)` : 判断期望值 `expected` 是否与实际值 `actual` 相等。每种数据类型都有对应的 `assertEquals()` 重载方法，对于对于引用类型，对于引用类型为调用 `equals()` 方法进行比较
+- `Assert.assertNotEquals(int expected, int actual)` : 判断期望值 `expected` 是否与实际值 `actual` 相等。判等方式与  `assertEquals()` 方法相同。
+- `Assert.assertSame(Object expected, Object actual)` : 判断期望值 `expected` 与实际值 `actual` 的内存地址是否相等。
+- `Assert.assertNull(Object object)` : 判断传入值 `object` 是否为空值。
+- `Assert.assertNotNull(Object object)` : 判断传入值 `object` 是否为非空值。
+- `Assert.assertTrue(boolean condition)` : 判断传入值 `condition` 是否为真。
+- `Assert.assertFalse(boolean condition)` : 判断传入值 `condition` 是否为假。
+- `Assert.assertArrayEquals(int expecteds, int actuals)` : 判断期望数组 `expecteds` 是否与实际数组 `actuals` 内容相等。每种数据类型都有对应的 `assertArrayEquals()` 重载方法。
 
-assertArrayEquals(expecteds, actuals)	查看两个数组是否相等。
-assertEquals(expected, actual)	查看两个对象是否相等。类似于字符串比较使用的equals()方法。
-assertNotEquals(first, second)	查看两个对象是否不相等。
-assertNull(object)	查看对象是否为空。
-assertNotNull(object)	查看对象是否不为空。
-assertSame(expected, actual)	查看两个对象的引用是否相等。类似于使用“==”比较两个对象。
-assertNotSame(unexpected, actual)	查看两个对象的引用是否不相等。类似于使用“!=”比较两个对象。
-assertTrue(condition)	查看运行结果是否为true。
-assertFalse(condition)	查看运行结果是否为false。
-assertThat(actual, matcher)	查看实际值是否满足指定的条件。
-fail()	让测试失败。
+上述方法都有一个能够对外汇报消息的版本，我们可以在此填写问题出现的详细原因，以便断言异常后开发者能够找到原因。
 
+如果上述方法都不能满足需求，我们还可以自行编写断言逻辑，在条件不满足时调用 `Assert.fail()` 方法抛出异常。
+
+
+
+## 检测异常
+
+
+
+
+
+
+## 检测超时
 
 
 
@@ -150,10 +160,6 @@ fail()	让测试失败。
 
 @Disabled注解可以应用于测试类（禁用该类中的所有测试方法）或单个测试方法。
 
-
-
-
--->
 
 # 生命周期
 JUnit提供了一些生命周期方法，以便我们在测试开始前进行一些准备工作、在测试结束后进行一些收尾工作。我们可以使用下文列表中的注解修饰自定义方法，JUnit将在对应的时机调用这些方法。
