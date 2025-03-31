@@ -121,27 +121,27 @@ public class MathUtilTest {
 每个被 `@Test` 注解修饰的方法都是一个测试方法，它们是JUnit中的最小可执行单元，我们在测试方法中调用被测方法并传入预定参数，然后使用断言方法检查返回值是否与预期相符。在一个测试方法中，若所有断言均通过且没有出现异常，则测试结果为通过；若任意断言不通过或出现异常，则测试结果为不通过。
 
 
-# 检测
+# 验证结果
 ## 断言方法
-断言方法是JUnit提供的一种逻辑判断
-断言方法检测预期与实际值是否相同，不相同则抛出 `AssertionError` 异常。
-例如上文的 `assertEquals(s ,b)` ，系统将会比较a与b是否相等，若相等则不做任何处理，继续执行后续代码，若不相等则抛出异常提示用户。
+断言方法是JUnit提供的一种结果验证工具，我们可以向断言方法传入期望值与实际值，若实际值与期望值相匹配，则返回成功的结果；若实际值与期望值不匹配，则抛出 `AssertionError` 异常提示开发者，并返回失败的结果。
 
-- `Assert.assertEquals(int expected, int actual)` : 判断期望值 `expected` 是否与实际值 `actual` 相等。每种数据类型都有对应的 `assertEquals()` 重载方法，对于对于引用类型，对于引用类型为调用 `equals()` 方法进行比较
-- `Assert.assertNotEquals(int expected, int actual)` : 判断期望值 `expected` 是否与实际值 `actual` 相等。判等方式与  `assertEquals()` 方法相同。
-- `Assert.assertSame(Object expected, Object actual)` : 判断期望值 `expected` 与实际值 `actual` 的内存地址是否相等。
+JUnit提供的断言方法如下文列表所示：
+
+- `Assert.assertEquals(int expected, int actual)` : 判断期望值 `expected` 是否与实际值 `actual` 相等。对于基本数据类型，每种类型都有对应的 `assertEquals()` 重载方法可供选择；对于引用数据类型，实质为调用二者的 `equals()` 方法进行比较。
+- `Assert.assertNotEquals(int expected, int actual)` : 判断期望值 `expected` 是否与实际值 `actual` 不相等。判等依据与  `assertEquals()` 方法相同。
+- `Assert.assertSame(Object expected, Object actual)` : 判断期望值 `expected` 与实际值 `actual` 的内存地址是否相同。
+- `Assert.assertNotSame(Object expected, Object actual)` : 判断期望值 `expected` 与实际值 `actual` 的内存地址是否不同。
 - `Assert.assertNull(Object object)` : 判断传入值 `object` 是否为空值。
 - `Assert.assertNotNull(Object object)` : 判断传入值 `object` 是否为非空值。
 - `Assert.assertTrue(boolean condition)` : 判断传入值 `condition` 是否为真。
 - `Assert.assertFalse(boolean condition)` : 判断传入值 `condition` 是否为假。
-- `Assert.assertArrayEquals(int expecteds, int actuals)` : 判断期望数组 `expecteds` 是否与实际数组 `actuals` 内容相等。每种数据类型都有对应的 `assertArrayEquals()` 重载方法。
+- `Assert.assertArrayEquals(int expecteds, int actuals)` : 判断期望数组 `expecteds` 是否与实际数组 `actuals` 内容相等。每种数据类型都有对应的 `assertArrayEquals()` 重载方法可供选择。
 
-上述方法都有一个能够对外汇报消息的版本，我们可以在此填写问题出现的详细原因，以便断言异常后开发者能够找到原因。
+上述方法都有一个能够汇报失败消息的版本，例如： `assertTrue(boolean condition)` 与 `assertTrue(String message, boolean condition)` 对应。这些消息会在断言失败时显示在控制台或测试报告中，以便开发者了解详情。
 
-如果上述方法都不能满足需求，我们还可以自行编写断言逻辑，在条件不满足时调用 `Assert.fail()` 方法抛出异常。
+如果JUnit提供的断言方法都无法满足需求，我们还可以自行编写断言逻辑，并在条件不满足时调用 `Assert.fail()` 方法抛出 `AssertionError` 异常。
 
-
-
+<!-- TODO
 ## 检测异常
 
 
@@ -153,6 +153,7 @@ public class MathUtilTest {
 
 
 
+
 ## 其他功能
 @Test：	标识一条测试用例。 (A) (expected=XXEception.class)   (B) (timeout=xxx)
 @Ignore: 	忽略的测试用例。表来标识该用例跳过，不管用例运行成功还是失败。
@@ -160,6 +161,7 @@ public class MathUtilTest {
 
 @Disabled注解可以应用于测试类（禁用该类中的所有测试方法）或单个测试方法。
 
+-->
 
 # 生命周期
 JUnit提供了一些生命周期方法，以便我们在测试开始前进行一些准备工作、在测试结束后进行一些收尾工作。我们可以使用下文列表中的注解修饰自定义方法，JUnit将在对应的时机调用这些方法。
@@ -238,8 +240,8 @@ public class LifeCycleTest {
 > 我们应当确保每个生命周期注解在所属测试类中仅出现一次，假如我们定义多个 `@Before` 方法，JUnit不能保证它们的执行顺序。
 
 
-# JUnit5
 <!-- TODO
+# JUnit5
 不像以往的版本，JUnit 5 现在是三个模块的合体 JUnit 5 = JUnit Platform + JUnit Jupiter + JUnit Vintage
 
     JUnit Platform: 运行测试的基础平台。还定义了开发测试框架的 TestEngine API。并提供了命令行执行测试以及与 Gradle, Maven, JUnit4 Runner 的集成
