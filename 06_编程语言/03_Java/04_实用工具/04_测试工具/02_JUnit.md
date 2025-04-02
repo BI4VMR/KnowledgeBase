@@ -257,40 +257,101 @@ public class LifeCycleTest {
 -->
 
 
-以下声明方式只能在IDE中运行测试代码，不适用于Gradle命令行。
+## 环境配置
+若要使用JUnit5，我们首先需要在构建工具中声明相关依赖并添加一些配置。
 
+如果构建系统为Maven，我们可以使用下文代码块中的语句声明依赖：
 
-```text
-// Jupiter（将会自动引入Platform）
-testImplementation("org.junit.jupiter:junit-jupiter:5.12.1")
-// Vintage（JUnit4及更早版本的兼容模块，可选。）
-testImplementation("org.junit.vintage:junit-vintage-engine:5.12.1")
+"pom.xml":
+
+```xml
+<!-- Jupiter（JUnit5引擎的实现，将会自动引入Platform。） -->
+<dependency>
+    <groupId>org.junit.jupiter</groupId>
+    <artifactId>junit-jupiter</artifactId>
+    <version>5.12.1</version>
+    <scope>test</scope>
+</dependency>
+
+<!-- Vintage（JUnit4及更早版本的兼容模块，可以运行JUnit4以及更早版本的测试代码，可选。） -->
+<dependency>
+    <groupId>org.junit.vintage</groupId>
+    <artifactId>junit-vintage-engine</artifactId>
+    <version>5.12.1</version>
+    <scope>test</scope>
+</dependency>
 ```
 
+如果构建系统为Gradle，我们可以使用下文代码块中的语句声明依赖：
 
-以下声明方式适用于IDE和Gradle命令行
+"build.gradle":
 
-```text
-// JUnit5 BOM版本配置文件
-testImplementation(platform("org.junit:junit-bom:5.12.1"))
-// JUnit5 平台启动器
-testImplementation("org.junit.platform:junit-platform-launcher")
-// Jupiter
-testImplementation("org.junit.jupiter:junit-jupiter-engine")
-// Vintage（JUnit4及更早版本的兼容模块，可选。）
-testImplementation("org.junit.vintage:junit-vintage-engine")
-```
-
-
-```
+```groovy
 test {
+    // Gradle默认只能识别JUnit4，该语句可以使其支持JUnit5。
     useJUnitPlatform()
+}
+
+dependencies {
+    // Jupiter（JUnit5引擎的实现，将会自动引入Platform。）
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.12.1'
+    // Vintage（JUnit4及更早版本的兼容模块，可以运行JUnit4以及更早版本的测试代码，可选。）
+    testImplementation 'org.junit.vintage:junit-vintage-engine:5.12.1'
 }
 ```
 
+上述内容也可以使用Kotlin语言编写：
 
-```
+"build.gradle.kts":
+
+```kotlin
 tasks.withType<Test> {
+    // Gradle默认只能识别JUnit4，该语句可以使其支持JUnit5。
     useJUnitPlatform()
+}
+
+dependencies {
+    // Jupiter（JUnit5引擎的实现，将会自动引入Platform。）
+    testImplementation("org.junit.jupiter:junit-jupiter:5.12.1")
+    // Vintage（JUnit4及更早版本的兼容模块，可以运行JUnit4以及更早版本的测试代码，可选。）
+    testImplementation("org.junit.vintage:junit-vintage-engine:5.12.1")
+}
+```
+
+当我们引入 `junit-jupiter` 组件后，构建系统也会级联引入 `junit-jupiter-engine` 、 `junit-platform-launcher` 等组件，此时我们就可以使用JUnit5编写测试代码了。
+
+上述配置是官方提供的简化方式，在Maven项目中确实可以正常工作，但在Gradle项目中无法完全正常工作，我们只能在IDE中直接运行测试代码，无法在Gradle命令行运行测试任务。
+
+若要使用Gradle命令行运行测试任务，我们必须使用BOM明确配置 `junit-jupiter-engine` 与 `junit-platform-launcher` 的版本，不可使用 `junit-jupiter` 。
+
+"build.gradle":
+
+```groovy
+dependencies {
+    // JUnit5 BOM版本配置文件
+    testImplementation platform('org.junit:junit-bom:5.12.1')
+    // JUnit5 平台启动器
+    testImplementation 'org.junit.platform:junit-platform-launcher'
+    // Jupiter（JUnit5引擎的实现）
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine'
+    // Vintage（JUnit4及更早版本的兼容模块，可以运行JUnit4以及更早版本的测试代码，可选。）
+    testImplementation 'org.junit.vintage:junit-vintage-engine'
+}
+```
+
+上述内容也可以使用Kotlin语言编写：
+
+"build.gradle.kts":
+
+```kotlin
+dependencies {
+    // JUnit5 BOM版本配置文件
+    testImplementation(platform("org.junit:junit-bom:5.12.1"))
+    // JUnit5 平台启动器
+    testImplementation("org.junit.platform:junit-platform-launcher")
+    // Jupiter（JUnit5引擎的实现）
+    testImplementation("org.junit.jupiter:junit-jupiter-engine")
+    // Vintage（JUnit4及更早版本的兼容模块，可以运行JUnit4以及更早版本的测试代码，可选。）
+    testImplementation("org.junit.vintage:junit-vintage-engine")
 }
 ```
