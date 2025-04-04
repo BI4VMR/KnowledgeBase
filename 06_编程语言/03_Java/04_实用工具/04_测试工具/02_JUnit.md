@@ -240,22 +240,17 @@ public class LifeCycleTest {
 > 我们应当确保每个生命周期注解在所属测试类中仅出现一次，假如我们定义多个 `@Before` 方法，JUnit不能保证它们的执行顺序。
 
 
-<!-- TODO
 # JUnit5
-不像以往的版本，JUnit 5 现在是三个模块的合体 JUnit 5 = JUnit Platform + JUnit Jupiter + JUnit Vintage
+## 简介
+JUnit5基于模块化思想重新设计，除了支持JUnit4的现有功能之外，还提供了一些扩展功能。
 
-    JUnit Platform: 运行测试的基础平台。还定义了开发测试框架的 TestEngine API。并提供了命令行执行测试以及与 Gradle, Maven, JUnit4 Runner 的集成
-    JUnit Jupiter: 包含了新的编程和扩展模型。它还提供了一个运行新型测试的 TestEngine 实现
-    JUnit Vintage: 提供了一个让 JUnit Platform 运行 JUnit 3 和 JUnit 4 的 TestEngine 实现
+JUnit5分为以下模块：
 
-注意：是 JUnit 4 测试类还是 JUnit 5 测试类，关键看注解 @Test 是来自于哪个包，比如说
+- `JUnit Platform` : JUnit5平台，包括API定义、启动器、构建工具集成模块等。
+- `JUnit Jupiter` : Jupiter引擎，用于运行JUnit5的测试代码。
+- `JUnit Vintage` : 兼容模块，能够在JUnit5中运行JUnit4及更早版本的测试代码。
 
-    @Test 是 org.junit.Test，那么它是老的 JUnit 4 的测试类(也可能是 JUnit 3 的)
-    @Test 是 org.junit.jpiter.api.Test, 那么它是 JUnit 5 的测试类
-
-
--->
-
+JUnit4与JUnit5的部分类、注解名称相同，我们可以通过所在包区分它们，例如： `org.junit.Test` 是JUnit4的 `@Test` 注解，而 `org.junit.jupiter.api.Test` 是JUnit5的 `@Test` 注解
 
 ## 环境配置
 若要使用JUnit5，我们首先需要在构建工具中声明相关依赖并添加一些配置。
@@ -355,3 +350,35 @@ dependencies {
     testImplementation("org.junit.vintage:junit-vintage-engine")
 }
 ```
+
+## 基本应用
+
+
+<div align="center">
+
+|     JUnit4     |    JUnit5     |                用途                |
+| :------------: | :-----------: | :--------------------------------: |
+|    `@Test`     |    `@Test`    |           声明测试方法。           |
+|   `@Ignore`    |  `@Disabled`  |           停用测试方法。           |
+| `@BeforeClass` | `@BeforeAll`  | 生命周期：在所有测试方法之前执行。 |
+| `@AfterClass`  |  `@AfterAll`  | 生命周期：在所有测试方法之后执行。 |
+|   `@Before`    | `@BeforeEach` | 生命周期：在每个测试方法之前执行。 |
+|    `@After`    | `@AfterEach`  | 生命周期：在每个测试方法之后执行。 |
+
+</div>
+
+
+
+断言
+org.junit.jupiter.api.Assertions
+
+message参数移动至最后一个参数
+
+
+
+
+
+
+
+
+
