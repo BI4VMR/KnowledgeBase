@@ -1,29 +1,22 @@
 # 简介
-<!-- TODO
+JUnit是一个流行的单元测试框架，官方网站为：[🔗 JUnit - 官方网站](https://junit.org/) 。
 
-JUnit 是一个编写可重复测试的简单框架。它是单元测试框架的 xUnit 架构的一个实例。
-
-Junit 官网：http://junit.org/
-
-目前JUnit4和JUnit5都是被广泛应用的版本
-
-
--->
+目前JUnit 4和JUnit 5都是正在被广泛应用的版本，后文内容将会首先介绍JUnit 4的使用方法，并在 [🧭 JUnit 5](#junit5) 小节中对比JUnit 4与JUnit 5的差异。
 
 本章的示例工程详见以下链接：
 
-- [🔗 示例工程：JUnit4](https://github.com/BI4VMR/Study-Java/tree/master/M04_Utils/C04_Test/S02_JUnit4)
-- [🔗 示例工程：JUnit5](https://github.com/BI4VMR/Study-Java/tree/master/M04_Utils/C04_Test/S03_JUnit5)
+- [🔗 示例工程：JUnit 4](https://github.com/BI4VMR/Study-Java/tree/master/M04_Utils/C04_Test/S02_JUnit4)
+- [🔗 示例工程：JUnit 5](https://github.com/BI4VMR/Study-Java/tree/master/M04_Utils/C04_Test/S03_JUnit5)
 
 
 # 基本应用
-下文示例展示了JUnit4的基本使用方法：
+下文示例展示了JUnit 4的基本使用方法：
 
-🔴 示例一：构建JUnit4环境。
+🔴 示例一：构建JUnit 4环境。
 
-在本示例中，我们将为示例工程添加JUnit4支持。
+在本示例中，我们将为示例工程添加JUnit 4支持。
 
-第一步，我们在构建系统中声明对于JUnit4组件的依赖。
+第一步，我们在构建系统中声明对于JUnit 4组件的依赖。
 
 如果构建系统为Maven，我们可以使用下文代码块中的语句声明依赖：
 
@@ -120,6 +113,11 @@ public class MathUtilTest {
 
 每个被 `@Test` 注解修饰的方法都是一个测试方法，它们是JUnit中的最小可执行单元，我们在测试方法中调用被测方法并传入预定参数，然后使用断言方法检查返回值是否与预期相符。在一个测试方法中，若所有断言均通过且没有出现异常，则测试结果为通过；若任意断言不通过或出现异常，则测试结果为不通过。
 
+除了上述示例中涉及的注解与方法之外，JUnit还提供了以下实用工具：
+
+- `@Ignore` : 该注解可以被添加在测试方法上，此类方法不会被JUnit执行，通常用于临时调试。
+- `@FixMethodOrder` : 该注解可以被添加在测试类上，用于设置类中多个测试方法的执行顺序。该注解的唯一属性用于指定执行顺序，默认值为 `MethodSorters.DEFAULT` ，即一种不确定的顺序；取值为 `MethodSorters.JVM` 时表示以JVM方法顺序为准，通常也是代码中定义方法的顺序；取值为 `MethodSorters.NAME_ASCENDING` 时表示以方法名称的字母顺序为准。
+
 
 # 验证结果
 ## 断言方法
@@ -141,27 +139,42 @@ JUnit提供的断言方法如下文列表所示：
 
 如果JUnit提供的断言方法都无法满足需求，我们还可以自行编写断言逻辑，并在条件不满足时调用 `Assert.fail()` 方法抛出 `AssertionError` 异常。
 
-<!-- TODO
 ## 检测异常
+默认情况下，如果被测方法抛出了异常，JUnit就会认为用例执行失败。有时被测方法在某些条件下应当抛出指定的异常，我们可以在 `@Test` 注解中设置 `expected` 属性进行检测。
 
+🟠 示例二：判断被测方法是否抛出指定异常。
 
+在本示例中，我们制造一个ArithmeticException异常，并在声明测试方法时检测该异常。
 
+"MathUtilTest.java":
 
+```java
+@Test(expected = ArithmeticException.class)
+public void testException() {
+    int a = 100 / 0;
+}
+```
 
+在上述代码中，测试方法 `testException()` 应当抛出ArithmeticException异常，我们在方法体中故意制造了ArithmeticException异常，因此测试用例能够执行成功。
 
 ## 检测超时
+有时我们需要检测被测方法的耗时是否小于某个值，可以在 `@Test` 注解中设置 `timeout` 属性进行检测。
 
+🟡 示例三：判断被测方法耗时是否满足要求。
 
+在本示例中，我们通过线程休眠模拟耗时操作，并在声明测试方法时检测耗时时长。
 
+"MathUtilTest.java":
 
-## 其他功能
-@Test：	标识一条测试用例。 (A) (expected=XXEception.class)   (B) (timeout=xxx)
-@Ignore: 	忽略的测试用例。表来标识该用例跳过，不管用例运行成功还是失败。
-要在 JUnit5 中禁用测试，您将需要使用@Disabled注解。 它等效于 JUnit4 的@Ignored注解。
+```java
+@Test(timeout = 1000L)
+public void testTimeout() throws InterruptedException {
+    Thread.sleep(5000L);
+}
+```
 
-@Disabled注解可以应用于测试类（禁用该类中的所有测试方法）或单个测试方法。
+在上述代码中，测试方法 `testTimeout()` 将会执行失败，因为休眠时长5秒大于注解所要求的1秒。
 
--->
 
 # 生命周期
 JUnit提供了一些生命周期方法，以便我们在测试开始前进行一些准备工作、在测试结束后进行一些收尾工作。我们可以使用下文列表中的注解修饰自定义方法，JUnit将在对应的时机调用这些方法。
@@ -179,9 +192,9 @@ JUnit提供了一些生命周期方法，以便我们在测试开始前进行一
 
 下文示例展示了每个方法的执行时机：
 
-🔴 示例一：观察JUnit4生命周期方法的执行顺序。
+🟢 示例四：观察JUnit 4生命周期方法的执行顺序。
 
-在本示例中，我们在JUnit4的方法中输出日志，并观察执行顺序。
+在本示例中，我们在JUnit 4的方法中输出日志，并观察执行顺序。
 
 "LifeCycleTest.java":
 
@@ -240,20 +253,20 @@ public class LifeCycleTest {
 > 我们应当确保每个生命周期注解在所属测试类中仅出现一次，假如我们定义多个 `@Before` 方法，JUnit不能保证它们的执行顺序。
 
 
-# JUnit5
+# JUnit 5
 ## 简介
-JUnit5基于模块化思想重新设计，除了支持JUnit4的现有功能之外，还提供了一些扩展功能。
+JUnit 5基于模块化思想重新设计，除了支持JUnit 4的现有功能之外，还提供了一些扩展功能。
 
-JUnit5分为以下模块：
+JUnit 5分为以下模块：
 
-- `JUnit Platform` : JUnit5平台，包括API定义、启动器、构建工具集成模块等。
-- `JUnit Jupiter` : Jupiter引擎，用于运行JUnit5的测试代码。
-- `JUnit Vintage` : 兼容模块，能够在JUnit5中运行JUnit4及更早版本的测试代码。
+- `JUnit Platform` : JUnit 5平台，包括API定义、启动器、构建工具集成模块等。
+- `JUnit Jupiter` : Jupiter引擎，用于运行JUnit 5的测试代码。
+- `JUnit Vintage` : 兼容模块，能够在JUnit 5中运行JUnit 4及更早版本的测试代码。
 
-JUnit4与JUnit5的部分类、注解名称相同，我们可以通过所在包区分它们，例如： `org.junit.Test` 是JUnit4的 `@Test` 注解，而 `org.junit.jupiter.api.Test` 是JUnit5的 `@Test` 注解
+JUnit 4与JUnit 5的部分类、注解名称相同，我们可以通过所在包区分它们，例如： `org.junit.Test` 是JUnit 4的 `@Test` 注解，而 `org.junit.jupiter.api.Test` 是JUnit 5的 `@Test` 注解
 
 ## 环境配置
-若要使用JUnit5，我们首先需要在构建工具中声明相关依赖并添加一些配置。
+若要使用JUnit 5，我们首先需要在构建工具中声明相关依赖并添加一些配置。
 
 如果构建系统为Maven，我们可以使用下文代码块中的语句声明依赖：
 
@@ -313,7 +326,7 @@ dependencies {
 }
 ```
 
-当我们引入 `junit-jupiter` 组件后，构建系统也会级联引入 `junit-jupiter-engine` 、 `junit-platform-launcher` 等组件，此时我们就可以使用JUnit5编写测试代码了。
+当我们引入 `junit-jupiter` 组件后，构建系统也会级联引入 `junit-jupiter-engine` 、 `junit-platform-launcher` 等组件，此时我们就可以使用JUnit 5编写测试代码了。
 
 上述配置是官方提供的简化方式，在Maven项目中确实可以正常工作，但在Gradle项目中无法完全正常工作，我们只能在IDE中直接运行测试代码，无法在Gradle命令行运行测试任务。
 
@@ -352,11 +365,11 @@ dependencies {
 ```
 
 ## 基本应用
-
+JUnit 4与JUnit 5提供的注解对比如下文表格所示：
 
 <div align="center">
 
-|     JUnit4     |    JUnit5     |                用途                |
+|    JUnit 4     |    JUnit 5    |                用途                |
 | :------------: | :-----------: | :--------------------------------: |
 |    `@Test`     |    `@Test`    |           声明测试方法。           |
 |   `@Ignore`    |  `@Disabled`  |           停用测试方法。           |
@@ -367,18 +380,8 @@ dependencies {
 
 </div>
 
+除了上述注解之外，JUnit 5还提供了一些新的API：
 
-
-断言
-org.junit.jupiter.api.Assertions
-
-message参数移动至最后一个参数
-
-
-
-
-
-
-
-
-
+- `@Test` : JUnit 5中的该注解不能设置任何属性，若要检测用例耗时，我们可以添加 `@Timeout(<超时时长（毫秒）>)` 注解；若要检测异常，我们可以使用 `assertThrows()` 断言方法。
+- `@DisplayName("<显示名称>")` : 该注解需要添加在测试方法上，可以将自定义内容显示在测试报告上，提高可读性。
+- `org.junit.jupiter.api.Assertions.*` : JUnit 5提供的断言库，使用方法与JUnit 4中的Assert断言库相同，但 `message` 参数从第一参数移动至最后一个参数。

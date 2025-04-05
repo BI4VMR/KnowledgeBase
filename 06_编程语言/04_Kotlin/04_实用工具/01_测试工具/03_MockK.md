@@ -205,7 +205,7 @@ fun testGetUserNames2() {
 
 🟡 示例三：使用注解创建Mock对象。
 
-在本示例中，我们以JUnit4平台为例，使用MockK提供的注解创建Mock对象。
+在本示例中，我们以JUnit 4平台为例，使用MockK提供的注解创建Mock对象。
 
 "AnnotationTest.kt":
 
@@ -250,7 +250,82 @@ fun testGetUserNames(){
 
 上述注解默认没有任何效果，为了使它们生效，我们需要在测试代码执行前调用 `MockKAnnotations.init(this)` 方法；测试代码执行完毕后，我们还应该调用 `unmockkAll()` 方法撤销所有Mock行为。
 
+## Kotlin相关
+Mockk
 
+
+
+🟢 示例四：Mock Object中的方法。
+
+在本示例中，我们使用MockK模拟Object中的方法。
+
+第一步，我们编写业务代码。
+
+"Utils.kt":
+
+```kotlin
+object Utils {
+    fun getCurrentTime(): Long = System.currentTimeMillis()
+}
+```
+
+第二步，我们编写测试代码。
+
+"UtilsTest.kt":
+
+```kotlin
+// Mock Utils中的普通方法
+mockkObject(Utils)
+// 定义行为
+every { Utils.getCurrentTime() } returns 1234567890L
+// 调用Mock方法
+println("Utils#getCurrentTime:[${Utils.getCurrentTime()}]")
+
+// 撤销Mock（可选）
+unmockkObject(Utils)
+```
+
+我们可以使用 `mockkObject(objects: Any)` 方法启用Object的Mock，然后通过 `every {}` 语句定义Mock对象的行为。
+
+如果我们不再需要针对某个Object的Mock，可以调用 `unmockkObject(objects: Any)` 方法撤销Mock行为。
+
+
+
+
+🔵 示例五：Mock Object中的静态方法。
+
+在本示例中，我们使用MockK模拟Object中的 `@JvmStatic` 方法。
+
+第一步，我们编写业务代码。
+
+"Utils.kt":
+
+```kotlin
+object Utils {
+    @JvmStatic
+    fun getURL(): String {
+        return "http://192.168.1.1/"
+    }
+}
+```
+
+第二步，我们编写测试代码。
+
+"UtilsTest.kt":
+
+```kotlin
+// Mock Utils中的静态方法
+mockkStatic(Utils::class)
+// 定义行为
+every { Utils.getURL() } returns "http://example.com/"
+// 调用Mock方法
+println("Utils#getURL:[${Utils.getURL()}]")
+```
+
+
+
+
+<!-- TODO
 # 行为定义
 
 every{...} 语句 没有什么好解释的，它就是 Mockito 中的when，用来监听指定的代码语句，并做出接下来的动作，例如：
@@ -302,6 +377,8 @@ fun verify(
 
 
 # 参数匹配器
+
+-->
 
 
 # 参数捕获器
@@ -475,5 +552,41 @@ verify{ mockClass["privateFunName"](arg1, arg2, ...) }
     小括号，里面填入传参，可以使用 allAny<T>()、mockk() … 或你想要的传入的实参
 
 
+
+
+    偏函数模拟
+
+ 
+
+every { 
+    mockObject.someMethod(any()) 
+} answers { 
+    originalCall(it.invocation.args.first()) 
+}
+
+备注：对于某些方法调用，我们并不想完全使用模拟的值，而是想使用特定的函数调用过程，那么可以使用originalCall来实现对实际函数的调用。
+
+
+
+    构造函数
+
+ 
+
+mockkConstructor(MyClass::class)
+every { 
+    anyConstructed<MyClass>().someMethod() 
+} returns "Mocked Result"// 执行测试代码
+unmockkConstructor(MyClass::class)
+
+备注：使用mockkConstructor方法mock构造函数，并通过anyConstructed进行类的构造，最后通过 unmockkConstructor取消构造函数的mock。
+
+    Lambada表达式
+
+ 
+
+val lambdaMock: () -> Unit = mockk()
+every { 
+    lambdaMock.invoke() 
+} just Runs
 
 -->
