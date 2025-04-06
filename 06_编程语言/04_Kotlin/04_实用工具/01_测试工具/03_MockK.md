@@ -589,4 +589,26 @@ every {
     lambdaMock.invoke() 
 } just Runs
 
+
+模拟私有函数
+
+在罕见情况下，可能需要模拟私有函数。这个过程较为复杂，因为不能直接调用此类函数。
+
+    val mock = spyk(ExampleClass(), recordPrivateCalls = true)
+    every { mock["sum"](any<Int>(), 5) } returns 25
+
+或使用:
+
+every { mock invoke "openDoor" withArguments listOf("left", "rear") } returns "OK"
+
+模拟属性
+
+通常可以像模拟 get/set 函数或字段访问一样模拟属性。对于更多场景，可以使用其他方法。
+
+    every { mock getProperty "speed" } returns 33
+    every { mock setProperty "acceleration" value less(5) } just Runs
+    verify { mock getProperty "speed" }
+    verify { mock setProperty "acceleration" value less(5) }
+
+
 -->
