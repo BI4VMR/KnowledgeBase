@@ -1,7 +1,7 @@
 # 简介
 Mockito是一个在Java语言中被广泛使用的Mock工具，我们可以用它创建Mock对象，为待测接口提供模拟数据，隔离单元测试等场景中的依赖项。
 
-Mockito的早期版本通过继承实现Mock，不支持模拟Final类与静态方法，我们可以使用 `mockito-inline` 和PowerMock工具进行操作。自从3.4.0版本开始，Mockito新增了通过Byte Buddy修改字节码模拟Final类与静态方法的功能，我们不必再使用其他工具。
+Mockito的早期版本通过继承实现Mock，不支持模拟Final类与静态方法，我们可以使用 `mockito-inline` 和PowerMock等工具进行操作。自从3.4.0版本开始，Mockito新增了通过Byte Buddy修改字节码模拟Final类与静态方法的功能，我们不必再使用其他工具。
 
 本章的示例工程详见以下链接：
 
@@ -145,7 +145,7 @@ Index:[2] Name:[用户B]
 
 根据上述输出内容可知：
 
-UserManager调用DBHelper中的接口后，输出内容确实为测试代码提供的模拟数据，并非DBHelper的内置数据，说明Mock操作成功。
+UserManager调用DBHelper模拟对象的接口后，输出内容确实为测试代码提供的模拟数据，并非真实的DBHelper接口数据，说明Mock操作成功。
 
 ## 常用注解
 在前文示例中，我们使用 `Mockito.mock()` 方法创建了一些Mock对象；如果需要Mock的对象数量较多，我们也可以使用Mockito提供的注解。

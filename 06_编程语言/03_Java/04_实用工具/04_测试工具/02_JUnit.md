@@ -263,7 +263,7 @@ JUnit 5分为以下模块：
 - `JUnit Jupiter` : Jupiter引擎，用于运行JUnit 5的测试代码。
 - `JUnit Vintage` : 兼容模块，能够在JUnit 5中运行JUnit 4及更早版本的测试代码。
 
-JUnit 4与JUnit 5的部分类、注解名称相同，我们可以通过所在包区分它们，例如： `org.junit.Test` 是JUnit 4的 `@Test` 注解，而 `org.junit.jupiter.api.Test` 是JUnit 5的 `@Test` 注解
+JUnit 4与JUnit 5的部分类、注解名称相同，我们可以通过所在包区分它们，例如： `org.junit.Test` 是JUnit 4的 `@Test` 注解，而 `org.junit.jupiter.api.Test` 是JUnit 5的 `@Test` 注解。
 
 ## 环境配置
 若要使用JUnit 5，我们首先需要在构建工具中声明相关依赖并添加一些配置。
@@ -385,3 +385,47 @@ JUnit 4与JUnit 5提供的注解对比如下文表格所示：
 - `@Test` : JUnit 5中的该注解不能设置任何属性，若要检测用例耗时，我们可以添加 `@Timeout(<超时时长（毫秒）>)` 注解；若要检测异常，我们可以使用 `assertThrows()` 断言方法。
 - `@DisplayName("<显示名称>")` : 该注解需要添加在测试方法上，可以将自定义内容显示在测试报告上，提高可读性。
 - `org.junit.jupiter.api.Assertions.*` : JUnit 5提供的断言库，使用方法与JUnit 4中的Assert断言库相同，但 `message` 参数从第一参数移动至最后一个参数。
+
+
+# 疑难解答
+## 索引
+
+<div align="center">
+
+|       序号        |                          摘要                           |
+| :---------------: | :-----------------------------------------------------: |
+| [案例一](#案例一) | 在Gradle命令行中执行测试任务时，JUnit 5的用例出现错误。 |
+
+</div>
+
+## 案例一
+### 问题描述
+在命令行中使用 `./gradlew test` 命令执行测试任务时，JUnit 5的用例出现错误，相关信息为：
+
+```text
+org.gradle.api.internal.tasks.testing.TestSuiteExecutionException: Could not complete execution for Gradle Test Executor 4.
+
+Caused by: org.junit.platform.commons.JUnitException: TestEngine with ID 'junit-jupiter' failed to discover tests
+
+Caused by: org.junit.platform.commons.JUnitException: OutputDirectoryProvider not available; probably due to unaligned versions of the junit-platform-engine and junit-platform-launcher jars on the classpath/module path.
+
+# 此处已省略部分输出内容...
+```
+
+### 问题分析
+从上述日志中我们可以发现， `junit-platform-engine` 模块与 `junit-platform-launcher` 版本不匹配，因此导致了错误。
+
+在本案例中，我们按照JUnit的官方示例，引入 `junit-jupiter` 组件以声明依赖。
+
+"build.gradle.kts":
+
+```kotlin
+dependencies {
+    testImplementation("org.junit.jupiter:junit-jupiter:5.12.1")
+}
+```
+
+这种方式对于通过命令行运行的Gradle任务并不适用。
+
+### 解决方案
+移除官方示例代码的 `junit-jupiter` 依赖项，使用BOM明确配置 `junit-jupiter-engine` 与 `junit-platform-launcher` 的版本，详情可参考前文章节： [🧭 JUnit 5 - 环境配置](#环境配置) 。
