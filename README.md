@@ -297,10 +297,10 @@ msg=$(uuidgen | awk '{print toupper($0)}'); git add .; git commit -m "$msg";git 
 
 <div align="center">
 
-|       序号        |                                   摘要                                    |
-| :---------------: | :-----------------------------------------------------------------------: |
-| [案例一](#案例一) | 无法连接到服务器，错误信息为： `no matching key exchange method found` 。 |
-| [案例二](#案例二) |    无法连接到服务器，错误信息为： `no matching host key type found` 。    |
+|       序号        |                               摘要                                |
+| :---------------: | :---------------------------------------------------------------: |
+| [案例一](#案例一) | 连接服务器时出现错误： `no matching key exchange method found` 。 |
+| [案例二](#案例二) |    连接服务器时出现错误： `no matching host key type found` 。    |
 
 </div>
 
