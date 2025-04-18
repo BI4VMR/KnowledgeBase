@@ -62,3 +62,40 @@ Arch Linux系统设计以KISS（保持简单和愚蠢）为总体指导原则，
 🔷 Manjaro
 
 Manjaro是一款基于Arch的Linux发行版，相比Arch整合了许多图形化工具、驱动管理器等，易用性更好，适合作为桌面系统使用。Manjaro官方提供集成了KDE、Gnome、XFCE等各种桌面环境的安装包，可以根据个人喜好进行选择。
+
+
+# 疑难解答
+## 索引
+
+<div align="center">
+
+|       序号        |                       摘要                        |
+| :---------------: | :-----------------------------------------------: |
+| [案例一](#案例一) | Ubuntu 22.04无法识别CH340系列USB-UART串口适配器。 |
+
+</div>
+
+## 案例一
+### 问题描述
+Ubuntu 22.04无法识别CH340系列USB-UART串口适配器。
+
+### 问题分析
+使用 `dmesg` 命令查看系统日志后，可以发现 `brltty` 程序占用了设备 `ttyUSB0` ，所以无法使用串口适配器。
+
+### 解决方案
+`brltty` 是一个终端盲文辅助程序，视力正常的用户并不需要该组件，我们可以将其禁用：
+
+```text
+# 禁用 `brltty` 相关组件
+[root@Fedora ~]# systemctl stop brltty-udev.service
+[root@Fedora ~]# systemctl mask brltty-udev.service
+[root@Fedora ~]# systemctl stop brltty.service
+[root@Fedora ~]# systemctl disable brltty.service
+```
+
+或者直接卸载该程序：
+
+```text
+# 卸载 `brltty` 软件包，并清理无用的依赖。
+[root@Fedora ~]# apt purge brltty
+```
