@@ -122,3 +122,21 @@ btnTest.setOnClickListener {
 我们首先通过 `findViewById()` 方法获取了按钮 `btnTest` 实例，然后通过它的 `setOnClickListener()` 方法设置了点击事件监听器，其参数即监听器实例；我们在回调方法 `onClick()` 中实现了自己的逻辑。
 
 我们将上述代码放置在界面的初始化回调方法 `onCreate()` 中，当界面加载后，点击监听器即被设置；后续用户每点击一次按钮，此处的 `onClick()` 回调方法将被触发一次，控制台中也将显示相应的日志内容。
+
+
+<!-- TODO
+# 防止快速点击
+
+    private fun View.clickAntiJitter(interval: Long = 500L, action: (view: View) -> Unit) {
+        setOnClickListener {
+            val currentTS = SystemClock.uptimeMillis()
+            if (currentTS - lastClickTS < interval) {
+                Log.w(TAG, "Click too quickly, ignored!")
+                return@setOnClickListener
+            }
+            lastClickTS = currentTS
+            action(it)
+        }
+    }
+
+-->
