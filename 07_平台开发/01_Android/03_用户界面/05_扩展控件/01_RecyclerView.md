@@ -28,7 +28,7 @@ dependencies {
 # 基本应用
 下文示例展示了RecyclerView的基本使用方法。
 
-🔴 示例一：RecyclerView的基本应用。
+🔴 示例一：使用RecyclerView展示数据。
 
 在本示例中，我们创建RecyclerView相关的类与布局文件，实现一个简单的列表。
 
@@ -37,37 +37,20 @@ dependencies {
 "list_item_simple.xml":
 
 ```xml
-<?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="100dp">
+<androidx.constraintlayout.widget.ConstraintLayout
+    此处已省略部分代码... >
 
     <TextView
         android:id="@+id/tvTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="15dp"
-        android:textColor="@android:color/black"
-        android:textSize="20sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        此处已省略部分代码... />
 
     <ImageView
         android:id="@+id/ivIcon"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_marginEnd="15dp"
-        android:src="@drawable/ic_funny_256"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        此处已省略部分代码... />
 </androidx.constraintlayout.widget.ConstraintLayout>
 ```
 
-第二步，我们创建一个与表项相匹配的实体类(View Object)，以便存放视图数据。
+第二步，我们创建一个与表项元素匹配的实体类(View Object)，以便存放视图数据。
 
 "SimpleVO.java":
 
@@ -81,78 +64,150 @@ public class SimpleVO {
 }
 ```
 
-第三步，
+上述内容也可以使用Kotlin语言编写：
+
+"SimpleVOKT.kt":
+
+```kotlin
+data class SimpleVOKT(val title: String)
+```
+
+第三步，创建RecyclerView的适配器。
 
 RecyclerView使用适配器模式管理视图与数据，我们需要创建一个适配器类，继承RecyclerView.Adapter并重写父类的一些方法。
 
-MyAdapter.java:
+"MyAdapter.java":
 
 ```java
 public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
 
-    // 上下文环境
-    private final Context mContext;
     // 数据源
     private final List<SimpleVO> dataSource;
 
     // 构造方法
-    public MyAdapter(Context context, List<SimpleVO> dataSource) {
-        this.mContext = context.getApplicationContext();
+    public MyAdapter(List<SimpleVO> dataSource) {
         this.dataSource = dataSource;
     }
 
-    // 创建ViewHolder
+    // RecyclerView创建ViewHolder的回调方法
     @NonNull
     @Override
     public MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // 将布局文件实例化为View对象
-        View view = LayoutInflater.from(mContext)
-                // 此方法的第三参数必须为"false"，因为控件将会在需要时自行Attach到视图。
-                .inflate(R.layout.list_item_simple, parent, false);
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+
+        /*
+         * 将布局文件实例化为View对象。
+         *
+         * 此处的第三参数必须为"false"，因为控件将由ViewHolder控制Attach与Detach。
+         */
+        View view = inflater.inflate(R.layout.list_item_simple, parent, false);
+
         // 创建ViewHolder实例，并将View对象保存在其中。
         return new MyViewHolder(view);
     }
 
-    // 将数据与ViewHolder绑定
+    // RecyclerView将数据与ViewHolder绑定的回调方法
     @Override
     public void onBindViewHolder(@NonNull MyViewHolder holder, int position) {
         holder.bindData();
     }
 
-    // 获取表项的总数量
+    // RecyclerView获取表项总数的回调方法
     @Override
     public int getItemCount() {
         return dataSource.size();
     }
 
-    // ViewHolder类，保存View实例，用于快速复用视图。
-    class MyViewHolder extends RecyclerView.ViewHolder {
+    // 自定义ViewHolder类，内部保存了View实例，便于复用。
+    public class MyViewHolder extends RecyclerView.ViewHolder {
 
-        /* 保存控件的引用，以便后续绑定数据。 */
+        // 保存控件的引用，以便后续绑定数据。
         TextView tvTitle;
         ImageView ivIcon;
 
-        // 构造方法，初始化ViewHolder，获取各控件的引用，并保存在全局变量中，便于后续使用。
+        // 初始化ViewHolder，获取各控件的引用，并保存在全局变量中，便于后续使用。
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
             tvTitle = itemView.findViewById(R.id.tvTitle);
             ivIcon = itemView.findViewById(R.id.ivIcon);
         }
 
-        // 将数据源中的VO属性与View中的控件绑定。
+        // 取出数据源集合中与当前表项位置对应的数据项，并更新View中的控件。
         public void bindData() {
-            // 获取当前项的数据
+            // 获取当前表项位置对应的数据项
             SimpleVO vo = dataSource.get(getAdapterPosition());
-            // 将数据设置到控件中
-            tvTitle.setText(vo.getTitle());
+            // 将数据设置到视图中
+            if (tvTitle != null) {
+                tvTitle.setText(vo.getTitle());
+            }
         }
     }
 }
 ```
 
-适配器中的内部类MyViewHolder继承自RecyclerView.ViewHolder，用于保存View与控件的引用。RecyclerView在某些情况下可以利用已存在的ViewHolder实例，不必重新创建ViewHolder，以此达到复用的目的，提升性能。
+上述内容也可以使用Kotlin语言编写：
 
-我们创建的适配器必须重写三个方法，这些方法将在RecyclerView绘制表项时被调用，它们的作用如下文所示：
+"SimpleVOKT.kt":
+
+```kotlin
+class MyAdapterKT(
+
+    // 数据源
+    private val mDataSource: MutableList<SimpleVOKT>
+) : RecyclerView.Adapter<MyAdapterKT.MyViewHolder>() {
+
+    // RecyclerView创建ViewHolder的回调方法
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
+        val inflater: LayoutInflater = LayoutInflater.from(parent.context)
+
+        /*
+         * 将布局文件实例化为View对象。
+         *
+         * 此处的第三参数必须为"false"，因为控件将由ViewHolder控制Attach与Detach。
+         */
+        val itemView: View = inflater.inflate(R.layout.list_item_simple, parent, false)
+
+        // 创建ViewHolder实例，并将View对象保存在其中。
+        return MyViewHolder(itemView)
+    }
+
+    // RecyclerView将数据与ViewHolder绑定的回调方法
+    override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
+        holder.bindData()
+    }
+
+    // RecyclerView获取表项总数的回调方法
+    override fun getItemCount(): Int {
+        return mDataSource.size
+    }
+
+    // 自定义ViewHolder类，内部保存了View实例，便于复用。
+    inner class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
+        // 保存控件的引用，以便后续绑定数据。
+        private var tvTitle: TextView? = null
+        private var ivIcon: ImageView? = null
+
+        // 初始化ViewHolder，获取各控件的引用，并保存在全局变量中，便于后续使用。
+        init {
+            tvTitle = itemView.findViewById(R.id.tvTitle)
+            ivIcon = itemView.findViewById(R.id.ivIcon)
+        }
+
+        // 取出数据源集合中与当前表项位置对应的数据项，并更新View中的控件。
+        fun bindData() {
+            // 获取当前表项位置对应的数据项
+            val vo: SimpleVOKT = mDataSource[adapterPosition]
+            // 将数据设置到视图中
+            tvTitle?.text = vo.title
+        }
+    }
+}
+```
+
+适配器中的内部类MyViewHolder继承自RecyclerView.ViewHolder，用于保存View与控件的引用。RecyclerView在某些情况下可以利用已存在的ViewHolder实例及其中的View，不必重新创建View示例，以此达到复用的目的，提升性能。
+
+我们创建的适配器必须重写三个方法，这些方法将在RecyclerView绘制表项时被回调，它们的作用如下文所示：
 
 🔷 `int getItemCount()`
 
@@ -160,7 +215,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
 
 🔷 `onCreateViewHolder(ViewGroup parent, int viewType)`
 
-当RecyclerView创建ViewHolder时，将会调用此方法。
+当RecyclerView需要新的表项时，将会回调此方法。我们应当在此处创建对应的View，并封装进ViewHolder返回给RecyclerView。
 
 参数"parent"是该表项的视图容器。参数"viewType"是表项类型，此处仅有一种表项，我们可以忽略该参数。
 
