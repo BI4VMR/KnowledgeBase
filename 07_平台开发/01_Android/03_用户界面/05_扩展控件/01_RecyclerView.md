@@ -304,8 +304,11 @@ recyclerView.adapter = adapter
 
 
 # 外观定制
-## 基本样式
-🔷 `android:overScrollMode="[never|always|ifContentScrolls]"`
+## 列表边缘滚动效果
+以下属性与方法用于获取与设置TextView中的文字内容：
+
+- XML - 设置文本内容 : `android:overScrollMode="[never|always|ifContentScrolls]"`
+
 
 该属性用于设置RecyclerView滚动至边缘时，继续拖拽产生的阴影效果。
 
