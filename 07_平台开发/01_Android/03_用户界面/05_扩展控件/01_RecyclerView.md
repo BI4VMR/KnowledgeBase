@@ -25,6 +25,7 @@ dependencies {
 }
 ```
 
+
 # 基本应用
 下文示例展示了RecyclerView的基本使用方法。
 
@@ -211,33 +212,35 @@ class MyAdapterKT(
 
 🔷 `int getItemCount()`
 
-该方法用于告知RecyclerView总共有几个表项需要绘制，我们通常使用List存放数据，所以此处返回的值是List的长度。
+当RecyclerView绘制表项前，将会回调此方法。
 
-🔷 `onCreateViewHolder(ViewGroup parent, int viewType)`
+我们通常使用List存放数据，所以本示例中返回的值是List的长度。
 
-当RecyclerView需要新的表项时，将会回调此方法。我们应当在此处创建对应的View，并封装进ViewHolder返回给RecyclerView。
+🔷 `void onCreateViewHolder(ViewGroup parent, int viewType)`
 
-参数"parent"是该表项的视图容器。参数"viewType"是表项类型，此处仅有一种表项，我们可以忽略该参数。
+当RecyclerView创建新的ViewHolder时，将会回调此方法。
 
-我们应当在此处创建表项的View实例，并将其封装进ViewHolder对象返回给RecyclerView。
+我们应当在此处创建表项对应的View，并封装进ViewHolder返回给RecyclerView。
 
-🔷 `onBindViewHolder(MyViewHolder holder, int position)`
+第一参数 `parent` 是当前表项的视图容器，我们可以获取Context对象，并进一步获取LayoutInflater以便实例化View。第二参数 `viewType` 是表项类型，在本示例中仅有一种表项，我们可以忽略该参数。
 
-当RecyclerView将表项数据与ViewHolder实例绑定时，将会调用此方法。
+🔷 `void onBindViewHolder(MyViewHolder holder, int position)`
 
-参数"holder"即ViewHolder对象，我们可以使用"holder.tvTitle"这种方式给View中的控件设置属性。参数"position"是表项在列表中的位置索引，我们需要根据此索引在数据源List中找到对应的数据对象(VO)，并为各个控件设置属性，实现界面与数据的绑定。
+当RecyclerView将View显示到屏幕上之前，将会回调此方法。
 
-此处我们并不使用"holder.tvTitle"这种方式绑定数据，而是调用ViewHolder的 `bindData()` 方法完成数据绑定工作，相关逻辑在ViewHolder内部实现。当列表中拥有多种类型的ViewType时，视图绑定的逻辑由各类型的ViewHolder实现，而不是全部写在 `onBindViewHolder()` 方法中，这样能够提高代码的可读性。
+我们需要从数据源中根据位置索引找到对应的数据项，然后通过ViewHolder设置各个控件，实现View与数据的同步。
 
-至此，表项的视图样式和数据已经在适配器中组装完毕，接下来我们在测试Activity中放置RecyclerView控件，并创建测试数据、加载适配器，一个基本的列表就实现完成了。
+第一参数 `holder` 即ViewHolder对象，我们可以调用ViewHolder的 `bindData()` 方法，访问各个控件更新UI。第二参数 `position` 是表项在列表中的位置索引，由于列表与数据源有对应关系，我们也可以从数据源中取出数据项(View Object)，并更新ViewHolder中的控件。
 
-activity_demo_base.xml:
+第四步，组装控件与数据。
+
+至此，表项的视图和数据已经在适配器中组装完毕，接下来我们在测试Activity中放置RecyclerView控件，并创建测试数据、加载适配器，一个基本的列表就编写完成了。
+
+"testui_base.xml":
 
 ```xml
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
+<FrameLayout
+    此处已省略部分代码... >
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvContent"
@@ -247,45 +250,58 @@ activity_demo_base.xml:
 </FrameLayout>
 ```
 
-配置项 `tools:listitem` 的值为布局文件ID，此属性使控件在Android Studio的布局设计器中显示为实际样式，便于开发者进行视觉设计。
+配置项 `tools:listitem="<布局ID>"` 的值可以是表项的布局文件，该属性将使RecyclerView在Android Studio的布局设计器中显示预览，便于开发者进行视觉设计。
 
-DemoBaseUI.java:
+"TestUIBase.java":
 
 ```java
-public class DemoBaseUI extends AppCompatActivity {
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_demo_base);
-
-        // 制造测试数据
-        List<SimpleVO> datas = new ArrayList<>();
-        for (int i = 0; i < 20; i++) {
-            datas.add(new SimpleVO("项目" + (i + 1)));
-        }
-
-        // 获取控件实例
-        RecyclerView recyclerView = findViewById(R.id.rvContent);
-        // 设置布局管理器
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(linearLayoutManager);
-        // 设置适配器
-        MyAdapter adapter = new MyAdapter(getApplicationContext(), datas);
-        recyclerView.setAdapter(adapter);
-    }
+// 制造测试数据
+List<SimpleVO> datas = new ArrayList<>();
+for (int i = 0; i < 20; i++) {
+    datas.add(new SimpleVO("项目" + (i + 1)));
 }
+
+// 获取控件实例
+RecyclerView recyclerView = findViewById(R.id.rvContent);
+// 设置布局管理器
+LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+recyclerView.setLayoutManager(linearLayoutManager);
+// 设置适配器
+MyAdapter adapter = new MyAdapter(datas);
+recyclerView.setAdapter(adapter);
+```
+
+上述内容也可以使用Kotlin语言编写：
+
+"TestUIBaseKT.kt":
+
+```kotlin
+// 制造测试数据
+val datas: MutableList<SimpleVOKT> = ArrayList()
+for (i in 0..19) {
+    datas.add(SimpleVOKT("项目" + (i + 1)))
+}
+
+// 获取控件实例
+val recyclerView = findViewById<RecyclerView>(R.id.rvContent)
+// 设置布局管理器
+val linearLayoutManager = LinearLayoutManager(this)
+recyclerView.layoutManager = linearLayoutManager
+// 设置适配器
+val adapter = MyAdapterKT(datas)
+recyclerView.adapter = adapter
 ```
 
 此处我们使用线性布局管理器，将表项以列表的方式排列。
 
-运行示例程序后，RecyclerView的显示效果如下图所示：
+此时运行示例程序，并查看界面外观：
 
 <div align="center">
 
-![RecyclerView示例](./Assets-RecyclerView/基本应用-RecyclerView示例.jpg)
+![默认样式](./Assets_RecyclerView/基本应用_默认样式.jpg)
 
 </div>
+
 
 # 外观定制
 ## 基本样式
