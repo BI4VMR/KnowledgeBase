@@ -324,14 +324,19 @@ recyclerView.adapter = adapter
 - Java - 获取是否显示垂直滚动条 : `boolean getVerticalScrollBarEnabled()`
 - Java - 获取是否显示水平滚动条 : `boolean getHorizontalScrollBarEnabled()`
 
+
 # 点击事件
-RecyclerView控件本身没有实现表项的点击事件，因为RecyclerView较为灵活，使用者可以根据需要为每个表项设置不同的监听器，或者为表项中的某个子控件设置监听器。
+RecyclerView本身没有实现表项的点击事件，这是因为RecyclerView可以支持多种布局复杂的表项，调用者可能希望为表项中不同的子控件设置各异的点击行为，由调用者自行控制事件更为灵活。
 
 如果我们要为每个表项设置统一形式的点击监听器，可以在适配器中定义一个接口，调用者只需实现该接口，就能够接收事件回调。
 
-我们在适配器中定义一个ItemClickListener接口，外部组件将接口实现传入Adapter，当表项的View收到点击事件时，我们就触发接口中的方法，通知外部组件表项被点击了。
+🟠 示例二：为RecyclerView实现表项点击事件监听器。
 
-MyAdapter.java:
+在本示例中，我们为RecyclerView实现表项点击事件监听器。
+
+第一步，我们在适配器中定义一个ItemClickListener接口，转发View的点击事件，为RecyclerView实现表项点击事件监听器。
+
+"MyAdapter.java":
 
 ```java
 public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
@@ -354,7 +359,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
         this.listener = listener;
     }
 
-    /* ViewHolder类，用于表项的复用。 */
+    /* ViewHolder */
     class MyViewHolder extends RecyclerView.ViewHolder {
 
         /* 此处省略部分变量与方法... */
@@ -363,9 +368,8 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
             // 获取当前项的数据
             SimpleVO item = dataSource.get(getAdapterPosition());
 
-            // 设置View的点击事件
+            // 当根布局被点击时，触发监听器。
             itemView.setOnClickListener(v -> {
-                // 如果外部设置了点击事件监听器，则通知它事件触发。
                 if (listener != null) {
                     listener.onClick(getAdapterPosition(), item);
                 }
@@ -375,17 +379,61 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
 }
 ```
 
-在ViewHolder的 `bindData()` 方法中，我们给表项的View设置了点击事件监听器，一旦其收到点击事件，就会通过ItemClickListener的 `onClick()` 方法，将事件转发给外部组件。
+上述内容也可以使用Kotlin语言编写：
+
+"MyAdapterKT.kt":
+
+```java
+class MyAdapterKT(
+
+    // 数据源
+    private val mDataSource: MutableList<SimpleVOKT>
+) : RecyclerView.Adapter<MyAdapterKT.MyViewHolder>() {
+
+    /* 此处省略部分变量与方法... */
+
+    // 点击事件监听器的实现对象
+    private var listener: ItemClickListener? = null
+
+    /* 点击监听器 */
+    fun interface ItemClickListener {
+        fun onClick(index: Int, data: SimpleVOKT)
+    }
+
+    // Set方法，调用者通过此处设置事件监听器实现。
+    fun setItemClickListener(listener: ItemClickListener?) {
+        this.listener = listener
+    }
+
+    /* ViewHolder */
+    inner class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
+        /* 此处省略部分变量与方法... */
+
+        fun bindData() {
+            // 获取当前表项位置对应的数据项
+            val vo: SimpleVOKT = mDataSource[adapterPosition]
+
+            // 当根布局被点击时，触发监听器。
+            itemView.setOnClickListener {
+                listener?.onClick(adapterPosition, vo)
+            }
+        }
+    }
+}
+```
+
+在ViewHolder的 `bindData()` 方法中，我们给表项的View设置了点击事件监听器，一旦其收到点击事件，就会通过ItemClickListener的 `onClick()` 方法，将事件转发给调用者。
 
 > ⚠️ 警告
 >
-> 当前表项的位置必须使用ViewHolder的 `getAdapterPosition()` 方法即时获取，而不能使用 `onBindViewHolder()` 的"position"参数。
+> 当前表项的位置必须使用ViewHolder的 `getAdapterPosition()` 方法即时获取，而不能使用 `onBindViewHolder()` 的 `position` 参数。
 >
-> 由于RecyclerView存在复用机制，表项在可视区域发生移位后，并不会触发 `onBindViewHolder()` 方法，因此如果我们向外通知 `onBindViewHolder()` 的"position"参数，监听者只能得到该表项移动之前的初始位置，与实际位置不符。
+> 由于RecyclerView存在复用机制，表项在可视区域发生移位后，并不会触发 `onBindViewHolder()` 方法，因此如果我们向外通知 `onBindViewHolder()` 的 `position` 参数，监听者只能得到该表项移动之前的初始位置，与实际位置不符。
 
-当我们使用此Adapter时，需要实现ItemClickListener接口，以接收表项点击的事件回调。
+第二步，我们在测试Activity中实现ItemClickListener接口，以接收表项的点击事件回调。
 
-DemoClickEventUI.java:
+"TestUIClickEvent.java":
 
 ```java
 // 设置适配器
@@ -399,13 +447,30 @@ adapter.setItemClickListener((position, item) -> {
 });
 ```
 
+上述内容也可以使用Kotlin语言编写：
+
+"TestUIClickEventKT.kt":
+
+```kotlin
+// 设置适配器
+val adapter = MyAdapterKT(datas)
+recyclerView.adapter = adapter
+// 设置表项点击监听器
+adapter.setItemClickListener { position: Int, _: SimpleVOKT ->
+    // “表项点击”事件回调
+    Toast.makeText(this, "表项" + (position + 1), Toast.LENGTH_SHORT)
+        .show()
+}
+```
+
 当我们运行示例程序后，效果如下图所示：
 
 <div align="center">
 
-![表项的点击事件](./Assets-RecyclerView/点击事件-表项的点击事件.gif)
+![表项的点击事件](./Assets_RecyclerView/点击事件_表项的点击事件.gif)
 
 </div>
+
 
 # 加载多种表项
 RecyclerView支持加载多种不同的表项，具有较高的灵活度。当RecyclerView绘制表项时，首先调用适配器的 `getItemViewType(int position)` 方法，确定当前位置需要绘制的表项类型，然后再调用 `onCreateViewHolder(ViewGroup parent, int viewType)` 方法创建View实例，此处"viewType"参数就是 `getItemViewType(int position)` 的返回值，我们需要根据此数值创建对应的View实例。
@@ -986,6 +1051,7 @@ public void handleMessage(Message msg) {
 }
 ```
 
+
 # 疑难解答
 ## 索引
 
@@ -995,7 +1061,7 @@ public void handleMessage(Message msg) {
 | :---------------: | :-------------------------------------------: |
 | [案例一](#案例一) |   更新数据源后，滚动列表至指定位置无效果。    |
 | [案例二](#案例二) | 更新数据源时发生异常：IllegalStateException。 |
-| [案例三](#案例三) |   明确设置需要显示滚动条后，实际没有显示。    |
+| [案例三](#案例三) |      设置需要显示滚动条后，实际未显示。       |
 
 </div>
 
@@ -1074,11 +1140,10 @@ recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
 
 ## 案例三
 ### 问题描述
-<!-- TODO
-当我们通过 
+当我们通过 `android:scrollbars="vertical"` 等方式设置RecyclerView需要显示滚动条后，实际运行时并未显示。
 
-如果我们设置了 `android:overScrollMode="never"` 属性，RecyclerView在初始化时将会跳过部分组件的绘制工作，包括滚动条；这会导致滚动条的相关属性全部失效，无法显示。
+### 问题分析
+我们为RecyclerView设置了 `android:overScrollMode="never"` 属性，该属性会使RecyclerView在初始化时跳过部分组件的绘制工作（包括滚动条），从而导致滚动条的相关属性全部失效，无法显示。
 
-此时我们可以调用RecyclerView的 `setWillNotDraw(boolean b)` 方法，传入"false"关闭绘图优化，确保滚动条被正确绘制。
--->
-
+### 解决方案
+我们可以调用RecyclerView的 `setWillNotDraw(boolean b)` 方法，传入 `false` 关闭绘图优化，确保滚动条被正确绘制。
