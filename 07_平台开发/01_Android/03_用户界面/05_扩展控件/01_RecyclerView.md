@@ -305,25 +305,24 @@ recyclerView.adapter = adapter
 
 # 外观定制
 ## 列表边缘滚动效果
-以下属性与方法用于获取与设置TextView中的文字内容：
+当RecyclerView的内容滚动至边缘时，如果用户继续拖拽，控件将产生颜色效果提醒用户。
 
-- XML - 设置文本内容 : `android:overScrollMode="[never|always|ifContentScrolls]"`
+以下属性与方法用于获取与设置列表边缘滚动效果：
 
+- XML - 设置列表边缘滚动效果 : `android:overScrollMode="< never | always | ifContentScrolls >"`
+- Java - 设置列表边缘滚动效果 : `void setOverScrollMode(int overScrollMode)`
+- Java - 获取列表边缘滚动效果 : `int getOverScrollMode()`
 
-该属性用于设置RecyclerView滚动至边缘时，继续拖拽产生的阴影效果。
+取值为 `always` 时总是显示阴影，这是默认值；取值为 `never` 时不显示阴影；取值为 `ifContentScrolls` 时，若边缘位置的子控件可滚动，则显示阴影，否则不显示。
 
-取值为"never"时不显示阴影；取值为"always"时总是显示阴影，这是默认值；取值为"ifContentScrolls"时，若边缘位置的子控件可滚动，则显示阴影，否则不显示。
+## 滚动指示条
+以下属性与方法用于获取与设置列表滚动条效果：
 
-## 滚动条
-### 基本应用
-🔷 `android:scrollbars="[vertical|horizontal|none]"`
-
-该属性用于设置当表项数量超出一屏时，是否显示滚动条，默认值为"none"，即不显示滚动条。
-
-### 滚动条属性不生效
-如果我们设置了 `android:overScrollMode="never"` 属性，RecyclerView在初始化时将会跳过部分组件的绘制工作，包括滚动条；这会导致滚动条的相关属性全部失效，无法显示。
-
-此时我们可以调用RecyclerView的 `setWillNotDraw(boolean b)` 方法，传入"false"关闭绘图优化，确保滚动条被正确绘制。
+- XML - 设置需要显示的滚动条 : `android:scrollbars="< vertical | horizontal | none >"`
+- Java - 设置是否显示垂直滚动条 : `void setVerticalScrollBarEnabled(boolean enable)`
+- Java - 设置是否显示水平滚动条 : `void setHorizontalScrollBarEnabled(boolean enable)`
+- Java - 获取是否显示垂直滚动条 : `boolean getVerticalScrollBarEnabled()`
+- Java - 获取是否显示水平滚动条 : `boolean getHorizontalScrollBarEnabled()`
 
 # 点击事件
 RecyclerView控件本身没有实现表项的点击事件，因为RecyclerView较为灵活，使用者可以根据需要为每个表项设置不同的监听器，或者为表项中的某个子控件设置监听器。
@@ -996,6 +995,7 @@ public void handleMessage(Message msg) {
 | :---------------: | :-------------------------------------------: |
 | [案例一](#案例一) |   更新数据源后，滚动列表至指定位置无效果。    |
 | [案例二](#案例二) | 更新数据源时发生异常：IllegalStateException。 |
+| [案例三](#案例三) |   明确设置需要显示滚动条后，实际没有显示。    |
 
 </div>
 
@@ -1071,3 +1071,14 @@ recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
 
 ### 解决方案
 与相关章节 [🧭 案例一](#案例一) 中的解决方案类似，我们可以将多个任务提交至RecyclerView的事件队列中，以确保同步执行。
+
+## 案例三
+### 问题描述
+<!-- TODO
+当我们通过 
+
+如果我们设置了 `android:overScrollMode="never"` 属性，RecyclerView在初始化时将会跳过部分组件的绘制工作，包括滚动条；这会导致滚动条的相关属性全部失效，无法显示。
+
+此时我们可以调用RecyclerView的 `setWillNotDraw(boolean b)` 方法，传入"false"关闭绘图优化，确保滚动条被正确绘制。
+-->
+
