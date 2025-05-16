@@ -124,6 +124,42 @@ btnTest.setOnClickListener {
 我们将上述代码放置在界面的初始化回调方法 `onCreate()` 中，当界面加载后，点击监听器即被设置；后续用户每点击一次按钮，此处的 `onClick()` 回调方法将被触发一次，控制台中也将显示相应的日志内容。
 
 
+# 疑难解答
+## 索引
+
+<div align="center">
+
+|       序号        |         摘要         |
+| :---------------: | :------------------: |
+| [案例一](#案例一) | 此处填写【问题描述】 |
+
+</div>
+
+## 案例一
+### 问题描述
+此处填写【问题描述】。
+
+### 问题分析
+
+
+"frameworks/base/core/java/android/view/View.java":
+
+```java
+public void setBackgroundResource(@DrawableRes int resid) {
+    if (resid != 0 && resid == mBackgroundResource) {
+        return;
+    }
+
+    // 此处已省略部分代码...
+}
+```
+
+### 解决方案
+此处填写【解决方案】。
+
+
+
+
 <!-- TODO
 # 防止快速点击
 
