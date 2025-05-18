@@ -129,18 +129,18 @@ btnTest.setOnClickListener {
 
 <div align="center">
 
-|       序号        |         摘要         |
-| :---------------: | :------------------: |
-| [案例一](#案例一) | 此处填写【问题描述】 |
+|       序号        |                    摘要                     |
+| :---------------: | :-----------------------------------------: |
+| [案例一](#案例一) | 调用 `setBackgroundResource()` 方法无效果。 |
 
 </div>
 
 ## 案例一
 ### 问题描述
-此处填写【问题描述】。
+当我们调用View的 `setBackgroundResource()` 方法更新背景资源时，实际无任何效果。
 
 ### 问题分析
-
+在本案例中，我们切换主题后调用View的 `setBackgroundResource()` 方法，希望控件重新加载资源，由于AOSP原生主题机制通过主题属性切换资源，属性本身的ID是不变的，这导致 `setBackgroundResource()` 方法调用在第一个 `if` 语句就被Return了，后续逻辑均不会执行。
 
 "frameworks/base/core/java/android/view/View.java":
 
@@ -155,7 +155,7 @@ public void setBackgroundResource(@DrawableRes int resid) {
 ```
 
 ### 解决方案
-此处填写【解决方案】。
+`setBackgroundResource()` 是SDK的内置方法，相关逻辑无法修改，我们可以先根据资源获取Drawable对象，再改用View的 `setBackground()` 方法进行UI更新。
 
 
 
