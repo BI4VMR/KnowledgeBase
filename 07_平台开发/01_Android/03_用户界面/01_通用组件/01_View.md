@@ -155,7 +155,9 @@ public void setBackgroundResource(@DrawableRes int resid) {
 ```
 
 ### 解决方案
-`setBackgroundResource()` 是SDK的内置方法，相关逻辑无法修改，我们可以先根据资源获取Drawable对象，再改用View的 `setBackground()` 方法进行UI更新。
+`setBackgroundResource()` 是SDK的内置方法，相关逻辑无法修改。
+
+我们可以先根据资源ID获取当前环境下的最新Drawable对象，再调用View的 `setBackground()` 方法更新UI。
 
 
 
