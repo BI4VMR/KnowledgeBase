@@ -163,6 +163,8 @@ public void setBackgroundResource(@DrawableRes int resid) {
 
 
 <!-- TODO
+## 实用技巧
+
 # 防止快速点击
 
     private fun View.clickAntiJitter(interval: Long = 500L, action: (view: View) -> Unit) {
@@ -176,5 +178,31 @@ public void setBackgroundResource(@DrawableRes int resid) {
             action(it)
         }
     }
+
+
+# 连续点击触发
+
+
+```kotlin
+// 连续点击计数器，数组的大小即为需要设置的连点次数。
+private var clickTSRecords: LongArray = LongArray(10)
+
+
+// 调试后门：5秒内连续点击10次用户名弹出云端环境选择窗口。
+tvNickName.setOnClickListener {
+    // 所有现有数据左移一位，舍弃最旧的一位数据。
+    System.arraycopy(clickTSRecords, 1, clickTSRecords, 0, clickTSRecords.size - 1)
+    // 将当前点击时间记录到数组末尾
+    clickTSRecords[clickTSRecords.size - 1] = SystemClock.uptimeMillis()
+    // 当前时间与最早一次的点击时间比较，如果差值小于5秒，则触发连点事件。
+    if (SystemClock.uptimeMillis() - clickTSRecords[0] <= 5000L) {
+        "Repeat click 10 times in 5 seconds, open environment switch dialog.".logi(TAG)
+        showEnvironmentDialog()
+        // 事件已经触发，重置记录器。
+        Arrays.fill(clickTSRecords, 0L)
+    }
+}
+```
+
 
 -->
