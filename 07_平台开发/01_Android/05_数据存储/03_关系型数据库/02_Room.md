@@ -786,25 +786,88 @@ Room.databaseBuilder(context.applicationContext, StudentDBKT::class.java, "stude
 
 <div align="center">
 
-|       序号        |                         摘要                         |
-| :---------------: | :--------------------------------------------------: |
-| [案例一](#案例一) | Android Debug Database工具无法查看Room数据库的内容。 |
+|       序号        |                            摘要                            |
+| :---------------: | :--------------------------------------------------------: |
+| [案例一](#案例一) |    Android Debug Database工具无法查看Room数据库的内容。    |
+| [案例二](#案例二) | 通过Migration升级数据库后，出现IllegalStateException错误。 |
+| [案例三](#案例三) |             SQL模糊查询语句无法匹配任何记录。              |
 
 </div>
 
 ## 案例一
 ### 问题描述
-使用Android Debug Database工具调试Room框架生成的数据库时，Web查看到的内容为空。
+通过Migration升级数据库后，出现IllegalStateException错误，详细信息如下文代码块所示：
+
+```text
+java.lang.IllegalStateException: Migration didn't properly handle: student_info(net.bi4vmr.study.upgrade.Student).
+ Expected:
+TableInfo{name='student_info', columns={birthday=Column{name='birthday', type='TEXT', affinity='2', notNull=true, primaryKeyPosition=0, defaultValue='undefined'}, flags=Column{name='flags', type='INTEGER', affinity='3', notNull=true, primaryKeyPosition=0, defaultValue='undefined'}, student_id=Column{name='student_id', type='INTEGER', affinity='3', notNull=true, primaryKeyPosition=1, defaultValue='undefined'}, student_name=Column{name='student_name', type='TEXT', affinity='2', notNull=true, primaryKeyPosition=0, defaultValue='undefined'}}, foreignKeys=[], indices=[]}
+
+ Found:
+TableInfo{name='student_info', columns={student_id=Column{name='student_id', type='INTEGER', affinity='3', notNull=true, primaryKeyPosition=1, defaultValue='undefined'}, student_name=Column{name='student_name', type='TEXT', affinity='2', notNull=true, primaryKeyPosition=0, defaultValue='undefined'}, birthday=Column{name='birthday', type='TEXT', affinity='2', notNull=true, primaryKeyPosition=0, defaultValue='undefined'}, flag=Column{name='flag', type='INTEGER', affinity='3', notNull=false, primaryKeyPosition=0, defaultValue='undefined'}}, foreignKeys=[], indices=[]}
+```
 
 ### 问题分析
-当API Level > 16时，Room框架的默认日志模式为WAL，这种模式不会将变更立即写入磁盘，因此Android Debug Database工具无法实时读取内容。
+仔细观察 `Expected` 与 `Found` 块中的每个字段，我们可以发现期望字段名称为 `flags` ；而Migration升级后的字段名称为 `flag` ，两者不一致。
 
 ### 解决方案
-在构建Database实例时，将日志模式设为"TRUNCATE"。
+日志中的 `Expected` 部分是根据Entity生成的，因此我们需要检查Migration和Entity是否匹配，确保二者一致。
 
-```java
-Room.databaseBuilder(context.getApplicationContext(), StudentDB.class, "student")
-    // 设置日志模式为"TRUNCATE"
-    .setJournalMode(JournalMode.TRUNCATE)
-    .build();
+在本案例中，我们为Entity的新增属性 `flags` 添加 `@ColumnInfo` 注解，确保它能正确地映射到Migration中的 `flag` 字段。
+
+```kotlin
+@Entity(tableName = "student_info")
+data class Student(
+
+    @ColumnInfo(name = "flag")
+    var flags: Int
+
+    // 此处已省略部分代码...
+)
+```
+
+## 案例二
+### 问题描述
+SQL模糊查询语句 `LIKE '%<关键词>%'` 无法匹配任何记录。
+
+### 问题分析
+在DAO接口中，我们需要将方法的 `name` 参数拼接到SQL语句中，因此使用了加号( `+` )：
+
+```kotlin
+@Query("SELECT * FROM student_info WHERE student_name LIKE '%' + :name + '%'")
+fun searchStudent(name: String): List<Student>
+```
+
+SQLite不支持使用加号拼接SQL语句，上述语句相当于 `LIKE '% + <变量的值> + %'` ，因此无法匹配到记录。
+
+### 解决方案
+在SQLite中，拼接SQL语句需要使用双竖线( `||` )符号：
+
+```kotlin
+@Query("SELECT * FROM student_info WHERE student_name LIKE '%' || :name || '%'")
+fun searchStudent(name: String): List<Student>
+```
+
+
+
+## 案例三
+### 问题描述
+SQL模糊查询语句 `LIKE '%<关键词>%'` 无法匹配任何记录。
+
+### 问题分析
+在DAO接口中，我们需要将方法的 `name` 参数拼接到SQL语句中，因此使用了加号( `+` )：
+
+```kotlin
+@Query("SELECT * FROM student_info WHERE student_name LIKE '%' + :name + '%'")
+fun searchStudent(name: String): List<Student>
+```
+
+SQLite不支持使用加号拼接SQL语句，上述语句相当于 `LIKE '% + <变量的值> + %'` ，因此无法匹配到记录。
+
+### 解决方案
+在SQLite中，拼接SQL语句需要使用双竖线( `||` )符号：
+
+```kotlin
+@Query("SELECT * FROM student_info WHERE student_name LIKE '%' || :name || '%'")
+fun searchStudent(name: String): List<Student>
 ```
