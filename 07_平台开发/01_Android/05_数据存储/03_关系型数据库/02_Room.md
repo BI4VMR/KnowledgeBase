@@ -1,5 +1,5 @@
 # 简介
-Room是Jetpack提供的一个ORM框架，它对SQLite进行了封装，我们可以通过注解声明Database、DAO、DO(Entity)等元素，Gradle编译时将会自动生成部分实现代码，例如根据实体类创建二维表、将查询结果映射为实体类或集合，使我们不必反复书写模板代码。
+Room是Jetpack提供的一个ORM框架，它对SQLite API进行了封装，我们可以通过注解声明Database、DAO、DO(Entity)等元素，Gradle在编译过程中将会自动生成部分代码，例如：根据实体类创建二维表、将查询结果映射为实体类或集合，我们不再需要反复编写数据转换等模板代码。
 
 Room中各元素的关系如下文图片所示：
 
@@ -9,14 +9,19 @@ Room中各元素的关系如下文图片所示：
 
 </div>
 
-本章示例工程详见以下链接：
+本章的示例工程详见以下链接：
 
 - [🔗 示例工程：Room](https://github.com/BI4VMR/Study-Android/tree/master/M05_Storage/C03_SQL/S02_Room)
 
-# 基本应用
-下文将以学生信息管理系统为例，演示Room框架的基本使用方法。
 
-在使用Room之前，我们需要在Gradle配置文件中声明相关的组件依赖：
+# 基本应用
+下文示例展示了Room的基本使用方法：
+
+🔴 示例一：使用Room实现学生信息管理系统。
+
+在本示例中，我们使用Room框架，实现一个简单的学生信息管理系统。
+
+第一步，我们为当前模块引入Room的依赖组件：
 
 "build.gradle":
 
@@ -52,9 +57,9 @@ dependencies {
 }
 ```
 
-"room-runtime"是Room的核心组件，"room-compiler"是Room的注解处理器，一个应用程序至少需要引入这些组件才能使用Room框架。上述的三条注解处理器声明语句不可同时书写，我们需要根据项目所使用的语言进行选择。
+`room-runtime` 是Room的核心组件， `room-compiler` 是Room的注解处理器，一个应用程序至少需要引入这些组件才能使用Room框架。上述的三条注解处理器声明语句不可同时声明，我们需要根据项目所使用的语言进行选择。
 
-我们首先创建一个Student实体类，用于描述“学生”的属性，此处设置“ID、姓名、年龄”三个属性。为了建立实体类与二维表的关联，我们还需要在Student类的属性与方法上添加一些Room注解。
+第二步，我们创建一个Student实体类，用于描述“学生”的属性，此处设置“ID、姓名、年龄”三个属性。
 
 "Student.java":
 
@@ -108,11 +113,13 @@ data class StudentKT(
 )
 ```
 
+为了建立实体类与二维表的关联，我们需要在Student类的属性与方法上添加一些Room注解。
+
 注解 `@Entity` 表示这是一个Room实体类，在编译期间，Room会以该类的属性作为字段，生成 `tableName` 属性所指定的二维表 `student_info` 。
 
 注解 `@PrimaryKey` 表示 `id` 属性是二维表的主键；注解 `@ColumnInfo` 用于设置属性在二维表中对应的字段名称。如果某个属性未被添加该注解，则字段名称与属性名称保持一致。
 
-接着，我们创建StudentDAO接口，提供对“学生信息表”进行增删改查的方法。
+第二步，我们创建StudentDAO接口，提供对“学生信息表”进行增删改查的方法。
 
 "StudentDAO.java":
 
@@ -165,7 +172,7 @@ interface StudentDAOKT {
 
 注解 `@Dao` 表示这是一个Room数据访问实体类，其中的抽象方法通过 `@Query` 等注解声明了各自的操作类型，分别对应“查询所有学生”、“新增学生记录”、“更新学生记录”、“删除学生记录”功能。我们并不需要实现这些方法，在编译期间，Room的注解处理器将会自动生成DAO接口的实现类，这正是ORM框架的主要功能之一，能够帮助我们简化开发流程。
 
-最后，我们还需要创建一个StudentDB抽象类，继承自RoomDatabase类，实现数据库的创建与配置功能。该类对于数据库调用者是唯一的访问点，因此我们通常将其设计为单例模式。
+第三步，我们创建一个StudentDB抽象类，继承自RoomDatabase类，实现数据库的创建与配置功能。
 
 "StudentDB.java":
 
@@ -237,15 +244,19 @@ abstract class StudentDBKT : RoomDatabase() {
 }
 ```
 
-注解 `@Database` 表示这是一个Room数据库，属性 `entities` 用于声明本数据库包含的所有实体类，当存在多个实体类时，使用逗号(",")分隔，例如： `entities = {A.class, B.class, ...}` 。属性 `version` 表示数据库的版本号，程序启动时用于判断数据库是否需要执行升级或降级操作。
+该类对于数据库调用者是唯一的访问点，因此我们通常将其设计为单例模式。
+
+注解 `@Database` 表示这是一个Room数据库，属性 `entities` 用于声明本数据库包含的所有实体类，当存在多个实体类时，使用逗号( `,` )分隔，例如： `entities = {A.class, B.class, ...}` 。属性 `version` 表示数据库的版本号，程序启动时用于判断数据库是否需要执行升级或降级操作。
 
 在获取实例的 `getInstance()` 方法中，我们通过Room的 `Room.databaseBuilder(Context context, Class<T> cls, String name)` 方法初始化数据库，此处的三个参数依次为：上下文环境、当前抽象类的Class实例和数据库名称，该方法返回的Builder实例可以配置其他功能，最后我们调用Builder的 `build()` 方法创建StudentDB的实例。
 
 Room默认禁止在主线程操作数据库；此处为了便于调试，我们添加配置项 `allowMainThreadQueries()` 解除该限制。
 
-该类中还需要书写返回每个DAO实例的抽象方法，具体实现代码将在编译时自动生成。
+该类中还需要声明返回每个DAO实例的抽象方法，具体实现代码将在编译时自动生成。
 
-至此，一个完整的学生信息管理系统数据库模块就编写完成了。我们可以在测试Activity中放置一些控件，并通过DAO类的实例调用增删改查等方法。
+至此，一个完整的学生信息管理系统数据库模块就编写完成了。
+
+第四步，我们切换到调用者视角，在测试Activity中放置一些控件，并通过DAO类的实例调用增删改查等方法。
 
 "TestUIBase.java":
 
@@ -331,14 +342,20 @@ val result: List<StudentKT> = studentDB.getStudentDAO().getStudent()
 
 此处省略了UI控件声明与异常处理等逻辑，详见本章示例工程。
 
+
 # 进阶技巧
 ## 数据库
+### 指定数据库文件路径
+`Room.databaseBuilder(Context context, Class<T> cls, String name)` 方法的第三参数 `name` 表示数据库文件名称，默认情况下，系统会在 `/data/data/<应用程序包名>/databases/` 目录中创建同名数据库文件。
+
+如果我们希望将数据库文件存放至其他目录，可以在 `name` 参数处传入完整的路径；程序启动时，若该参数的值以 `/` 开头，就会被视为绝对路径。例如：当我们传入 `/sdcard/StudentManager/student.db` 时，系统将会尝试在SD卡根目录下创建 `StudentManager` 目录以及 `student.db` 文件。
+
 ### 导出调试信息
-`@Database` 注解的 `exportSchema = <true | false>` 属性用于控制是否显示调试信息，该功能仅用于调试，对编译产物毫无影响。
+`@Database` 注解的 `exportSchema = <true | false>` 属性用于控制是否显示调试信息，该功能仅用于调试，对编译产物没有影响。
 
 当Room的注解被处理时，Gradle可以将二维表结构等信息以JSON格式输出到工程目录中，便于开发者查看与分析。
 
-该属性的默认值为"true"，但默认配置中并未指明输出路径，因此不会生成JSON文件。如果我们希望查看JSON文件，需要在Gradle配置文件的 `android {}` 小节中添加配置语句以指明路径。
+该属性的默认值为 `true` ，但默认配置中并未指明输出路径，因此不会生成JSON文件。如果我们希望查看JSON文件，需要在Gradle配置文件的 `android {}` 小节中添加配置语句以指明路径。
 
 "build.gradle":
 
@@ -388,23 +405,26 @@ defaultConfig {
 }
 ```
 
-在上述示例配置中，我们将调试信息的输出目录指定为 `<当前模块根目录>/RoomSchema/` ，成功地执行一次编译任务后，工程中就会出现对应的文件。
-
-### 指定数据库文件路径
-`Room.databaseBuilder(Context context, Class<T> cls, String name)` 方法的第三参数 `name` 表示数据库文件名称，默认情况下，系统会在 `/data/data/<应用程序包名>/databases/` 目录中创建同名数据库文件。
-
-如果我们希望将数据库文件存放至其他目录，可以在 `name` 参数处传入完整的路径；程序启动时，若该参数的值以"/"开头，就会被视为绝对路径。例如：当我们传入 `/sdcard/StudentManager/student.db` 时，系统将会尝试在SD卡根目录下创建 `StudentManager` 目录以及 `student.db` 文件。
+在上述配置文件中，我们将调试信息的输出目录指定为 `<当前模块根目录>/RoomSchema/` ，成功地执行一次编译任务后，工程中就会出现对应的文件。
 
 ### 允许在主线程访问数据库
 默认情况下，Room禁止在主线程访问数据库，因为I/O等耗时操作可能会导致应用程序出现ANR。
 
 当我们进行一些简单的功能验证时，可以在Builder中添加 `allowMainThreadQueries()` 配置项，以允许在主线程中直接访问数据库。
 
+### 配置日志模式
+SQLite支持以下两种日志模式：
+
+- `TRUNCATE` : 这是SQLite的默认日志模式，SQLite向存储器写入数据时会阻塞其他读写操作。
+- `WRITE_AHEAD_LOGGING` : 预写日志模式，将变更先写入缓存文件，空闲时入库。这种方式允许在写入的同时读取数据，但由于读取操作需要访问缓存文件，所以读取效率略低。
+
+当API Level > 16时，Room框架默认使用 `WRITE_AHEAD_LOGGING` 模式，我们可以在Builder中添加 `setJournalMode(JournalMode journalMode)` 方法更改默认模式。
+
 ## 实体类
 ### 定义实体类
 `@Entity` 注解用于定义实体类，必选属性 `tableName = <表名>` 用于声明该实体类对应的二维表名称。
 
-实体类中的每个全局变量都会被自动映射到二维表中，且字段名称与变量名称完全一致；如果我们希望修改属性所对应的字段名称，可以添加 `@ColumnInfo` 注解并指明 `name = <字段名称>` 属性。Room将会使用与变量名称对应的"get"与"set"方法访问属性，因此实体类必须符合Java Bean规范。
+实体类中的每个全局变量都会被自动映射到二维表中，且字段名称与变量名称完全一致；如果我们希望修改属性所对应的字段名称，可以添加 `@ColumnInfo` 注解并指明 `name = <字段名称>` 属性。Room将会使用与变量名称对应的 `get` 与 `set` 方法访问属性，因此实体类必须符合Java Bean规范。
 
 `@PrimaryKey` 注解用于声明某个属性为二维表的主键，Room要求每张表至少有一个主键。
 
@@ -459,7 +479,12 @@ data class StudentKT(
 )
 ```
 
-在上述示例代码中， `id` 属性与 `name` 属性通过注解设置了字段名称，它们在二维表中对应的字段名称分别为"student_id"和"student_name"； `age` 属性没有指明列名，因此在二维表中对应的字段名称为"age"，与变量同名。
+在上述示例代码中， `id` 属性与 `name` 属性通过注解设置了字段名称，它们在二维表中对应的字段名称分别为 `student_id` 和 `student_name` ； `age` 属性没有指明列名，因此在二维表中对应的字段名称为 `age` ，与变量同名。
+
+### 字段是否可空
+当实体类使用Java语言编写时，基本数据类型变量对应的二维表字段不可为空，并且我们不能将其修改为可空。引用数据类型变量对应的二维表字段默认可以为空；如果我们希望使某个字段不可为空，需要在对应的属性上添加 `androidx.annotation` 包中的 `@NonNull` 注解。
+
+当实体类使用Kotlin语言编写时，变量数据类型是否可空将会映射到对应的二维表字段，例如变量 `var name: String` 在二维表中是非空字段，而变量 `var address: String?` 在二维表中是可空字段。
 
 ### 忽略属性与方法
 如果某些属性不需要与二维表相互关联，我们可以添加 `@Ignore` 注解，它们不会在表中生成字段，查询记录时也不会被自动赋值。
@@ -553,20 +578,20 @@ data class StudentKT(
 )
 ```
 
-### 使用自增主键
-`@PrimaryKey` 注解的 `autoGenerate = <true | false>` 属性用于控制插入记录时主键是否自增，该属性的默认值为"false"，仅当主键为整数类型时，我们可以将其设为"true"。
+### 自增主键
+`@PrimaryKey` 注解的 `autoGenerate = <true | false>` 属性用于控制插入记录时主键是否自增，该属性的默认值为 `false` ，仅当主键为整数类型时，我们可以将其设为 `true` 。
 
 当实体类使用Java语言编写时，插入新记录遵循以下规则：
 
-- 传入数值"0"，触发自增，新记录的主键为 $当前最大主键数值 + 1$ 。
-- 传入大于"0"的数值，如果该数值未被占用，新记录的主键即为该数值；如果该数值已被占用，则产生异常。
-- 传入小于"0"的数值，如果该数值未被占用，新记录的主键即为该数值；如果该数值已被占用，则产生异常。虽然负数不在自增ID的范围内，但与主键数据类型是匹配的，新记录可以插入成功。
+- 传入数值 `0` ，触发自增，新记录的主键为 $当前最大主键数值 + 1$ 。
+- 传入大于 `0` 的数值，如果该数值未被占用，新记录的主键即为该数值；如果该数值已被占用，则产生异常。
+- 传入小于 `0` 的数值，如果该数值未被占用，新记录的主键即为该数值；如果该数值已被占用，则产生异常。虽然负数不在自增ID的范围内，但与主键数据类型是匹配的，新记录可以插入成功。
 
 当实体类使用Kotlin语言编写时，若主键为非空整数，其行为与Java语言是一致的。若主键为可空整数，传入空值也可以触发自增。
 
 在新建数据实体时，其ID属性是未知的，逻辑上可以使用空值表示，例如： `var id: Long? = null` ；但我们并不推荐这样做，因为根据主键的定义，ID必然是一个非空的值，使用可空ID会导致代码可读性降低，并在查询时引入多余的空值判断逻辑。
 
-为了便于使用自增ID插入记录，我们可以提供一个将ID属性置为"0"的次要构造方法。
+为了便于使用自增ID插入记录，我们可以提供一个将ID属性置为 `0` 的次要构造方法。
 
 ```kotlin
 @Entity(tableName = "student_info")
@@ -588,14 +613,9 @@ data class Student(
 }
 ```
 
-### 字段是否允许为空
-当实体类使用Java语言编写时，基本数据类型变量对应的二维表字段不可为空，并且我们不能将其修改为可空。引用数据类型变量对应的二维表字段默认可以为空；如果我们希望使某个字段不可为空，需要在对应的属性上添加 `androidx.annotation` 包中的 `@NonNull` 注解。
-
-当实体类使用Kotlin语言编写时，变量数据类型是否可空将会映射到对应的二维表字段，例如变量 `var name: String` 在二维表中是非空字段，而变量 `var address: String?` 在二维表中是可空字段。
-
 ## 数据访问对象类
 ### 定义DAO类
-`@Dao` 注解用于定义数据访问类 可以被放置在抽象类或接口上。在程序编译阶段，注解处理器将会根据其他注解信息自动生成抽象方法的具体实现。
+`@Dao` 注解用于定义数据访问类，可以被放置在抽象类或接口上。在程序编译阶段，注解处理器将会根据其他注解信息自动生成抽象方法的具体实现。
 
 以下是一个简单的DAO接口示例，其中包含对于学生信息表进行新增、删除、查询的抽象方法。
 
@@ -640,10 +660,10 @@ interface StudentDAOKT {
 }
 ```
 
-在上述示例代码中，Room注解能够生成全部符合需求的数据访问方法，因此我们将StudentDAO定义为接口；若需要在DAO类中添加自定义方法，我们也可以将接口变更为抽象类。
+在上述代码中，Room注解能够生成全部符合需求的数据访问方法，因此我们将StudentDAO定义为接口；若需要在DAO类中添加自定义方法，我们也可以将接口变更为抽象类。
 
 ### 定义插入方法
-`@Insert` 注解用于声明向二维表中插入记录的抽象方法，参数类型必须是我们在RoomDatabase中注册的实体类。
+`@Insert` 注解用于声明向二维表中插入记录的抽象方法，参数类型必须是通过 `@Entity` 注解注册的实体类。
 
 插入方法可以拥有多个参数，以便使用者向表中批量插入记录，所有受支持的形式如下文示例代码所示：
 
@@ -689,25 +709,12 @@ fun insertStudents(students: List<StudentKT>): List<Long>
 fun insertStudents(monitor: StudentKT, students: List<StudentKT>)
 ```
 
-插入操作将会返回新记录在二维表中的"RowID"，如果参数为单个实体，则返回值类型为 `long` ；如果参数为多个实体，则返回值类型可以为 `long[]` 或 `List<Long>` ；如果我们并不关心"RowID"，也可以将返回值类型设置为 `void` 。
+插入操作将会返回新记录在二维表中的 `RowID` ，如果参数为单个实体，则返回值类型为 `long` ；如果参数为多个实体，则返回值类型可以为 `long[]` 或 `List<Long>` ；如果我们并不关心 `RowID` ，也可以将返回值类型设置为 `void` 。
 
 > ⚠️ 警告
 >
-> SQLite中的"RowID"不一定等同于主键，我们在使用该数值前需要注意鉴别，此处省略具体描述，详见相关章节： [🧭 SQLite - "RowID"字段](../../../../04_应用软件/08_存储工具/01_关系型数据库/01_SQLite/02_基本概念.md#rowid字段) 。
+> SQLite中的 `RowID` 不一定等同于主键，我们在使用该数值前需要注意鉴别，此处省略具体描述，详见相关章节： [🧭 SQLite - "RowID"字段](../../../../04_软件技巧/04_数据存储/03_关系型数据库/01_SQLite/02_基础应用.md#rowid字段) 。
 
-<!-- TODO
-
-### 配置日志模式
-SQLite支持以下两种日志模式：
-
-`JournalMode.TRUNCATE` : SQLite的默认日志模式，向存储器写入数据时会阻塞其他读写操作，降低写入并发。
-
-`JournalMode.WRITE_AHEAD_LOGGING` : Room框架的默认模式(API Level > 16时)，WAL模式使得读与写操作之间不会阻塞，只会阻塞写与写操作，能够提高写入并发。
-
-setJournalMode(JournalMode journalMode)
-WAL模式比TRUNCATE模式写入速度更快，但由于读取数据时也需要读取WAL日志验证数据的正确性，所以读取数据较慢，我们应当根据实际使用场景进行选择。
-
--->
 
 # 版本迁移
 Room对SQLite API进行了封装，我们无需在SQLiteOpenHelper类的 `onUpgrade()` 方法中书写各个版本的判断与升级逻辑，应当转而使用Migration类。
@@ -781,20 +788,38 @@ Room.databaseBuilder(context.applicationContext, StudentDBKT::class.java, "stude
 
 若某两个版本缺少对应的Migration类，默认情况下Room会抛出异常： `IllegalStateException: A migration from <X> to <Y> is necessary.` ，但用户数据得以保留。如果我们在Room的构造器中调用了 `fallbackToDestructiveMigration()` 方法，缺少Migration类时会直接清空旧的数据，以当前版本的数据库结构重新初始化。
 
+
 # 疑难解答
 ## 索引
 
 <div align="center">
 
-|       序号        |                            摘要                            |
-| :---------------: | :--------------------------------------------------------: |
-| [案例一](#案例一) |    Android Debug Database工具无法查看Room数据库的内容。    |
-| [案例二](#案例二) | 通过Migration升级数据库后，出现IllegalStateException错误。 |
-| [案例三](#案例三) |             SQL模糊查询语句无法匹配任何记录。              |
+|       序号        |                         摘要                         |
+| :---------------: | :--------------------------------------------------: |
+| [案例一](#案例一) | Android Debug Database工具无法查看Room数据库的内容。 |
+| [案例二](#案例二) |     升级数据库后出现IllegalStateException错误。      |
+| [案例三](#案例三) |          SQL模糊查询语句无法匹配任何记录。           |
 
 </div>
 
 ## 案例一
+### 问题描述
+使用Android Debug Database工具调试Room框架生成的数据库时，Web能够查看到表结构，但内容为空。
+
+### 问题分析
+当API Level > 16时，Room框架的默认日志模式为WAL，这种模式不会将变更立即写入磁盘，因此Android Debug Database工具无法实时读取内容。
+
+### 解决方案
+在构建Database实例时，将日志模式设为"TRUNCATE"。
+
+```java
+Room.databaseBuilder(context.getApplicationContext(), StudentDB.class, "student")
+    // 设置日志模式为"TRUNCATE"
+    .setJournalMode(JournalMode.TRUNCATE)
+    .build();
+```
+
+## 案例二
 ### 问题描述
 通过Migration升级数据库后，出现IllegalStateException错误，详细信息如下文代码块所示：
 
@@ -813,7 +838,7 @@ TableInfo{name='student_info', columns={student_id=Column{name='student_id', typ
 ### 解决方案
 日志中的 `Expected` 部分是根据Entity生成的，因此我们需要检查Migration和Entity是否匹配，确保二者一致。
 
-在本案例中，我们为Entity的新增属性 `flags` 添加 `@ColumnInfo` 注解，确保它能正确地映射到Migration中的 `flag` 字段。
+在本案例中，我们为Entity的新增属性 `flags` 添加 `@ColumnInfo` 注解，确保它能正确地映射到Migration中新增的 `flag` 字段。
 
 ```kotlin
 @Entity(tableName = "student_info")
@@ -825,30 +850,6 @@ data class Student(
     // 此处已省略部分代码...
 )
 ```
-
-## 案例二
-### 问题描述
-SQL模糊查询语句 `LIKE '%<关键词>%'` 无法匹配任何记录。
-
-### 问题分析
-在DAO接口中，我们需要将方法的 `name` 参数拼接到SQL语句中，因此使用了加号( `+` )：
-
-```kotlin
-@Query("SELECT * FROM student_info WHERE student_name LIKE '%' + :name + '%'")
-fun searchStudent(name: String): List<Student>
-```
-
-SQLite不支持使用加号拼接SQL语句，上述语句相当于 `LIKE '% + <变量的值> + %'` ，因此无法匹配到记录。
-
-### 解决方案
-在SQLite中，拼接SQL语句需要使用双竖线( `||` )符号：
-
-```kotlin
-@Query("SELECT * FROM student_info WHERE student_name LIKE '%' || :name || '%'")
-fun searchStudent(name: String): List<Student>
-```
-
-
 
 ## 案例三
 ### 问题描述
