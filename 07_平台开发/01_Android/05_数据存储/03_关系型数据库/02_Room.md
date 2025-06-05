@@ -407,6 +407,34 @@ defaultConfig {
 
 在上述配置文件中，我们将调试信息的输出目录指定为 `<当前模块根目录>/RoomSchema/` ，成功地执行一次编译任务后，工程中就会出现对应的文件。
 
+### 查看SQL语句
+有时Room生成的代码行为与预期不符，为了便于调试，我们可以在Builder中添加 `setQueryCallback(QueryCallback journalMode, Executor executor)` 方法，监听Room实际执行的SQL语句。
+
+```java
+Room.databaseBuilder(context, StudentDB.class, "student-skills.db")
+    // 设置SQL语句回调，便于调试。
+    .setQueryCallback(new QueryCallback() {
+        @Override
+        public void onQuery(@NonNull String sqlQuery, @NonNull List<?> bindArgs) {
+            Log.d("StudentDB", "SQL:[" + sqlQuery + "] | " + bindArgs);
+        }
+    }, Executors.newSingleThreadExecutor())
+```
+
+上述内容也可以使用Kotlin语言编写：
+
+```kotlin
+Room.databaseBuilder(context, StudentDBKT::class.java, "student-skills.db")
+    // 设置SQL语句回调，便于调试。
+    .setQueryCallback(object : QueryCallback {
+        override fun onQuery(sqlQuery: String, bindArgs: List<Any?>) {
+            Log.d("StudentDBKT", "SQL:[$sqlQuery] | $bindArgs")
+        }
+    }, Executors.newSingleThreadExecutor())
+```
+
+回调方法 `onQuery()` 的第一参数 `sqlQuery` 是原始SQL语句，第二参数 `bindArgs` 是参数列表，如果原始SQL语句中含有占位符 `?` ，则参数列表非空，且元素与占位符一一对应。
+
 ### 允许在主线程访问数据库
 默认情况下，Room禁止在主线程访问数据库，因为I/O等耗时操作可能会导致应用程序出现ANR。
 
@@ -715,11 +743,20 @@ fun insertStudents(monitor: StudentKT, students: List<StudentKT>)
 >
 > SQLite中的 `RowID` 不一定等同于主键，我们在使用该数值前需要注意鉴别，此处省略具体描述，详见相关章节： [🧭 SQLite - "RowID"字段](../../../../04_软件技巧/04_数据存储/03_关系型数据库/01_SQLite/02_基础应用.md#rowid字段) 。
 
+> 🚩 提示
+>
+> 参数为多个实体的方法支持事务，我们无需担心它们在执行过程中被其他线程干扰。
+
 
 # 版本迁移
 Room对SQLite API进行了封装，我们无需在SQLiteOpenHelper类的 `onUpgrade()` 方法中书写各个版本的判断与升级逻辑，应当转而使用Migration类。
 
 Migration类的构造方法为 `Migration(int startVersion, int endVersion)` ，第一参数 `startVersion` 表示旧的版本号；第三参数 `endVersion` 表示新的版本号，因此我们可以继承Migration类并创建一个或多个子类，在每个子类中分别实现两个版本间的升降级逻辑。
+
+
+
+
+
 
 以前文示例为基础，我们将学生信息表的整型字段年龄 `age` 变更为字符型字段出生日期 `birthday` ，并将数据结构升级至版本2。
 
