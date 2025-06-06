@@ -790,7 +790,7 @@ class MigrationV1ToV2KT : Migration(1, 2) {
 
 Migration类的回调方法 `migrate()` 将在版本迁移时被触发，我们需要在此处编写迁移逻辑，详见前文章节： [🧭 SQLite - 版本迁移](./01_SQLite.md#版本迁移) 。
 
-此时只有1和2两个版本号，本程序不必支持降级安装，因此我们只需要创建一个MigrationV1ToV2类即可，实现从版本1到版本2的迁移逻辑。
+此时只有 `1` 和 `2` 两个版本号，本程序不必支持降级安装，因此我们只需要创建一个MigrationV1ToV2类即可，实现从“版本1”到“版本2”的迁移逻辑。
 
 第二步，我们需要在Room的Builder中调用 `addMigrations(Migration... migrations)` 方法注册MigrationV1ToV2。
 
@@ -824,7 +824,7 @@ Room.databaseBuilder(context.applicationContext, StudentDBKT::class.java, "stude
 
 若某两个版本缺少对应的Migration类，默认情况下Room会抛出异常： `IllegalStateException: A migration from <X> to <Y> is necessary.` ，但用户数据得以保留。如果我们在Room的Builder中调用了 `fallbackToDestructiveMigration()` 方法，缺少Migration类时会直接清空旧的数据，以当前版本的数据库结构重新初始化。
 
-迁移过程将在首个数据库查询调用到达时被触发，并以该调用的线程按顺序执行所有 `migrate()` 方法，直到迁移完成后，该线程才会执行调用者请求的查询并返回结果。如果我们希望程序启动后即刻开始迁移，减少用户后续查询的等待时长，可以在初始化阶段调用任意查询方法。
+迁移过程将在首个数据库查询调用执行时被触发，并以该调用的线程按顺序执行所有 `migrate()` 方法，直到迁移完成后，该线程才会执行调用者请求的查询并返回结果。如果我们希望程序启动后即刻开始迁移，减少用户后续查询的等待时长，可以在初始化阶段调用任意查询方法。
 
 
 # 疑难解答
