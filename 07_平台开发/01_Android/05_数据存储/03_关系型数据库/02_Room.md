@@ -745,22 +745,19 @@ fun insertStudents(monitor: StudentKT, students: List<StudentKT>)
 
 > 🚩 提示
 >
-> 参数为多个实体的方法支持事务，我们无需担心它们在执行过程中被其他线程干扰。
+> 由 `@Insert` 等Room注解生成的插入、修改与删除方法支持事务，我们无需担心操作多条数据时被其他线程干扰。
 
 
 # 版本迁移
-Room对SQLite API进行了封装，我们无需在SQLiteOpenHelper类的 `onUpgrade()` 方法中书写各个版本的判断与升级逻辑，应当转而使用Migration类。
+Room对SQLite API进行了封装，我们无需在SQLiteOpenHelper类的 `onUpgrade()` 方法中编写各个版本的判断与升级逻辑，应当转而使用Migration类。
 
 Migration类的构造方法为 `Migration(int startVersion, int endVersion)` ，第一参数 `startVersion` 表示旧的版本号；第三参数 `endVersion` 表示新的版本号，因此我们可以继承Migration类并创建一个或多个子类，在每个子类中分别实现两个版本间的升降级逻辑。
 
+🟠 示例二：编写Migration类进行版本迁移。
 
+在本示例中，我们以前文“示例一”为基础，将学生信息表的整型字段年龄 `age` 变更为字符型字段出生日期 `birthday` ，并将数据结构升级至版本2。
 
-
-
-
-以前文示例为基础，我们将学生信息表的整型字段年龄 `age` 变更为字符型字段出生日期 `birthday` ，并将数据结构升级至版本2。
-
-此时只有1和2两个版本号，本程序不必支持降级安装，因此我们只需要创建一个MigrationV1ToV2类即可，实现从版本1到版本2的迁移逻辑。
+第一步，我们创建MigrationV1ToV2类，继承自Migration类。
 
 "MigrationV1ToV2.java":
 
@@ -791,9 +788,11 @@ class MigrationV1ToV2KT : Migration(1, 2) {
 }
 ```
 
-Migration类的回调方法 `migrate()` 将在版本迁移时被触发，我们需要在此处书写迁移逻辑，本示例省略，详见前文示例： [🧭 SQLite - 版本迁移](./01_SQLite.md#版本迁移) 。
+Migration类的回调方法 `migrate()` 将在版本迁移时被触发，我们需要在此处编写迁移逻辑，详见前文章节： [🧭 SQLite - 版本迁移](./01_SQLite.md#版本迁移) 。
 
-接下来，我们需要在Room的构造器中调用 `addMigrations(Migration... migrations)` 方法注册MigrationV1ToV2。
+此时只有1和2两个版本号，本程序不必支持降级安装，因此我们只需要创建一个MigrationV1ToV2类即可，实现从版本1到版本2的迁移逻辑。
+
+第二步，我们需要在Room的Builder中调用 `addMigrations(Migration... migrations)` 方法注册MigrationV1ToV2。
 
 "StudentDB.java":
 
@@ -819,11 +818,13 @@ Room.databaseBuilder(context.applicationContext, StudentDBKT::class.java, "stude
 
 `addMigrations()` 方法的参数数量是可变的，如果有多个Migration的子类，我们需要将它们分别进行注册。
 
-当数据库加载时，如果程序中的版本号与本地数据库不一致，Room将会尝试调用已注册的Migration类完成迁移。例如：从版本1升级至版本2时，Room会调用前文示例中的MigrationV1ToV2类。
+当数据库加载时，如果程序中的版本号与本地数据库不一致，Room将会尝试调用已注册的Migration类完成迁移。例如：从“版本1”升级至“版本2”时，Room会调用前文示例中的MigrationV1ToV2类。
 
-跨版本升级时，Room将会首先尝试调用版本号相匹配的Migration类；若没有找到该类，则会依次调用中途过渡版本的所有Migration类。例如：从版本1升级至版本3时，Room会尝试调用旧版本号为"1"且新版本号为"3"的Migration类；若不存在该类，则首先调用旧版本号为"1"且新版本号为"2"的Migration类，再调用旧版本号为"2"且新版本号为"3"的Migration类。
+跨版本升级时，Room将会首先尝试调用版本号相匹配的Migration类；若没有找到该类，则会依次调用中途过渡版本的所有Migration类。例如：从“版本1”升级至“版本3”时，Room会尝试调用旧版本号为 `1` 且新版本号为 `3` 的Migration类；若不存在该类，则首先调用旧版本号为 `1` 且新版本号为 `2` 的Migration类，再调用旧版本号为 `2` 且新版本号为 `3` 的Migration类。
 
-若某两个版本缺少对应的Migration类，默认情况下Room会抛出异常： `IllegalStateException: A migration from <X> to <Y> is necessary.` ，但用户数据得以保留。如果我们在Room的构造器中调用了 `fallbackToDestructiveMigration()` 方法，缺少Migration类时会直接清空旧的数据，以当前版本的数据库结构重新初始化。
+若某两个版本缺少对应的Migration类，默认情况下Room会抛出异常： `IllegalStateException: A migration from <X> to <Y> is necessary.` ，但用户数据得以保留。如果我们在Room的Builder中调用了 `fallbackToDestructiveMigration()` 方法，缺少Migration类时会直接清空旧的数据，以当前版本的数据库结构重新初始化。
+
+迁移过程将在首个数据库查询调用到达时被触发，并以该调用的线程按顺序执行所有 `migrate()` 方法，直到迁移完成后，该线程才会执行调用者请求的查询并返回结果。如果我们希望程序启动后即刻开始迁移，减少用户后续查询的等待时长，可以在初始化阶段调用任意查询方法。
 
 
 # 疑难解答

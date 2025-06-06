@@ -350,12 +350,12 @@ public class StudentDBHelper extends SQLiteOpenHelper {
         }
     }
 
-    // 版本1至版本2的数据结构升级逻辑。
+    // 版本1至版本2的数据结构升级逻辑
     private void migrateV1ToV2(SQLiteDatabase db) {
-        // 修改旧表的名称，防止其他线程读取到旧数据。
+        // 修改旧表的名称
         db.execSQL("ALTER TABLE student_info RENAME TO student_info_temp;");
 
-        // 以新的数据结构创建学生信息表。
+        // 以新的数据结构创建学生信息表
         final String createTableSQL = "CREATE TABLE student_info" +
                 "(" +
                 "student_id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -364,7 +364,7 @@ public class StudentDBHelper extends SQLiteOpenHelper {
                 ")";
         db.execSQL(createTableSQL);
 
-        // 读取旧表中的数据。
+        // 读取旧表中的数据
         List<Student> oldDatas = new ArrayList<>();
         Cursor cursor = db.rawQuery("SELECT * FROM student_info_temp", null);
         try (cursor) {
@@ -392,7 +392,7 @@ public class StudentDBHelper extends SQLiteOpenHelper {
             db.execSQL(sql);
         }
 
-        // 删除旧表。
+        // 删除旧表
         db.execSQL("DROP TABLE student_info_temp");
     }
 }
@@ -419,12 +419,12 @@ class StudentDBHelperKT(
         }
     }
 
-    // 版本1至版本2的数据结构升级逻辑。
+    // 版本1至版本2的数据结构升级逻辑
     private fun migrateV1ToV2(db: SQLiteDatabase) {
-        // 修改旧表的名称，防止其他线程读取到旧数据。
+        // 修改旧表的名称
         db.execSQL("ALTER TABLE student_info RENAME TO student_info_temp;")
 
-        // 以新的数据结构创建学生信息表。
+        // 以新的数据结构创建学生信息表
         val createTableSQL: String = """
             CREATE TABLE student_info
             (
@@ -435,7 +435,7 @@ class StudentDBHelperKT(
         """.trimIndent()
         db.execSQL(createTableSQL)
 
-        // 读取旧表中的数据。
+        // 读取旧表中的数据
         val oldDatas: MutableList<StudentKT> = mutableListOf()
         val cursor: Cursor = db.rawQuery("SELECT * FROM student_info_temp", null)
         cursor.use {
@@ -462,7 +462,7 @@ class StudentDBHelperKT(
             db.execSQL(sql)
         }
 
-        // 删除旧表。
+        // 删除旧表
         db.execSQL("DROP TABLE student_info_temp")
     }
 }
@@ -530,7 +530,6 @@ cursor.use {
 
 上述示例代码只是一个简单的迁移过程示范，在实际应用中我们还可以进行以下优化：
 
-- `onUpgrade()` 方法默认在主线程执行，我们应当手动切换到其他线程中操作。
-- 迁移过程中的多个步骤应当放在一个事务中执行，避免中途出现错误导致数据丢失以及其他线程读取到脏数据。
 - 每组数据库版本之间都要有对应的升级逻辑，不可遗漏，因为用户可能会从任意旧版本更新至最新版本。
 - 跨版本升级时，可以依次执行升级逻辑，例如：从版本1升级至版本3时，可以依次执行“版本1升级至版本2”与“版本2升级至版本3”的逻辑，避免重复书写代码。
+- 迁移过程将在首个数据库查询调用到达时被触发，并以该调用的线程执行 `onUpgrade()` 方法，直到迁移完成后，该线程才会执行调用者请求的查询并返回结果。如果我们希望程序启动后即刻开始迁移，减少用户后续查询的等待时长，可以在初始化阶段调用任意查询方法。
