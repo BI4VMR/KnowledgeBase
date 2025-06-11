@@ -73,9 +73,9 @@ public class SimpleVO {
 data class SimpleVOKT(val title: String)
 ```
 
-第三步，创建RecyclerView的适配器。
+第三步，我们创建RecyclerView的适配器。
 
-RecyclerView使用适配器模式管理视图与数据，我们需要创建一个适配器类，继承RecyclerView.Adapter并重写父类的一些方法。
+RecyclerView使用适配器模式管理视图与数据，我们需要创建一个适配器类，继承自RecyclerView.Adapter并重写父类的一些方法。
 
 "MyAdapter.java":
 
@@ -232,7 +232,7 @@ class MyAdapterKT(
 
 第一参数 `holder` 即ViewHolder对象，我们可以调用ViewHolder的 `bindData()` 方法，访问各个控件更新UI。第二参数 `position` 是表项在列表中的位置索引，由于列表与数据源有对应关系，我们也可以从数据源中取出数据项(View Object)，并更新ViewHolder中的控件。
 
-第四步，组装控件与数据。
+第四步，我们将适配器与RecyclerView控件进行关联，并填充测试数据。
 
 至此，表项的视图和数据已经在适配器中组装完毕，接下来我们在测试Activity中放置RecyclerView控件，并创建测试数据、加载适配器，一个基本的列表就编写完成了。
 
@@ -292,7 +292,7 @@ val adapter = MyAdapterKT(datas)
 recyclerView.adapter = adapter
 ```
 
-此处我们使用线性布局管理器，将表项以列表的方式排列。
+此处我们使用线性布局管理器，将表项以垂直列表的方式按顺序排列。
 
 此时运行示例程序，并查看界面外观：
 
@@ -463,7 +463,7 @@ adapter.setItemClickListener { position: Int, _: SimpleVOKT ->
 }
 ```
 
-当我们运行示例程序后，效果如下图所示：
+此时运行示例程序，并查看界面外观：
 
 <div align="center">
 
@@ -473,26 +473,43 @@ adapter.setItemClickListener { position: Int, _: SimpleVOKT ->
 
 
 # 加载多种表项
-RecyclerView支持加载多种不同的表项，具有较高的灵活度。当RecyclerView绘制表项时，首先调用适配器的 `getItemViewType(int position)` 方法，确定当前位置需要绘制的表项类型，然后再调用 `onCreateViewHolder(ViewGroup parent, int viewType)` 方法创建View实例，此处"viewType"参数就是 `getItemViewType(int position)` 的返回值，我们需要根据此数值创建对应的View实例。
+RecyclerView支持加载多种不同的表项，具有较高的灵活度。当RecyclerView绘制表项时，首先会调用适配器的 `getItemViewType(int position)` 方法，确定当前位置需要绘制的表项类型，然后再调用 `onCreateViewHolder(ViewGroup parent, int viewType)` 方法创建View实例，此处的第二参数 `viewType` 参数就是 `getItemViewType(int position)` 的返回值，我们需要根据该数值创建对应类型的View实例。
 
-我们以前文示例为基础，改造适配器，使其加载两种样式不同的表项。
+🟠 示例三：为RecyclerView添加多种类型的表项。
 
-首先创建一个接口ListItem，定义获取ViewType值的方法，所有表项均需要实现此接口，以保持一致性。
+在本示例中，我们以前文“示例一”为基础，改造适配器，使其加载两种样式不同的表项。
+
+第一步，我们创建一个接口，定义获取ViewType数值的抽象方法，要求所有的数据项实现该接口，以保持一致性。
+
+"ListItem.java":
 
 ```java
 public interface ListItem {
-    // 获取ViewType类型属性
+
+    // 获取当前表项的类型
     int getViewType();
 }
 ```
 
-此处为了简便，我们直接使用数字定义ViewType，实际应用中也可以将ViewType定义成枚举，避免使用时出现错误。
+上述内容也可以使用Kotlin语言编写：
 
-我们对前文的布局进行修改，首先定义第一种表项，布局文件为"list_item_type1.xml"，放置两个TextView控件。
+"ListItemKT.kt":
 
-再定义第一种表项对应的实体类Type1VO，其ViewType值固定为"1"。
+```kotlin
+interface ListItemKT {
 
-Type1VO.java:
+    // 获取当前表项的类型
+    fun getItemType(): Int
+}
+```
+
+此处我们直接使用数字定义ViewType，在实际应用中，由于表项类型都是已知的，我们也可以将ViewType定义成枚举，避免不规范的传值。
+
+第二步，我们对前文示例的布局与实体类进行修改，创建两种不同的表项。
+
+我们首先定义第一种表项，布局文件名为 `list_item_type1.xml` ，其中拥有两个TextView控件，对应的实体类为Type1VO，ViewType值固定为 `1` 。
+
+"Type1VO.java":
 
 ```java
 public class Type1VO implements ListItem {
@@ -509,11 +526,25 @@ public class Type1VO implements ListItem {
 }
 ```
 
-然后创建布局文件"list_item_type2.xml"描述第二种表项，其中仅有一个居中的文本框。
+上述内容也可以使用Kotlin语言编写：
 
-再定义第二种表项对应的实体类Type2VO，其ViewType值固定为"2"。
+"Type1VOKT.kt":
 
-Type2VO.java:
+```kotlin
+data class Type1VOKT(
+    val title: String,
+    val info: String = "-"
+) : ListItemKT {
+
+    override fun getItemType(): Int {
+        return 1
+    }
+}
+```
+
+然后定义第二种表项，布局文件名为 `list_item_type2.xml` ，其中仅有一个居中的TextView控件，对应的实体类为Type2VO，ViewType值固定为 `2` 。
+
+"Type2VO.java":
 
 ```java
 public class Type2VO implements ListItem {
@@ -528,84 +559,69 @@ public class Type2VO implements ListItem {
     }
 }
 ```
+上述内容也可以使用Kotlin语言编写：
 
-接着修改适配器，重写 `getItemViewType()` 方法，并重新编写 `onCreateViewHolder()` 方法和 `onBindViewHolder()` 方法。
+"Type2VOKT.kt":
 
-MyAdapter.java:
+```kotlin
+data class Type2VOKT(
+    val info: String
+) : ListItemKT {
+
+    override fun getItemType(): Int {
+        return 2
+    }
+}
+```
+
+第三步，我们对前文示例的适配器进行修改，重写 `getItemViewType()` 方法，并重新编写 `onCreateViewHolder()` 方法和 `onBindViewHolder()` 方法。
+
+首先，我们将数据源列表的类型改为ListItem，并重写 `getItemViewType()` 方法，在此处调用ListItem中的方法获取表项类型。
+
+"MyAdapter.java":
 
 ```java
 public class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    // 上下文环境
-    private final Context mContext;
     // 数据源
-    private final List<SimpleVO> dataSource;
+    private final List<ListItem> dataSource;
 
-    public MyAdapter(Context context, List<SimpleVO> dataSource) {
-        this.mContext = context;
-        this.dataSource = dataSource;
-    }
-
-    /* 创建ViewHolder */
-    @NonNull
-    @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        LayoutInflater inflater = LayoutInflater.from(mContext);
-        RecyclerView.ViewHolder vh;
-        switch (viewType) {
-            case 1: {
-                View view = inflater.inflate(R.layout.list_item_type1, parent, false);
-                vh = new Type1VH(view);
-            }
-            break;
-            case 2: {
-                View view = inflater.inflate(R.layout.list_item_type2, parent, false);
-                vh = new Type2VH(view);
-            }
-            break;
-            default:
-                throw new IllegalArgumentException();
-        }
-
-        return vh;
-    }
-
-    /* 将数据与ViewHolder绑定 */
-    @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        // 获取该位置的Item类型
-        int viewType = getItemViewType(position);
-        // 根据Item类型绑定数据到视图上
-        switch (viewType) {
-            case 1: {
-                Type1VH vh = (Type1VH) holder;
-                vh.bindData();
-            }
-            break;
-            case 2: {
-                Type2VH vh = (Type2VH) holder;
-                vh.bindData();
-            }
-            break;
-            default:
-                throw new IllegalArgumentException();
-        }
-    }
-
-    /* 获取表项的总数量 */
-    @Override
-    public int getItemCount() {
-        return dataSource.size();
-    }
-
-    /* 获取当前位置的Item类型 */
+    // 获取当前位置的Item类型
     @Override
     public int getItemViewType(int position) {
         // 我们约定所有列表项都实现ListItem接口，因此可以调用其中的方法获取ViewType。
         return dataSource.get(position).getViewType();
     }
+}
+```
 
-    /* 第一种表项的ViewHolder */
+上述内容也可以使用Kotlin语言编写：
+
+"MyAdapterKT.kt":
+
+```kotlin
+class MyAdapterKT(
+
+    // 数据源
+    private val mDataSource: MutableList<ListItemKT>
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+    // 获取当前位置的Item类型
+    override fun getItemViewType(position: Int): Int {
+        // 我们约定所有列表项都实现ListItem接口，因此可以调用其中的方法获取ViewType。
+        return mDataSource[position].getItemType()
+    }
+}
+```
+
+接下来，我们创建两种表项对应的ViewHolder，实现UI与数据的同步。
+
+"MyAdapter.java":
+
+```java
+public class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+
+    // 第一种表项的ViewHolder
     class Type1VH extends RecyclerView.ViewHolder {
 
         TextView tvTitle;
@@ -624,7 +640,7 @@ public class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
-    /* 第二种表项的ViewHolder */
+    // 第二种表项的ViewHolder
     class Type2VH extends RecyclerView.ViewHolder {
 
         TextView tvInfo;
@@ -642,11 +658,150 @@ public class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 }
 ```
 
-我们在 `getItemViewType()` 方法中，根据位置索引获取表项的类型，并返回ViewType数值；在 `onCreateViewHolder()` 方法中，根据"viewType"参数的值，渲染对应的XML文件并创建ViewHolder；在 `onBindViewHolder()` 方法中，我们主动调用Adapter的 `getItemViewType()` 方法，取出对应的数据实体对象，将数据绑定到控件上。
+上述内容也可以使用Kotlin语言编写：
 
-最后我们在测试Activity中制造一些数据，并加载至RecyclerView中。
+"MyAdapterKT.kt":
 
-DemoViewTypeUI.java:
+```kotlin
+class MyAdapterKT(
+    private val mDataSource: MutableList<ListItemKT>
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+    /**
+     * 第一种表项的ViewHolder。
+     */
+    inner class Type1VH(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
+        private var tvTitle: TextView? = null
+        private var tvInfo: TextView? = null
+
+        init {
+            tvTitle = itemView.findViewById(R.id.tvTitle)
+            tvInfo = itemView.findViewById(R.id.ivIcon)
+        }
+
+        fun bindData() {
+            val vo: Type1VOKT = mDataSource[adapterPosition] as Type1VOKT
+            tvTitle?.text = vo.title
+            tvInfo?.text = vo.info
+        }
+    }
+
+    /**
+     * 第二种表项的ViewHolder。
+     */
+    inner class Type2VH(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
+        private var tvInfo: TextView? = null
+
+        init {
+            tvInfo = itemView.findViewById(R.id.ivIcon)
+        }
+
+        fun bindData() {
+            val vo: Type2VOKT = mDataSource[adapterPosition] as Type2VOKT
+            tvInfo?.text = vo.info
+        }
+    }
+}
+```
+
+最后，我们修改 `onCreateViewHolder()` 与 `onBindViewHolder()` 方法的实现。
+
+"MyAdapter.java":
+
+```java
+public class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+
+    @NonNull
+    @Override
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+
+        RecyclerView.ViewHolder vh;
+        // 根据ViewType参数创建对应的视图实例与ViewHolder
+        switch (viewType) {
+            case 1: {
+                View view = inflater.inflate(R.layout.list_item_type1, parent, false);
+                vh = new Type1VH(view);
+            }
+            break;
+            case 2: {
+                View view = inflater.inflate(R.layout.list_item_type2, parent, false);
+                vh = new Type2VH(view);
+            }
+            break;
+            default:
+                throw new IllegalArgumentException("Unknown view type [" + viewType + "]!");
+        }
+
+        return vh;
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        if (holder instanceof Type1VH) {
+            ((Type1VH) holder).bindData();
+        } else if (holder instanceof Type2VH) {
+            ((Type2VH) holder).bindData();
+        } else {
+            Log.w("Test", "Unknown ViewHolder!");
+        }
+    }
+}
+```
+
+上述内容也可以使用Kotlin语言编写：
+
+"MyAdapterKT.kt":
+
+```kotlin
+class MyAdapterKT(
+    private val mDataSource: MutableList<ListItemKT>
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val inflater: LayoutInflater = LayoutInflater.from(parent.context)
+
+        val vh: RecyclerView.ViewHolder
+        // 根据ViewType参数创建对应的视图实例与ViewHolder
+        when (viewType) {
+            1 -> {
+                val view: View = inflater.inflate(R.layout.list_item_type1, parent, false)
+                vh = Type1VH(view)
+            }
+            2 -> {
+                val view: View = inflater.inflate(R.layout.list_item_type2, parent, false)
+                vh = Type1VH(view)
+            }
+            else -> {
+                throw IllegalArgumentException("Unknown view type [$viewType]!")
+            }
+        }
+        return vh
+    }
+
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        when (holder) {
+            is Type1VH -> {
+                holder.bindData()
+            }
+            is Type2VH -> {
+                holder.bindData()
+            }
+            else -> {
+                Log.w("Test", "Unknown ViewHolder!")
+            }
+        }
+    }
+}
+```
+
+在 `onCreateViewHolder()` 方法中，我们根据 `viewType` 参数的值，渲染对应的XML文件并创建ViewHolder；在 `onBindViewHolder()` 方法中，我们判断ViewHolder的实际类型，并调用对应的 `bindData()` 方法刷新数据。
+
+第四步，我们在测试Activity中制造一些数据，并加载至RecyclerView中。
+
+"TestUIViewType.java":
 
 ```java
 // 制造测试数据
@@ -663,22 +818,53 @@ RecyclerView recyclerView = findViewById(R.id.rvContent);
 LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
 recyclerView.setLayoutManager(linearLayoutManager);
 // 设置适配器
-MyAdapter adapter = new MyAdapter(getApplicationContext(), datas);
+MyAdapter adapter = new MyAdapter(datas);
 recyclerView.setAdapter(adapter);
 ```
 
-此处我们向列表中添加5个项目，它们的类型依次是"1, 1, 2, 1, 2"，显示效果如下图所示：
+上述内容也可以使用Kotlin语言编写：
+
+"TestUIViewTypeKT.kt":
+
+```kotlin
+// 制造测试数据
+val datas: MutableList<ListItemKT> = ArrayList()
+datas.add(Type1VOKT("项目一", "这是类型I"))
+datas.add(Type1VOKT("项目二", "这是类型I"))
+datas.add(Type2VOKT("这是类型II"))
+datas.add(Type1VOKT("项目三", "这是类型I"))
+datas.add(Type2VOKT("这是类型II"))
+for (i in 1..5) {
+    datas.add(Type1VOKT("项目$i"))
+}
+
+// 获取控件实例
+val recyclerView = findViewById<RecyclerView>(R.id.rvContent)
+// 设置布局管理器
+val linearLayoutManager = LinearLayoutManager(this)
+recyclerView.layoutManager = linearLayoutManager
+// 设置适配器
+val adapter = MyAdapterKT(datas)
+recyclerView.adapter = adapter
+```
+
+此处我们向列表中添加5个项目，它们的类型依次是 `1, 1, 2, 1, 2` 。
+
+此时运行示例程序，并查看界面外观：
 
 <div align="center">
 
-![多种类型表项共存示例](./Assets-RecyclerView/加载多种类型表项-多种类型表项共存示例.jpg)
+![多种类型表项共存示例](./Assets_RecyclerView/加载多种表项_多种表项共存示例.jpg)
 
 </div>
 
-# 动态修改表项
-RecyclerView中的内容初始加载完成后，我们还可以动态地向列表中插入新的项或者删除某个已存在的项，此时需要使用RecyclerView适配器提供的"notify()"系列方法，这些方法能够定向刷新受影响的表项，实现提高系统性能的目的，并且带有默认的动画效果，能够提升用户视觉体验。
 
-适配器的"notify()"系列方法只对视图中的表项生效，并且绘制新的表项时依赖数据源的正确性，所以我们在刷新列表之前应当首先更改数据源。
+# 动态更新表项
+RecyclerView中的内容初始加载完成后，我们还可以动态地向列表中插入新的项或者删除某个已存在的项，此时需要使用RecyclerView适配器提供的 `notify()` 系列方法，这些方法能够定向刷新受影响的表项，避免全表重新加载，提高系统性能；并且这些方法提供了默认动画效果，能够提升用户的视觉体验。
+
+适配器的 `notify()` 系列方法将会触发RecyclerView的 `onBindViewHolder()` 回调方法进行界面更新，因此我们在调用这些方法之前应当首先更改数据源。
+
+适配器的 `notify()` 系列方法只对已显示的表项有效，对于未显示的表项则没有效果，因为表项变为可见时RecyclerView将会回调 `onBindViewHolder()` 方法刷新界面。
 
 ## 更新指定表项
 适配器的 `notifyItemChanged(int position)` 方法用于更新指定位置的表项，此方法使得位置为"position"的表项被重新绘制。
