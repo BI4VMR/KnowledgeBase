@@ -860,45 +860,104 @@ recyclerView.adapter = adapter
 
 
 # 动态更新表项
-RecyclerView中的内容初始加载完成后，我们还可以动态地向列表中插入新的项或者删除某个已存在的项，此时需要使用RecyclerView适配器提供的 `notify()` 系列方法，这些方法能够定向刷新受影响的表项，避免全表重新加载，提高系统性能；并且这些方法提供了默认动画效果，能够提升用户的视觉体验。
+RecyclerView中的内容初始加载完成后，我们还可以动态地向列表中插入新的项或者删除某个已存在的项，此时需要使用RecyclerView的Adapter提供的 `notify()` 系列方法，这些方法能够定向刷新受影响的表项，避免全表重新加载，提高系统性能；并且这些方法提供了默认动画效果，能够提升用户的视觉体验。
 
-适配器的 `notify()` 系列方法将会触发RecyclerView的 `onBindViewHolder()` 回调方法进行界面更新，因此我们在调用这些方法之前应当首先更改数据源。
+Adapter的 `notify()` 系列方法将会触发RecyclerView的 `onBindViewHolder()` 回调方法进行界面更新，因此我们在调用这些方法之前应当首先更改数据源。
 
-适配器的 `notify()` 系列方法只对已显示的表项有效，对于未显示的表项则没有效果，因为表项变为可见时RecyclerView将会回调 `onBindViewHolder()` 方法刷新界面。
+Adapter的 `notify()` 系列方法只对已显示的表项有效，对于未显示的表项则没有效果，因为表项不可见时刷新界面没有意义，当表项变为可见时RecyclerView将会回调 `onBindViewHolder()` 方法刷新界面。
 
-## 更新指定表项
-适配器的 `notifyItemChanged(int position)` 方法用于更新指定位置的表项，此方法使得位置为"position"的表项被重新绘制。
+## 更新表项
+Adapter的 `notifyItemChanged(int position)` 方法用于更新指定的表项，此方法使得位置为 `position` 的表项被重新绘制。
+
+我们可以在Adapter中定义以下方法，以便调用者更新表项：
+
+"MyAdapter.java":
 
 ```java
-public void updateItem(int position, ItemBean item) {
+public void updateItem(int position, SimpleVO item) {
     // 更新数据源
-    dataSource.remove(position);
-    dataSource.add(position, item);
+    dataSource.set(position, item);
     // 通知RecyclerView指定表项被更改，刷新控件显示。
     notifyItemChanged(position);
 }
 ```
 
-适配器还提供了 `notifyItemRangeChanged(int position, int count)` 方法，可以批量刷新自"position"开始的"count"个表项。
+上述内容也可以使用Kotlin语言编写：
+
+"MyAdapterKT.kt":
+
+```kotlin
+fun updateItem(position: Int, data: SimpleVOKT) {
+    // 更新数据源
+    mDataSource[position] = data
+    // 通知RecyclerView新的表项被插入，刷新控件显示。
+    notifyItemChanged(position)
+}
+```
+
+Adapter还提供了 `notifyItemRangeChanged(int position, int count)` 方法，它可以批量刷新自 `position` 开始的 `count` 个表项。
 
 ## 插入表项
-适配器的 `notifyItemInserted(int position)` 方法用于向指定位置插入新的表项，若执行操作前"position"所在位置及后继位置已存在表项，则将这些表项都向后移动一位。
+Adapter的 `notifyItemInserted(int position)` 方法用于向 `position` 指定的位置插入新表项，若插入时该位置已存在表项，则将该表项及后继表项都向后移动一位。
+
+我们可以在Adapter中定义以下方法，以便调用者插入表项：
+
+"MyAdapter.java":
 
 ```java
-public void addItem(int position, ItemBean item) {
+public void addItem(int position, SimpleVO item) {
     // 更新数据源
-    dataSource.add(position, item);
+    dataSource.add(position, data);
     // 通知RecyclerView新的表项被插入，刷新控件显示。
     notifyItemInserted(position);
 }
 ```
 
-适配器还提供了 `notifyItemRangeInserted(int position, int count)` 方法用于批量插入新的表项，从"position"开始插入"count"个表项。
+上述内容也可以使用Kotlin语言编写：
+
+"MyAdapterKT.kt":
+
+```kotlin
+fun addItem(position: Int, data: SimpleVOKT) {
+    // 更新数据源
+    mDataSource.add(position, data)
+    // 通知RecyclerView新的表项被插入，刷新控件显示。
+    notifyItemInserted(position)
+}
+```
+
+Adapter还提供了 `notifyItemRangeInserted(int position, int count)` 方法，它表示从 `position` 开始插入 `count` 个表项。
 
 ## 移除表项
-移除指定位置的表项时需要使用 `notifyItemRemoved(int position)` 方法，操作与插入表项类似。
+Adapter的 `notifyItemRemoved(int position)` 方法用于移除 `position` 位置的表项。
 
-适配器还提供了 `notifyItemRangeRemoved(int position, int count)` 方法用于批量移除表项，从"position"开始移除"count"个表项。
+我们可以在Adapter中定义以下方法，以便调用者移除表项：
+
+"MyAdapter.java":
+
+```java
+public void removeItem(int position) {
+    // 更新数据源
+    dataSource.remove(position);
+    // 通知RecyclerView指定的表项被移除，刷新控件显示。
+    notifyItemRemoved(position);
+}
+```
+
+上述内容也可以使用Kotlin语言编写：
+
+"MyAdapterKT.kt":
+
+```kotlin
+fun removeItem(position: Int) {
+    // 更新数据源
+    mDataSource.removeAt(position)
+    // 通知RecyclerView指定的表项被移除，刷新控件显示。
+    notifyItemRemoved(position)
+}
+```
+
+Adapter还提供了 `notifyItemRangeRemoved(int position, int count)` 方法，它表示从 `position` 开始移除 `count` 个表项。
 
 ## 移动表项位置
 将表项从原位置移动到新位置时，可以使用 `notifyItemMoved(int fromPosition, int toPosition)` 方法。
