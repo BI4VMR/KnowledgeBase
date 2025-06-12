@@ -860,6 +860,7 @@ recyclerView.adapter = adapter
 
 
 # 动态更新表项
+## 简介
 RecyclerView中的内容初始加载完成后，我们还可以动态地向列表中插入新的项或者删除某个已存在的项，此时需要使用RecyclerView的Adapter提供的 `notify()` 系列方法，这些方法能够定向刷新受影响的表项，避免全表重新加载，提高系统性能；并且这些方法提供了默认动画效果，能够提升用户的视觉体验。
 
 Adapter的 `notify()` 系列方法将会触发RecyclerView的 `onBindViewHolder()` 回调方法进行界面更新，因此我们在调用这些方法之前应当首先更改数据源。
@@ -960,11 +961,13 @@ fun removeItem(position: Int) {
 Adapter还提供了 `notifyItemRangeRemoved(int position, int count)` 方法，它表示从 `position` 开始移除 `count` 个表项。
 
 ## 移动表项位置
-将表项从原位置移动到新位置时，可以使用 `notifyItemMoved(int fromPosition, int toPosition)` 方法。
+Adapter的 `notifyItemMoved(int fromPosition, int toPosition)` 方法用于将表项从原位置移动到新位置。
+
+"MyAdapter.java":
 
 ```java
 public void moveItem(int srcPosition, int dstPosition) {
-    // 如果源位置与目标位置相同，直接退出当前方法。
+    // 如果源位置与目标位置相同，则无需移动。
     if (srcPosition == dstPosition) {
         return;
     }
@@ -976,8 +979,28 @@ public void moveItem(int srcPosition, int dstPosition) {
 }
 ```
 
+上述内容也可以使用Kotlin语言编写：
+
+"MyAdapterKT.kt":
+
+```kotlin
+fun moveItem(srcPosition: Int, dstPosition: Int) {
+    // 如果源位置与目标位置相同，则无需移动。
+    if (srcPosition == dstPosition) {
+        return
+    }
+
+    // 更新数据源
+    Collections.swap(mDataSource, srcPosition, dstPosition)
+    // 通知RecyclerView表项被移动，刷新控件显示。
+    notifyItemMoved(srcPosition, dstPosition)
+}
+```
+
 ## 重新加载列表
-如果整个数据源发生大范围的变化，我们可以使用 `notifyDataSetChanged()` 方法，刷新所有表项。此方法的性能最低，并且没有动画效果；代码中出现此方法时编辑器将会产生警告，如果我们确实需要调用它，可以添加SuppressLint注解抑制警告。
+如果数据源发生大范围变化，我们可以使用Adapter的 `notifyDataSetChanged()` 方法，刷新所有表项。此方法的性能最低，并且没有动画效果；代码中出现此方法时编译器将会产生警告，如果业务确实需要调用它，我们可以添加SuppressLint注解抑制警告。
+
+"MyAdapter.java":
 
 ```java
 @SuppressLint("NotifyDataSetChanged")
@@ -991,10 +1014,33 @@ public void reloadItem(List<ItemBean> newDatas) {
 }
 ```
 
-# 局部刷新
-如果列表项拥有较为复杂的布局，且某些控件状态会频繁改变，此时我们可以通过局部刷新的方式，精确更新指定的控件，避免频繁重绘整个表项视图带来的性能开销与画面闪烁。
+上述内容也可以使用Kotlin语言编写：
 
-RecyclerView的适配器中有一个方法： `onBindViewHolder(ViewHolder holder, int position, List<Object> payloads)` ，其中的参数"payloads"是一个不为空的列表，如果该列表中存在元素，说明此时需要进行局部更新，我们可以将元素取出并据此更新控件；如果该列表中没有元素，说明此时不必进行局部更新，我们可以调用普通的 `onBindViewHolder()` 方法。
+"MyAdapterKT.kt":
+
+```kotlin
+@SuppressLint("NotifyDataSetChanged")
+fun reloadItems(newDatas: List<SimpleVOKT>) {
+    // 清空数据源
+    mDataSource.clear()
+    // 重新填充数据源
+    mDataSource.addAll(newDatas)
+    // 通知RecyclerView数据源改变
+    notifyDataSetChanged()
+}
+```
+
+
+# 局部刷新
+虽然Adapter的 `notifyItemChanged(int position)` 方法能够更新表项，但它会使表项的所有子控件重新与数据项绑定，导致整个表项画面闪烁，降低用户体验。有时我们只需要精确地更新子控件的部分属性，此时可以使用局部刷新机制，解决画面闪烁的问题并提高性能。
+
+RecyclerView的Adapter中有一个 `onBindViewHolder(ViewHolder holder, int position, List<Object> payloads)` 回调方法，第三参数 `payloads` 是一个不为空值的列表，如果该列表中存在元素，说明此时表项需要局部更新，我们可以将元素取出并据此更新子控件；如果该列表中没有元素，说明此时表项需要整体更新，我们可以调用具有两个参数的 `onBindViewHolder()` 方法。
+
+Adapter的 `notifyItemChanged(int position, Object payload)` 方法用于触发局部更新，第一参数 `position` 表示目标表项位置，第二参数 `payload` 表示更新指令，它的数据类型没有限制，因此我们可以自由地定义更新规则。
+
+🔴 示例一：。
+
+在本示例中，【此处填写示例背景】。
 
 此功能的基本用法如下文代码片段所示：
 
