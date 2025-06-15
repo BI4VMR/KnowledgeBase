@@ -167,3 +167,11 @@ protected void onCreate(Bundle savedInstanceState) {
 ```
 
 上述日志表明DstActivity从Parcel容器中读取到了数据，并且成功地反序列化为Book对象。
+
+
+参数不一致
+注意read和write方法中每个参数是否一一对应
+
+12:04:21.928 32620-32646 System.err                 W  java.lang.IllegalStateException
+12:04:21.928 32620-32646 System.err                 W  	at android.os.Parcel.readException(Parcel.java:2021)
+12:04:21.928 32620-32646 System.err                 W  	at android.os.Parcel.readException(Parcel.java:1959)

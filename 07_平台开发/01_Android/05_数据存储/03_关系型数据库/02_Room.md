@@ -641,7 +641,31 @@ data class Student(
 }
 ```
 
-## 数据访问对象类
+### 数据类型映射
+
+<div align="center">
+
+| Java数据类型 | SQLite数据类型 |
+| :----------: | :------------: |
+|    `byte`    |   `INTEGER`    |
+|   `short`    |   `INTEGER`    |
+|    `int`     |   `INTEGER`    |
+|    `long`    |   `INTEGER`    |
+|  `boolean`   |   `INTEGER`    |
+|   `float`    |     `REAL`     |
+|   `double`   |     `REAL`     |
+|    `char`    |     `TEXT`     |
+|   `String`   |     `TEXT`     |
+|   `short`    |   `INTEGER`    |
+|   `byte[]`   |     `BLOB`     |
+
+</div>
+
+`boolean` 也是整数， 0（false）和 1（true）。
+
+
+
+## DAO类
 ### 定义DAO类
 `@Dao` 注解用于定义数据访问类，可以被放置在抽象类或接口上。在程序编译阶段，注解处理器将会根据其他注解信息自动生成抽象方法的具体实现。
 

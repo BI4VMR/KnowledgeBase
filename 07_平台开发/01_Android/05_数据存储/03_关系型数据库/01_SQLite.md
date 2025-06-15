@@ -7,6 +7,7 @@ SQLite使用C语言编写，运行效率较高，并且支持多种平台。Andr
 
 - [🔗 示例工程：SQLite](https://github.com/BI4VMR/Study-Android/tree/master/M05_Storage/C03_SQL/S01_SQLite)
 
+
 # 基本应用
 ## 创建数据库
 下文将以学生信息管理系统为例，演示Android SDK中SQLite相关接口的基本使用方法。
@@ -102,6 +103,8 @@ SQLiteOpenHelper还有一个 `getReadableDatabase()` 方法，首先尝试以“
 当我们调用 `getWritableDatabase()` 或 `getReadableDatabase()` 方法访问数据库时，若数据库文件不存在，系统将会回调 `onCreate(SQLiteDatabase db)` 方法，唯一参数 `db` 即数据库实例，我们可以通过它创建表结构并写入初始数据；若数据库文件已存在，则系统不会回调该方法。
 
 回调方法 `onUpgrade()` 用于执行数据库升级逻辑，此处为首次创建数据库，因此我们书写空实现即可。
+
+`execSQL()` 方法可以执行任意SQL语句，但不支持分号分隔的多条语句，这种语句只有第一个分号前的语句会被执行，后续语句都会被忽略，我们可以根据分号拆分为多个语句后重复调用此方法执行。
 
 ## 插入数据
 我们首先需要创建StudentDBHelper实例，并调用 `getDB()` 方法获取SQLiteDatabase实例，然后使用该实例进行增删改查操作。
