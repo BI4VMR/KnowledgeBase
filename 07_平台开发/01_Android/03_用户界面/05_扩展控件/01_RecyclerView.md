@@ -1280,7 +1280,7 @@ btChange2.setOnClickListener { _ ->
 }
 ```
 
-第一个按钮只更新表项的标题，因此我们复制原表项并修改标题，然后通过 `FLAG_TITLE` 标志位指明需要更新标题；第二个按钮同时更新了标题和说明文本，因此我们使用或运算同时设置了 `FLAG_TITLE` 与 `FLAG_INFO` 标志位。
+第一个按钮只更新表项的标题，因此我们复制原表项并修改标题，然后通过 `FLAG_TITLE` 标志位指明需要更新标题；第二个按钮同时更新了标题和说明文本，因此我们传入新的数据项，并使用或运算同时设置 `FLAG_TITLE` 与 `FLAG_INFO` 标志位。
 
 
 # DiffUtil
@@ -1407,12 +1407,16 @@ fun updateData(newDatas: List<ItemVOKT>) {
 
 `calculateDiff()` 方法默认会检测新旧列表的表项是否发生了移动，如果列表中已有表项的位置总是固定不变，或者新旧表项以相同的规则排序，我们可以调用 `calculateDiff(DiffUtil.Callback cb, boolean detectMoves)` 方法，并将第二参数 `detectMoves` 设为 `false` 关闭移动检测功能，提升计算速度。
 
-如果列表数据量较大，DiffUtil的计算过程可能会持续较长时间，此时我们应当将计算操作放置在子线程中，得到结果后在主线程中调用 `dispatchUpdatesTo()` 更新视图。
-
 ## 局部刷新
-DiffUtil的Callback中拥有 `getChangePayload()` 方法，如果我们不实现它，DiffUtil检测到表项相同但数据发生变化时，只会刷新整个表项。当我们实现此方法后，DiffUtil可以计算出发生变化的属性，通过返回值传递给适配器，实现表项的局部刷新。
+在前文“示例五”中，我们只实现了DiffUtil.Callback的两个抽象方法，此时若检测到表项发生变化，DiffUtil会调用Adapter的 `notifyItemChanged(int position)` 方法刷新整个表项，这种方式性能较低，不适合用来构建具有复杂布局的列表。
 
-我们在前文“示例五”的基础上进行扩展，为其添加局部刷新功能。
+DiffUtil.Callback的 `getChangePayload()` 方法用于实现局部刷新，当 `areContentsTheSame()` 方法返回 `false` 时，DiffUtil将会回调 `Object getChangePayload(int oldItemPosition, int newItemPosition)` 方法，该方法的返回值将作为 `payload` 参数被传递给Adapter的 `notifyItemChanged(int position, Object payload)` 方法，我们可以在此处编写检测表项局部变化的逻辑代码，配合Adapter实现局部刷新功能。
+
+🟣 示例六：使用DiffUtil实现局部刷新。
+
+在本示例中，我们编写自定义DiffUtil.Callback，实现表项的局部刷新。
+
+第一步，我们在前文“示例五”的基础上进行扩展，为其添加局部刷新功能。
 
 "MyDiffCallback.java":
 
@@ -1455,6 +1459,13 @@ override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any {
     return flags
 }
 ```
+
+第二步，我们再次运行示例程序，并通过日志观察带有Payload的 `onBindViewHolder()` 方法是否接收到Payload参数。
+
+## 异步计算
+<!-- TODO -->
+如果列表数据量较大，DiffUtil的计算过程可能会持续较长时间，此时我们应当将计算操作放置在子线程中，得到结果后在主线程中调用 `dispatchUpdatesTo()` 更新视图。
+
 
 
 # 缓存与复用机制
