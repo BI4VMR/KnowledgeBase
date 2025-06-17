@@ -29,7 +29,7 @@ dependencies {
 # 基本应用
 下文示例展示了RecyclerView的基本使用方法。
 
-🔴 示例一：使用RecyclerView展示数据。
+🔴 示例一：使用RecyclerView展示列表数据。
 
 在本示例中，我们创建RecyclerView相关的类与布局文件，实现一个简单的列表。
 
@@ -1290,7 +1290,7 @@ DiffUtil是RecyclerView提供的辅助工具，它可以对比新旧数据源的
 ## 基本应用
 若要使用DiffUtil，我们首先需要创建一个自定义类并继承DiffUtil.Callback，在该类中配置新旧表项的对比规则。
 
-🔵 示例五：使用DiffUtil实现差异对比。
+🔵 示例五：通过DiffUtil实现差异对比。
 
 在本示例中，我们编写自定义DiffUtil.Callback，实现自动差异对比与刷新功能。
 
@@ -1412,7 +1412,7 @@ fun updateData(newDatas: List<ItemVOKT>) {
 
 DiffUtil.Callback的 `getChangePayload()` 方法用于实现局部刷新，当 `areContentsTheSame()` 方法返回 `false` 时，DiffUtil将会回调 `Object getChangePayload(int oldItemPosition, int newItemPosition)` 方法，该方法的返回值将作为 `payload` 参数被传递给Adapter的 `notifyItemChanged(int position, Object payload)` 方法，我们可以在此处编写检测表项局部变化的逻辑代码，配合Adapter实现局部刷新功能。
 
-🟣 示例六：使用DiffUtil实现局部刷新。
+🟣 示例六：通过DiffUtil实现局部刷新。
 
 在本示例中，我们编写自定义DiffUtil.Callback，实现表项的局部刷新。
 
@@ -1463,9 +1463,99 @@ override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any {
 第二步，我们再次运行示例程序，并通过日志观察带有Payload的 `onBindViewHolder()` 方法是否接收到Payload参数。
 
 ## 异步计算
-<!-- TODO -->
-如果列表数据量较大，DiffUtil的计算过程可能会持续较长时间，此时我们应当将计算操作放置在子线程中，得到结果后在主线程中调用 `dispatchUpdatesTo()` 更新视图。
+在前文章节中，我们直接使用主线程调用DiffUtil的 `calculateDiff()` 方法计算差异，这在规模较小的列表中没有问题，但如果列表规模较大，计算过程可能会花费较长的时间，导致界面卡顿。为了解决此类问题，Google官方提供了AsyncListDiffer工具，它接管了数据源，开发者提交新的列表后将在子线程中计算差异，并在计算完毕后回到主线程更新界面。
 
+AsyncListDiffer的常用方法如下文列表所示：
+
+- `AsyncListDiffer(@NonNull RecyclerView.Adapter adapter, @NonNull DiffUtil.ItemCallback<T> diffCallback)` : 构造方法，第一参数 `adapter` 用于绑定Adapter；第二参数 `diffCallback` 用于设置差异对比规则，泛型 `T` 用于指明数据源列表元素的类型。
+- `List<T> getCurrentList()` : 获取当前列表。
+- `submitList(@Nullable List<T> newList)` : 提交新的列表。AsyncListDiffer不支持单独修改某个表项，因此无论是新增、修改还是删除表项都需要调用此方法，由DiffUtil自行判断新旧列表的差异。
+- `submitList(@Nullable final List<T> newList, @Nullable final Runnable commitCallback)` : 提交新的列表，并在计算完毕并调用 `dispatchUpdatesTo()` 方法后执行 `commitCallback` 中的语句。
+
+🟣 示例七：通过AsyncListDiffer实现异步差异计算。
+
+在本示例中，我们对前文“示例六”进行改造，使用AsyncListDiffer替换原本的差异对比方案。
+
+"MyAdapter.java":
+
+```java
+public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
+    private final AsyncListDiffer<ItemVO> differ = new AsyncListDiffer<>(this, new DiffUtil.ItemCallback<>() {
+
+        @Override
+        public boolean areItemsTheSame(@NonNull ItemVO oldItem, @NonNull ItemVO newItem) {
+            return oldItem.equals(newItem);
+        }
+
+        @Override
+        public boolean areContentsTheSame(@NonNull ItemVO oldItem, @NonNull ItemVO newItem) {
+            return oldItem.equals(newItem);
+        }
+
+        @NonNull
+        @Override
+        public Object getChangePayload(@NonNull ItemVO oldItem, @NonNull ItemVO newItem) {
+            int flags = 0;
+            if (!oldItem.getTitle().equals(newItem.getTitle())) {
+                flags |= UpdateFlags.FLAG_TITLE;
+            }
+            if (!oldItem.getInfo().equals(newItem.getInfo())) {
+                flags |= UpdateFlags.FLAG_INFO;
+            }
+
+            return flags;
+        }
+    });
+
+    // 使用DiffUtil更新列表
+    public void submitList(List<ItemVO> newDatas) {
+        differ.submitList(newDatas);
+    }
+}
+```
+
+上述内容也可以使用Kotlin语言编写：
+
+"MyAdapterKT.kt":
+
+```kotlin
+class MyAdapterKT : RecyclerView.Adapter<MyAdapterKT.MyViewHolder>() {
+
+    private val differ: AsyncListDiffer<ItemVOKT> = AsyncListDiffer(this, object : DiffUtil.ItemCallback<ItemVOKT>() {
+
+        override fun areItemsTheSame(oldItem: ItemVOKT, newItem: ItemVOKT): Boolean {
+            return oldItem == newItem
+        }
+
+        override fun areContentsTheSame(oldItem: ItemVOKT, newItem: ItemVOKT): Boolean {
+            return oldItem == newItem
+        }
+
+        override fun getChangePayload(oldItem: ItemVOKT, newItem: ItemVOKT): Any {
+            var flags = 0
+            if (oldItem.title != newItem.title) {
+                flags = flags or UpdateFlagsKT.FLAG_TITLE
+            }
+            if (oldItem.info != newItem.info) {
+                flags = flags or UpdateFlagsKT.FLAG_INFO
+            }
+
+            return flags
+        }
+    })
+
+    override fun getItemCount(): Int {
+        return differ.currentList.size
+    }
+
+    // 使用DiffUtil更新列表
+    fun submitList(newDatas: List<ItemVOKT>) {
+        differ.submitList(newDatas)
+    }
+}
+```
+
+由于AsyncListDiffer内置数据源，因此我们将Adapter中的全局变量 `dataSource` 移除了，所有获取数据源的语句需要替换成 `differ.getCurrentList()` ；所有修改数据源的语句需要替换成 `differ.submitList()` 。
 
 
 # 缓存与复用机制
