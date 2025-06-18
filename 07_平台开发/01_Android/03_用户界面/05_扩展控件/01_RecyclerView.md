@@ -1819,3 +1819,20 @@ recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
 
 ### 解决方案
 我们可以调用RecyclerView的 `setWillNotDraw(boolean b)` 方法，传入 `false` 关闭绘图优化，确保滚动条被正确绘制。
+
+
+<!-- 
+`setHasStableIds(boolean hasStableIds)` 方法用于告知 `RecyclerView.Adapter` 其数据集中的每个 item 是否都有唯一且稳定的 ID。
+
+**作用说明：**
+- 如果你调用 `setHasStableIds(true)`，则需要重写 `getItemId(int position)` 方法，返回每个 item 的唯一标识（通常是数据库主键或唯一字段）。
+- 这样做的好处是：当数据发生变化时，`RecyclerView` 能更智能地处理动画和状态恢复（如选中状态、展开状态等），因为它能通过 ID 跟踪 item，而不是仅靠位置。
+- 如果为 `false`（默认），则 `RecyclerView` 只通过 item 的位置来识别 item，无法区分内容相同但位置变化的 item。
+
+**典型用法：**
+- 数据有唯一主键时建议设为 `true`，并实现 `getItemId`。
+- 需要高效的动画和状态保持时建议开启。
+
+**注意：**
+- `setHasStableIds` 必须在 adapter 还未注册观察者（即未绑定到 RecyclerView）前调用，否则会抛异常。
+-->
