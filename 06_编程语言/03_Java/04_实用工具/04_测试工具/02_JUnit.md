@@ -392,15 +392,16 @@ JUnit 4与JUnit 5提供的注解对比如下文表格所示：
 
 <div align="center">
 
-|       序号        |                          摘要                           |
-| :---------------: | :-----------------------------------------------------: |
-| [案例一](#案例一) | 在Gradle命令行中执行测试任务时，JUnit 5的用例出现错误。 |
+|       序号        |                          摘要                          |
+| :---------------: | :----------------------------------------------------: |
+| [案例一](#案例一) | 在Gradle命令行中执行测试任务时，JUnit 5用例出现异常。  |
+| [案例二](#案例二) | 在Gradle命令行中执行测试任务时，Gradle提示找不到用例。 |
 
 </div>
 
 ## 案例一
 ### 问题描述
-在命令行中使用 `./gradlew test` 命令执行测试任务时，JUnit 5的用例出现错误，相关信息为：
+在命令行中使用 `./gradlew test` 命令执行测试任务时，JUnit 5用例出现错误，相关信息为：
 
 ```text
 org.gradle.api.internal.tasks.testing.TestSuiteExecutionException: Could not complete execution for Gradle Test Executor 4.
@@ -429,3 +430,36 @@ dependencies {
 
 ### 解决方案
 移除官方示例代码的 `junit-jupiter` 依赖项，使用BOM明确配置 `junit-jupiter-engine` 与 `junit-platform-launcher` 的版本，详情可参考前文章节： [🧭 JUnit 5 - 环境配置](#环境配置) 。
+
+## 案例二
+### 问题描述
+在命令行中使用 `./gradlew test` 命令执行测试任务时，Gradle提示找不到用例，相关信息为：
+
+```text
+> Task :M01_Test:testDebugUnitTest FAILED
+FAILURE: Build failed with an exception.
+* What went wrong:
+Execution failed for task ':M01_Test:testDebugUnitTest'.
+> No tests found for given includes: [net.bi4vmr.study.TestBase](--tests filter)
+```
+
+### 问题分析
+在本案例中，工程使用了Java与Kotlin两种语言， `test` 目录下的 `java` 和 `kotlin` 目录均可放置两种源码，不影响编译结果。
+
+```text
+<模块根目录>
+└── src
+    └── test
+        ├── java
+        │   └── net.bi4vmr.study
+        │       └── JavaTest.java
+        └── kotlin
+            └── net.bi4vmr.study
+                ├── JavaTest2.java
+                └── KTTest.kt
+```
+
+问题在于Gradle只识别 `java` 目录下的Java测试代码，如果 `.java` 文件出现在 `kotlin` 目录下，虽然编译不会报错，却不会被Gradle识别。
+
+### 解决方案
+将Java测试代码与Kotlin测试代码分别放置在各自的目录内，不要混合放置，例如我们应当将本案例中的 `JavaTest2.java` 文件移动到 `java` 目录中。
