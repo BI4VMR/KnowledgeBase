@@ -129,10 +129,10 @@ JUnit提供的断言方法如下文列表所示：
 - `Assert.assertNotEquals(int expected, int actual)` : 判断期望值 `expected` 是否与实际值 `actual` 不相等。判等依据与  `assertEquals()` 方法相同。
 - `Assert.assertSame(Object expected, Object actual)` : 判断期望值 `expected` 与实际值 `actual` 的内存地址是否相同。
 - `Assert.assertNotSame(Object expected, Object actual)` : 判断期望值 `expected` 与实际值 `actual` 的内存地址是否不同。
-- `Assert.assertNull(Object object)` : 判断传入值 `object` 是否为空值。
-- `Assert.assertNotNull(Object object)` : 判断传入值 `object` 是否为非空值。
-- `Assert.assertTrue(boolean condition)` : 判断传入值 `condition` 是否为真。
-- `Assert.assertFalse(boolean condition)` : 判断传入值 `condition` 是否为假。
+- `Assert.assertNull(Object object)` : 判断输入值 `object` 是否为空值。
+- `Assert.assertNotNull(Object object)` : 判断输入值 `object` 是否为非空值。
+- `Assert.assertTrue(boolean condition)` : 判断输入值 `condition` 是否为真。
+- `Assert.assertFalse(boolean condition)` : 判断输入值 `condition` 是否为假。
 - `Assert.assertArrayEquals(int expecteds, int actuals)` : 判断期望数组 `expecteds` 是否与实际数组 `actuals` 内容相等。每种数据类型都有对应的 `assertArrayEquals()` 重载方法可供选择。
 
 上述方法都有一个能够汇报失败消息的版本，例如： `assertTrue(boolean condition)` 与 `assertTrue(String message, boolean condition)` 对应。这些消息会在断言失败时显示在控制台或测试报告中，以便开发者了解详情。
@@ -140,7 +140,7 @@ JUnit提供的断言方法如下文列表所示：
 如果JUnit提供的断言方法都无法满足需求，我们还可以自行编写断言逻辑，并在条件不满足时调用 `Assert.fail()` 方法抛出 `AssertionError` 异常。
 
 ## 检测异常
-默认情况下，如果被测方法抛出了异常，JUnit就会认为用例执行失败。有时被测方法在某些条件下应当抛出指定的异常，我们可以在 `@Test` 注解中设置 `expected` 属性进行检测。
+默认情况下，如果被测方法抛出了异常，JUnit就会认为用例执行失败。如果我们期望被测方法在某些条件下抛出指定的异常，可以在 `@Test` 注解中设置 `expected=<期望异常的Class>` 属性进行检测。
 
 🟠 示例二：判断被测方法是否抛出指定异常。
 

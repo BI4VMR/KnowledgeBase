@@ -521,16 +521,6 @@ Index:[2] Value:[系统找不到指定的路径。]
 
 <!-- TODO
 
-2.3.7 mock 静态类
-
-和 Mockito 差不多： mockkStatic(StaticClass::class)
-2.3.8 mock Object类
-
-Kotlin 中 Object 类使用较多，而使用 Mockito 时不好对其进行mock，而 mockk 自然是完全支持啦，它通过下面语句mock一个object类：
-
-mockkObject(ObjectClass)
-every {...}
-
 如果你要验证、执行 object类里面的私有方法，你需要在mock的时候指定一个值 recordPrivateCalls， 它默认是false：
 
 mockkObject(ObjectClass, recordPrivateCalls = true)
