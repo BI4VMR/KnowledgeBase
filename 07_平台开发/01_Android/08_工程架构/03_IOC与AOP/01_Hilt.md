@@ -12,20 +12,19 @@
 
 在本示例中，【此处填写示例背景】。
 
-"<此处填写【文件名称】>":
+"MyApplication.java":
 
-```text
-TODO 此处填写【代码内容】
-
-// 此处已省略部分代码...
+```java
+@HiltAndroidApp
+public class MyApplication extends Application {
+}
 ```
 
-上述内容也可以使用【第二语言】语言编写：
+上述内容也可以使用Kotlin语言编写：
 
-"<此处填写【文件名称】>":
+"MyApplicationKT.kt":
 
 ```text
-TODO 此处填写【代码内容】
-
-// 此处已省略部分代码...
+@HiltAndroidApp
+class MyApplicationKT : Application()
 ```
