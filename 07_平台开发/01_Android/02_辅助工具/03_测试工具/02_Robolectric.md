@@ -1,7 +1,7 @@
 # 简介
-虽然Android Test环境提供了Android SDK支持，但是其中的测试代码需要在模拟器或实体机中运行，速度缓慢且消耗大量硬件资源。有时我们希望只针对业务逻辑进行测试，不关心与设备特性强关联的接口，此时可以选用Robolectric工具。
+虽然仪器化测试环境提供了Android SDK支持，但是其中的测试代码需要在模拟器或实体机中运行，速度缓慢且消耗大量硬件资源。有时我们希望只针对业务逻辑进行测试，不关心与设备特性强关联的接口，此时可以选用Robolectric工具。
 
-Robolectric通过一系列JAR包模拟Android SDK中的接口，使得应用程序可以在标准的JVM中运行，不再依赖Android特有的JVM。当项目配置了Robolectric之后，我们便可通过Java Test环境测试Android业务代码以及简单的UI逻辑。
+Robolectric通过一系列JAR包模拟Android SDK中的接口，使得应用程序可以在标准的JVM中运行，不再依赖Android特有的JVM。当项目配置了Robolectric之后，我们便可通过本地测试环境测试Android业务代码以及简单的UI逻辑。
 
 本章的相关知识可以参考以下链接：
 
@@ -66,7 +66,7 @@ dependencies {
 }
 ```
 
-在默认配置中，Java Test所在的SourceSet无法访问Android资源，由于后续我们需要在Java Test中读取资源，此处应当在 `unitTests {}` 小节中添加 `includeAndroidResources = true` 配置项。
+在默认配置中，本地测试所在的SourceSet无法访问Android资源，由于后续我们需要在本地测试中读取资源，此处应当在 `unitTests {}` 小节中添加 `includeAndroidResources = true` 配置项。
 
 第二步，我们编写测试代码，获取Robolectric提供的模拟Application，并获取文本资源。
 
@@ -132,7 +132,7 @@ class TestBase {
 
 
 <!-- TODO
-
+## 实用技巧
 Robolectric会在测试用例运行过程中下载 `@Config` 注解所指定SDK版本对应的模拟文件，这些文件体积较大，如果网络环境不佳可能会导致运行缓慢。
 
 首先这些文件是存储在本地Maven仓库中的 `~/.m2/repository` ，不使用Gradle缓存目录，因此在项目的Gradle配置文件中添加镜像地址无效。
@@ -188,3 +188,53 @@ android {
 ```
 
 -->
+
+# 疑难解答
+## 索引
+
+<div align="center">
+
+|       序号        |                      摘要                       |
+| :---------------: | :---------------------------------------------: |
+| [案例一](#案例一) | 在本地测试中，构造ComponentName实例得到了空值。 |
+
+</div>
+
+## 案例一
+### 问题描述
+在本地测试中，构造ComponentName实例得到了空值。
+
+```kotlin
+@Test
+fun test() {
+    val cmpName = ComponentName("net.bi4vmr.test", "net.bi4vmr.test.MainActivity")
+    println("ComponentName:[$cmpName]")
+}
+```
+
+以常理推断，ComponentName的构造方法执行成功且没有错误， `cmpName` 变量是不可能为空值的，但上述代码运行时控制台输出内容为：
+
+```text
+ComponentName:[null]
+```
+
+### 问题分析
+在非Robolectric环境中，若本地测试代码调用了Android SDK，但未设置任何Mock，则会出现 `RuntimeException: Method toString in android.content.ComponentName not mocked.` 等异常信息。
+
+在本案例中，我们配置了Robolectric环境，但没有为当前测试类添加 `@RunWith(RobolectricTestRunner::class)` 注解，导致构造ComponentName实例的行为返回了空值，且Robolectric不会显示任何报错信息，对我们排查问题造成了误导。
+
+### 解决方案
+如果测试用例访问了Android SDK，一定要在类上添加 `@RunWith(RobolectricTestRunner::class)` 注解，切勿遗漏。
+
+```kotlin
+// 不要遗忘Robolectric初始化注解！
+@RunWith(RobolectricTestRunner::class)
+class TestBaseKT {
+
+    @Test
+    fun test() {
+        val cmpName = ComponentName("net.bi4vmr.test", "net.bi4vmr.test.MainActivity")
+        println("ComponentName:[$cmpName]")
+    }
+}
+```
