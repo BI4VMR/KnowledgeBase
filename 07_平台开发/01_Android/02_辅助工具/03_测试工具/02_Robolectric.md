@@ -131,17 +131,15 @@ class TestBase {
 在初始化方法 `setup()` 中，我们可以调用 `RuntimeEnvironment.getApplication()` 获取Robolectric提供的模拟Application实例，然后就可以在测试代码中访问Android相关接口了。
 
 
-<!-- TODO
-## 实用技巧
-Robolectric会在测试用例运行过程中下载 `@Config` 注解所指定SDK版本对应的模拟文件，这些文件体积较大，如果网络环境不佳可能会导致运行缓慢。
+# 实用技巧
+## 配置Maven镜像
+Robolectric会在测试用例执行前下载 `@Config` 注解所指定的环境模拟组件，这些文件体积较大，网络环境不佳时会导致运行困难。
 
-首先这些文件是存储在本地Maven仓库中的 `~/.m2/repository` ，不使用Gradle缓存目录，因此在项目的Gradle配置文件中添加镜像地址无效。
+我们可以将其他PC上已经下载完成的组件复制到目标设备上，或者配置Maven镜像服务器解决网络问题，详细信息可参考相关网页： [🔗 Robolectric Blog - 改进下载速度](https://robolectric.org/blog/2023/11/11/improving-android-all-downloading/) 。
 
-https://robolectric.org/blog/2023/11/11/improving-android-all-downloading/
+Robolectric的环境模拟组件存储在本地Maven仓库中，默认路径为： `~/.m2/repository/org/robolectric/android-all-instrumented/` ，而不是Gradle缓存目录，因此我们在Gradle配置文件中所设置的仓库镜像不会生效。我们可以从其他设备上复制环境模拟组件到目标设备，保持相同的目录结构即可生效。
 
-我们可以通过SystemProperty指明Robolectric下载模拟文件所使用的仓库，或者配置代理。
-
-[🧭 Gradle - 镜像仓库](../../../../04_软件技巧/06_软件开发/02_编译构建/02_Gradle/04_依赖管理.md#镜像仓库)
+除了直接复制文件之外，我们还可以通过配置项使Robolectric从Maven镜像服务器拉取组件，或者通过代理服务器访问网络，以下两种方式通常只需配置一种即可：
 
 "build.gradle":
 
@@ -187,7 +185,8 @@ android {
 }
 ```
 
--->
+知名的Maven镜像仓库及地址可参考相关章节： [🧭 Gradle - 镜像仓库](../../../../04_软件技巧/06_软件开发/02_编译构建/02_Gradle/04_依赖管理.md#镜像仓库) 。
+
 
 # 疑难解答
 ## 索引
