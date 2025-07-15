@@ -133,13 +133,11 @@ class TestBase {
 
 # 实用技巧
 ## 配置Maven镜像
-Robolectric会在测试用例执行前下载 `@Config` 注解所指定的环境模拟组件，这些文件体积较大，网络环境不佳时会导致运行困难。
+Robolectric会在测试用例执行前从Maven中心仓库下载其所需的环境模拟组件，这些文件体积较大，网络环境不佳时会导致运行困难。为了适应多种网络环境，Robolectric提供了一些配置项，详细信息可参考官方论坛： [🔗 Robolectric Blog - 改进下载速度](https://robolectric.org/blog/2023/11/11/improving-android-all-downloading/) 。
 
-我们可以将其他PC上已经下载完成的组件复制到目标设备上，或者配置Maven镜像服务器解决网络问题，详细信息可参考相关网页： [🔗 Robolectric Blog - 改进下载速度](https://robolectric.org/blog/2023/11/11/improving-android-all-downloading/) 。
+Robolectric的环境模拟组件存储在本地Maven仓库中，默认路径为： `~/.m2/repository/org/robolectric/android-all-instrumented/` ，而不是Gradle缓存目录，因此我们在Gradle配置文件中所设置的仓库镜像不会生效。我们可以从其他设备上复制已有的环境模拟组件到目标设备，保持相同的目录结构即可生效。
 
-Robolectric的环境模拟组件存储在本地Maven仓库中，默认路径为： `~/.m2/repository/org/robolectric/android-all-instrumented/` ，而不是Gradle缓存目录，因此我们在Gradle配置文件中所设置的仓库镜像不会生效。我们可以从其他设备上复制环境模拟组件到目标设备，保持相同的目录结构即可生效。
-
-除了直接复制文件之外，我们还可以通过配置项使Robolectric从Maven镜像服务器拉取组件，或者通过代理服务器访问网络，以下两种方式通常只需配置一种即可：
+除了直接复制文件之外，我们还可以通过配置项使Robolectric从Maven镜像服务器下载组件，或者通过代理服务器访问网络，以下两种方式通常只需配置一种即可：
 
 "build.gradle":
 
