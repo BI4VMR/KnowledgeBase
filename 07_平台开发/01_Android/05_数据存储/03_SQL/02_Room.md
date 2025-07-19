@@ -761,11 +761,11 @@ fun insertStudents(students: List<StudentKT>): List<Long>
 fun insertStudents(monitor: StudentKT, students: List<StudentKT>)
 ```
 
-插入操作将会返回新记录在二维表中的 `RowID` ，如果参数为单个实体，则返回值类型为 `long` ；如果参数为多个实体，则返回值类型可以为 `long[]` 或 `List<Long>` ；如果我们并不关心 `RowID` ，也可以将返回值类型设置为 `void` 。
+插入操作将会返回新记录在二维表中的RowID，如果参数为单个实体，则返回值类型为 `long` ；如果参数为多个实体，则返回值类型可以为 `long[]` 或 `List<Long>` ；如果我们并不关心RowID，也可以将返回值类型设置为 `void` 。
 
 > ⚠️ 警告
 >
-> SQLite中的 `RowID` 不一定等同于主键，我们在使用该数值前需要注意鉴别，此处省略具体描述，详见相关章节： [🧭 SQLite - "RowID"字段](../../../../04_软件技巧/04_数据存储/03_关系型数据库/01_SQLite/02_基础应用.md#rowid字段) 。
+> SQLite中的RowID不一定等同于主键，我们在使用该数值前需要注意鉴别，此处省略具体描述，详见相关章节： [🧭 SQLite - "RowID"字段](../../../../04_软件技巧/04_数据存储/03_关系型数据库/01_SQLite/02_基础应用.md#rowid字段) 。
 
 > 🚩 提示
 >
