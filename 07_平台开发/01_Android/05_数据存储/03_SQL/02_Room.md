@@ -772,6 +772,12 @@ fun insertStudents(monitor: StudentKT, students: List<StudentKT>)
 > 由 `@Insert` 等Room注解生成的插入、修改与删除方法支持事务，我们无需担心操作多条数据时被其他线程干扰。
 
 
+
+# 事务支持
+runInTransaction
+调用suspend方法且包含事务时，必须使用 `DB.withTransaction {}` ，因为SQLite事务为单线程，如果协程调度过程中切换了线程事务会失效。
+
+
 # 版本迁移
 Room对SQLite API进行了封装，我们无需在SQLiteOpenHelper类的 `onUpgrade()` 方法中编写各个版本的判断与升级逻辑，应当转而使用Migration类。
 
