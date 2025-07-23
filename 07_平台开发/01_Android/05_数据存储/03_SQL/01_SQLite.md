@@ -485,7 +485,7 @@ try {
 
     // 将2号学生的书本数量减1
     ContentValues values2 = new ContentValues();
-    values1.put("book_count", 9);
+    values2.put("book_count", 9);
     dbHelper.getDB().update("student_info", values2, "student_id = 2", null);
 
     // 标记事务已完成
@@ -562,26 +562,97 @@ try {
 
 除了 `beginTransaction()` 方法外，SQLiteDatabase还提供了 `beginTransactionWithListener(SQLiteTransactionListener transactionListener)` 方法，能够回调事务执行结果给监听者，我们可以根据需要选择。
 
-<!-- TODO
 ## 并发
-在前文“示例六”中，我们使用了SQLiteDatabase的 `beginTransaction()` 方法开启事务，对应的事务模式为 `EXCLUSIVE` ，当前数据库连接将会锁定数据库，其他数据库连接所发起的读请求将会排队等待，直到当前事务执行完毕并释放锁再恢复运行；其他数据库连接所发起的写请求则会触发 `SQLITE_BUSY` 异常。
+在前文“示例六”中，我们使用SQLiteDatabase的 `beginTransaction()` 方法开启事务，对应的事务模式为 `EXCLUSIVE` ，此时不支持并发，当前数据库连接将会锁定数据库，其他数据库连接所发起的读请求将会排队等待，直到当前事务执行完毕并释放锁再恢复运行；其他数据库连接所发起的写请求则会触发 `SQLITE_BUSY` 异常。
 
-db.enableWriteAheadLogging
+SQLiteDatabase提供了 `beginTransactionNonExclusive()` 方法，对应的事务模式为 `IMMEDIATE` ，此时SQLite拥有一定的并发能力，具体的支持程度视日志模式而定。在Android平台上，SQLite支持以下两种日志模式：
 
-SQLite拥有并发能力，SQLiteDatabase提供了 `beginTransactionNonExclusive()` 方法，对应的事务模式为 `IMMEDIATE` ，如果是wal模式，允许读取并发，读写并发，如果是默认日志，允许读取并发
+🔷 `TRUNCATE`
 
-独占数据库，这意味着在一个事务开启后，其他事务所在线程将被阻塞，直到首个事务执行完毕后才会继续运行。这种隔离级别确保了事务之间的互斥性，但也可能导致性能下降，尤其是在高并发场景下。
+这是默认的日志模式，只支持多个读取操作并发，任意事务写入数据时会阻塞其他读取操作。
 
-dbHelper.getDB(). ：对于多个连接（Helper实例），NonExclusive允许其他连接读取数据（当然是事务提交前的状态，不会读到未提交事务。）
+🔷 `WRITE_AHEAD_LOGGING`
 
-每个Helper实例对应一个SQLite连接，大部分情况下Helper实例是单独的，并且程序独享自己的数据库，不存在跨进程的情况，因此上述场景出现较少，只需要了解即可。
+预写日志(WAL)模式，将变更先写入缓存文件，空闲时再入库。
+
+这种模式允许在写入的同时读取数据，相比 `TRUNCATE` 模式提高了并发能力；但由于读取操作需要访问缓存文件，所以读取效率略低。
+
+<br />
+
+我们可以在数据库Helper类中调用 `enableWriteAheadLogging()` 方法，将默认的日志模式更改为WAL模式。
+
+"StudentDBHelper.java":
+
+```java
+public class StudentDBHelper extends SQLiteOpenHelper {
+
+    @Override
+    public void onOpen(SQLiteDatabase db) {
+        Log.i(TAG, "OnOpen.");
+        // 启用WAL日志
+        db.enableWriteAheadLogging();
+    }
+}
+```
+
+此时每个方法调用都会创建新的数据库连接，可提供较高的并发能力。
+
+## 协程支持
+Kotlin协程可能会被调度到任意线程中执行，假如 `beginTransaction()` 方法被执行后发生了线程切换，原线程会因缺少事务结束标志而无法再被使用，新线程会因缺少事务开始标志而导致事务失效，更多详细信息可参考相关网页： [🔗 Kotlin 协程和 Android SQLite API 中的线程模型](https://zhuanlan.zhihu.com/p/250511061) 。
+
+若要在协程中使用事务，我们需要对事务语法进行一些改造。
+
+🟤 示例七：在协程中编写事务。
+
+在本示例中，我们结合协程与相关工具编写事务代码，确保事务的正确性。
+
+"TestUITransactionKT.kt":
+
+```kotlin
+val mutex = Mutex()
+val singleDispatcher = Dispatchers.IO.limitedParallelism(1)
+
+fun transaction(num: Int) {
+    // 使用单线程调度器
+    CoroutineScope(singleDispatcher).launch {
+        // 添加互斥锁，确保线程安全。
+        mutex.withLock {
+            Log.i(TAG, "$num 号事务开始，工作线程：${Thread.currentThread().name}。")
+
+            dbHelper.getDB().beginTransaction()
+            try {
+                // 模拟耗时操作
+                delay(3000L)
+                dbHelper.getDB().setTransactionSuccessful()
+            } finally {
+                dbHelper.getDB().endTransaction()
+            }
+
+            Log.i(TAG, "$num 号事务结束，工作线程：${Thread.currentThread().name}。")
+        }
+    }
+}
 
 
-## 协程
+// 测试代码
+transaction(1)
+transaction(2)
+transaction(3)
+```
 
-使用协程时需要注意线程切换，具体内容可参考： https://zhuanlan.zhihu.com/p/250511061
+我们使用单线程调度器执行协程任务，并对事务代码添加了互斥锁，确保单个工作线程按顺序依次执行事务。
 
--->
+此时运行示例程序，并查看控制台输出信息与界面外观：
+
+```text
+20:53:28.129 24080 24333 I TestApp: 1 号事务开始，工作线程：DefaultDispatcher-worker-1。
+20:53:31.146 24080 24333 I TestApp: 1 号事务结束，工作线程：DefaultDispatcher-worker-1。
+20:53:31.149 24080 24333 I TestApp: 2 号事务开始，工作线程：DefaultDispatcher-worker-1。
+20:53:34.160 24080 24333 I TestApp: 2 号事务结束，工作线程：DefaultDispatcher-worker-1。
+20:53:34.165 24080 24333 I TestApp: 3 号事务开始，工作线程：DefaultDispatcher-worker-1。
+20:53:37.175 24080 24333 I TestApp: 3 号事务结束，工作线程：DefaultDispatcher-worker-1。
+```
+
 
 # 版本迁移
 SQLite数据库使用整数版本号标识二维表结构，初始版本号为 `1` 。随着程序的演进，如果我们需要进行新增二维表、修改现有表结构、删除现有表等操作，就要提升版本号。
@@ -590,7 +661,9 @@ SQLite数据库使用整数版本号标识二维表结构，初始版本号为 `
 
 新增二维表、删除现有表、在现有表中新增列等操作都可以使用SQL语句完成，但SQLite不支持修改或删除现有表中的字段，如果要进行此类操作，只能将旧表中的数据读取到内存中，转换数据结构后再写入新表。
 
-以前文示例为基础，我们将学生信息表的整型字段年龄 `age` 变更为字符型字段出生日期 `birthday` ，并将数据结构升级至版本2。
+🔴 示例八：实现数据库升级。
+
+在本示例中，我们以前文“示例一”为基础，将学生信息表的整型字段年龄 `age` 变更为字符型字段出生日期 `birthday` ，并将数据结构升级至版本 `2` 。
 
 "StudentDBHelper.java":
 
@@ -732,7 +805,7 @@ class StudentDBHelperKT(
 }
 ```
 
-当程序更新并运行后，当前版本号为"2"，本地数据库版本号为"1"，将会回调 `onUpgrade()` 方法，并满足"if"语句的条件，执行 `migrateV1ToV2()` 方法中的数据结构迁移逻辑。
+当程序更新并运行后，当前版本号为 `2` ，本地数据库版本号为 `1` ，将会回调 `onUpgrade()` 方法，并满足 `if` 语句的条件，执行 `migrateV1ToV2()` 方法中的数据结构迁移逻辑。
 
 对于需要修改或删除现有表字段的场景，基本操作步骤如下文列表所示：
 
@@ -744,56 +817,8 @@ class StudentDBHelperKT(
 
 当迁移操作完成后，我们就可以使用 `String` 类型读写 `birthday` 字段了。
 
-"TestUIUpgrade.java":
-
-```java
-Cursor cursor = dbHelper.getDB()
-        .query("student_info", null, null, null, null, null, null);
-try (cursor) {
-    if (cursor.moveToFirst()) {
-        do {
-            // 根据列索引与类型，读取当前行的属性。
-            long id = cursor.getLong(0);
-            String name = cursor.getString(1);
-            String birthday = cursor.getString(2);
-
-            // 生成Java对象。
-            StudentV2 student = new StudentV2(id, name, birthday);
-            // 显示对象信息。
-            Log.i(TAG, student.toString());
-        } while (cursor.moveToNext());
-    }
-} catch (Exception e) {
-    e.printStackTrace();
-}
-```
-
-上述内容也可以使用Kotlin语言编写：
-
-"TestUIUpgradeKT.kt":
-
-```kotlin
-val cursor: Cursor = dbHelper.getDB()
-    .query("student_info", null, null, null, null, null, null)
-cursor.use {
-    if (it.moveToFirst()) {
-        do {
-            // 根据列索引与类型，读取当前行的属性。
-            val id: Long = it.getLong(0)
-            val name: String = it.getString(1)
-            val birthday: String = it.getString(2)
-
-            // 生成Kotlin对象。
-            val student = StudentV2KT(id, name, birthday)
-            // 显示对象信息。
-            Log.i(TAG, student.toString())
-        } while (it.moveToNext())
-    }
-}
-```
-
 上述示例代码只是一个简单的迁移过程示范，在实际应用中我们还可以进行以下优化：
 
 - 每组数据库版本之间都要有对应的升级逻辑，不可遗漏，因为用户可能会从任意旧版本更新至最新版本。
-- 跨版本升级时，可以依次执行升级逻辑，例如：从版本1升级至版本3时，可以依次执行“版本1升级至版本2”与“版本2升级至版本3”的逻辑，避免重复书写代码。
-- 迁移过程将在首个数据库查询调用执行时被触发，并以该调用的线程执行 `onUpgrade()` 方法，直到迁移完成后，该线程才会执行调用者请求的查询并返回结果。如果我们希望程序启动后即刻开始迁移，减少用户后续查询的等待时长，可以在初始化阶段调用任意查询方法。
+- 跨版本升级时，可以依次执行升级逻辑，例如：从版本1升级至版本3时，可以依次执行“版本1升级至版本2”与“版本2升级至版本3”的逻辑，避免重复编写代码。
+- 迁移过程将在首个数据库查询调用发起时被触发，并以该调用的线程执行 `onUpgrade()` 方法，直到迁移完成后，该线程才会执行调用者请求的查询并返回结果。如果我们希望程序启动后即刻开始迁移，减少用户后续查询的等待时长，可以在程序初始化阶段调用任意查询方法。

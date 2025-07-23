@@ -77,7 +77,6 @@ public class Student {
     private String name;
 
     // 年龄
-    @ColumnInfo(name = "age")
     private int age;
 
     // 构造方法
@@ -127,19 +126,19 @@ data class StudentKT(
 @Dao
 public interface StudentDAO {
 
-    // 查询所有学生信息。
+    // 查询所有学生信息
     @Query("SELECT * FROM student_info")
     List<Student> getStudent();
 
-    // 新增学生记录。
+    // 新增学生记录
     @Insert
     void addStudent(Student student);
 
-    // 更新学生记录。
+    // 更新学生记录
     @Update
     void updateStudent(Student student);
 
-    // 删除学生记录。
+    // 删除学生记录
     @Delete
     void delStudent(Student student);
 }
@@ -152,19 +151,19 @@ public interface StudentDAO {
 ```kotlin
 interface StudentDAOKT {
 
-    // 查询所有学生信息。
+    // 查询所有学生信息
     @Query("SELECT * FROM student_info")
     fun getStudent(): List<StudentKT>
 
-    // 新增学生记录。
+    // 新增学生记录
     @Insert
     fun addStudent(student: StudentKT)
 
-    // 更新学生记录。
+    // 更新学生记录
     @Update
     fun updateStudent(student: StudentKT)
 
-    // 删除学生记录。
+    // 删除学生记录
     @Delete
     fun delStudent(student: StudentKT)
 }
