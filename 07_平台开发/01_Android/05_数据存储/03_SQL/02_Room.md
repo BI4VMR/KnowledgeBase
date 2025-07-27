@@ -771,10 +771,136 @@ fun insertStudents(monitor: StudentKT, students: List<StudentKT>)
 > 由 `@Insert` 等Room注解生成的插入、修改与删除方法支持事务，我们无需担心操作多条数据时被其他线程干扰。
 
 
-
 # 事务支持
-runInTransaction
-调用suspend方法且包含事务时，必须使用 `DB.withTransaction {}` ，因为SQLite事务为单线程，如果协程调度过程中切换了线程事务会失效。
+## 事务注解
+Room提供了 `@Transaction` 注解，我们可以将其添加到DAO类的方法上，该注解等价于 `beginTransaction()` 等方法的组合调用，能够使目标方法以事务的方式运行。
+
+🟠 示例二：使用 `@Transaction` 注解实现事务。
+
+在本示例中，我们对前文章节 [🧭 SQLite - 事务支持](./01_SQLite.md#基本应用-1) 中的“示例六”进行修改，使用Room提供的 `@Transaction` 注解，实现借书功能。
+
+"StudentDAO.java":
+
+```java
+@Dao
+public abstract class StudentDAO {
+
+    @Query("SELECT * FROM student_info WHERE student_id = :id")
+    abstract Student getStudent(long id);
+
+    @Update
+    abstract void updateStudent(Student student);
+
+    @Transaction
+    void borrowBook() {
+        // 将1号学生的书本数量加1
+        Student studentA = getStudent(1);
+        if (studentA != null) {
+            studentA.setBookCount(studentA.getBookCount() + 1);
+            updateStudent(studentA);
+        }
+
+        // 将2号学生的书本数量减1
+        Student studentB = getStudent(2);
+        if (studentB != null) {
+            studentB.setBookCount(studentB.getBookCount() - 1);
+            updateStudent(studentB);
+        }
+    }
+}
+```
+
+上述内容也可以使用Kotlin语言编写：
+
+"StudentDAOKT.kt":
+
+```kotlin
+@Dao
+abstract class StudentDAOKT {
+
+    @Query("SELECT * FROM student_info WHERE student_id = :id")
+    abstract fun getStudent(id: Long): StudentKT?
+
+    @Update
+    abstract fun updateStudent(student: StudentKT)
+
+    @Transaction
+    open fun borrowBook() {
+        // 将1号学生的书本数量加1
+        getStudent(1)?.let {
+            it.bookCount += 1
+            updateStudent(it)
+        }
+
+        // 将2号学生的书本数量减1
+        getStudent(2)?.let {
+            it.bookCount -= 1
+            updateStudent(it)
+        }
+    }
+}
+```
+
+`@Transaction` 注解只能配置在DAO类的方法上，在其他类中配置没有任何作用。
+
+## 快捷方法
+部分业务逻辑较为复杂，不适合放置在DAO中，此时我们无法使用 `@Transaction` 注解简化事务代码。在这种场景中，Room提供了 `RoomDatabase.runInTransaction()` 扩展方法，该方法等价于 `beginTransaction()` 等方法的组合调用，参数为事务操作语句，遇到异常时会忽略异常并执行回滚。
+
+🟡 示例三：使用 `runInTransaction()` 方法实现事务。
+
+在本示例中，我们对前文章节 [🧭 SQLite - 事务支持](./01_SQLite.md#基本应用-1) 中的“示例六”进行修改，使用Room提供的 `runInTransaction()` 扩展方法，实现借书功能。
+
+"TestUITransactionKT.kt":
+
+```kotlin
+studentDB.runInTransaction {
+    val dao = studentDB.getStudentDAO()
+    // 将1号学生的书本数量加1
+    dao.getStudent(1)?.let {
+        it.bookCount += 1
+        dao.updateStudent(it)
+    }
+
+    // 将2号学生的书本数量减1
+    dao.getStudent(2)?.let {
+        it.bookCount -= 1
+        dao.updateStudent(it)
+    }
+}
+```
+
+## 协程支持
+在前文章节 [🧭 SQLite - 事务支持 - 协程支持](./01_SQLite.md#协程支持) 中，我们已经了解到SQLite事务在协程中必须锁定工作线程；Room提供了 `RoomDatabase.withTransaction()` 扩展函数，实现事务与线程锁定，使我们不必再手动控制协程与线程。
+
+🟢 示例四：使用 `withTransaction()` 方法实现事务。
+
+在本示例中，我们对前文章节 [🧭 SQLite - 事务支持](./01_SQLite.md#基本应用-1) 中的“示例六”进行修改，使用Room提供的 `withTransaction()` 扩展方法，在协程中实现借书功能。
+
+"TestUITransactionKT.kt":
+
+```kotlin
+suspend fun transactionInCoroutine() {
+    studentDB.withTransaction {
+        val dao = studentDB.getStudentDAO()
+        // 将1号学生的书本数量加1
+        dao.getStudent(1)?.let {
+            it.bookCount += 1
+            dao.updateStudent(it)
+        }
+
+        // 将2号学生的书本数量减1
+        dao.getStudent(2)?.let {
+            it.bookCount -= 1
+            dao.updateStudent(it)
+        }
+    }
+}
+
+// 调用包含事务的挂起函数
+runBlocking {
+    transactionInCoroutine()
+}
+```
 
 
 # 版本迁移
@@ -784,7 +910,7 @@ Migration类的构造方法为 `Migration(int startVersion, int endVersion)` ，
 
 🟠 示例二：编写Migration类进行版本迁移。
 
-在本示例中，我们以前文“示例一”为基础，将学生信息表的整型字段年龄 `age` 变更为字符型字段出生日期 `birthday` ，并将数据结构升级至版本2。
+在本示例中，我们以前文“示例一”为基础，将学生信息表的整型字段年龄 `age` 变更为字符型字段出生日期 `birthday` ，并将数据结构升级至版本 `2` 。
 
 第一步，我们创建MigrationV1ToV2类，继承自Migration类。
 
