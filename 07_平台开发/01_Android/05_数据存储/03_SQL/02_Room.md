@@ -902,6 +902,8 @@ runBlocking {
 }
 ```
 
+`withTransaction {}` 函数遇到异常时，会抛出异常并使事务回滚，如果我们希望判断事务的执行结果，可以将其放置在 `try` 块中，未捕获异常表示事务执行成功，捕获到异常表示事务执行失败。
+
 
 # 版本迁移
 Room对SQLite API进行了封装，我们无需在SQLiteOpenHelper类的 `onUpgrade()` 方法中编写各个版本的判断与升级逻辑，应当转而使用Migration类。
