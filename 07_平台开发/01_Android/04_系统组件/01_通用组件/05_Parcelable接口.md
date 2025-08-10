@@ -169,6 +169,33 @@ protected void onCreate(Bundle savedInstanceState) {
 上述日志表明DstActivity从Parcel容器中读取到了数据，并且成功地反序列化为Book对象。
 
 
+# 简化
+
+
+
+https://developer.android.com/kotlin/parcelize
+
+
+
+plugins {
+    id 'kotlin-parcelize'
+}
+
+
+plugins {
+    id("kotlin-parcelize")
+}
+
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
+class User(val firstName: String, val lastName: String, val age: Int): Parcelable
+
+
+
+
+# 问题
+
 参数不一致
 注意read和write方法中每个参数是否一一对应
 

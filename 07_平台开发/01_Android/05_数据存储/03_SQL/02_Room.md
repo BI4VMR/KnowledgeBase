@@ -993,7 +993,8 @@ Room.databaseBuilder(context.applicationContext, StudentDBKT::class.java, "stude
 | :---------------: | :--------------------------------------------------: |
 | [案例一](#案例一) | Android Debug Database工具无法查看Room数据库的内容。 |
 | [案例二](#案例二) |     升级数据库后出现IllegalStateException错误。      |
-| [案例三](#案例三) |          SQL模糊查询语句无法匹配任何记录。           |
+| [案例三](#案例三) |          SQL语句调试回调与代码执行顺序不一致。           |
+| [案例四](#案例四) |          SQL模糊查询语句无法匹配任何记录。           |
 
 </div>
 
@@ -1047,6 +1048,35 @@ data class Student(
 ```
 
 ## 案例三
+### 问题描述
+SQL回调与实际顺序不一致
+
+这是正常的，因为SQL打印线程是独立的线程，与实际代码执行线程不一致，不能以SQL回调时刻判定代码的执行时刻。
+
+
+```text
+19:55:34.226 28768-28804 Bookkeeper-DatabaseModule  D  SQL:[TRANSACTION SUCCESSFUL] | 
+19:55:34.226 28768-28804 Bookkeeper-DatabaseModule  D  SQL:[END TRANSACTION] | 
+19:55:34.227 28768-28804 Bookkeeper-DatabaseModule  D  SQL:[BEGIN EXCLUSIVE TRANSACTION] | 
+19:55:34.227 28768-28804 Bookkeeper-DatabaseModule  D  SQL:[INSERT OR ABORT INTO `category_info` (`category_id`,`category_name`,`type`,`statistics_flag`,`hide_flag`,`display_order`,`icon_path`,`icon_hash`,`create_time`,`update_time`,`parent_id`,`user_id`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)] | C39F6924287748C88F1E1AD412F8C384, 车辆维保, 2, 1, 0, 4, out_traffic_car.png, , 1754826934183, 1754826934183, 95F258612B4C42DEA3BC59E56AC0F204, 212352513B6F4D02A2665F75BECD6AA8
+19:55:34.227 28768-28796 Bookkeeper-DataManager     D  InitUserData. return User(id=212352513B6F4D02A2665F75BECD6AA8, name=用户_212352, nickName=用户_212352, customizeSignature=-, avatarFilePath=-, lastSyncTime=0)
+19:55:34.227 28768-28804 Bookkeeper-DatabaseModule  D  SQL:[TRANSACTION SUCCESSFUL] | 
+19:55:34.227 28768-28796 Bookkeeper-SPHelper        D  SaveLoginUserID. ID:[212352513B6F4D02A2665F75BECD6AA8]
+19:55:34.230 28768-28804 Bookkeeper-DatabaseModule  D  SQL:[END TRANSACTION] | 
+19:55:34.231 28768-28804 Bookkeeper-DatabaseModule  D  SQL:[BEGIN EXCLUSIVE TRANSACTION] | 
+19:55:34.231 28720-28807 Bookkeeper-LoginActivity   D  onSuccess. User(id=212352513B6F4D02A2665F75BECD6AA8, name=用户_212352, nickName=用户_212352, customizeSignature=-, avatarFilePath=-, lastSyncTime=0)
+19:55:34.231 28768-28804 Bookkeeper-DatabaseModule  D  SQL:[INSERT OR ABORT INTO `category_info` (`category_id`,`category_name`,`type`,`statistics_flag`,`hide_flag`,`display_order`,`icon_path`,`icon_hash`,`create_time`,`update_time`,`parent_id`,`user_id`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)] | C39F6924287748C88F1E1AD412F8C384, 车辆维保, 2, 1, 0, 4, out_traffic_car.png, , 1754826934183, 1754826934183, 95F258612B4C42DEA3BC59E56AC0F204, 212352513B6F4D02A2665F75BECD6AA8
+19:55:34.231 28768-28804 Bookkeeper-DatabaseModule  D  SQL:[TRANSACTION SUCCESSFUL] | 
+```
+
+
+### 问题分析
+
+
+### 解决方案
+
+
+## 案例四
 ### 问题描述
 SQL模糊查询语句 `LIKE '%<关键词>%'` 无法匹配任何记录。
 
