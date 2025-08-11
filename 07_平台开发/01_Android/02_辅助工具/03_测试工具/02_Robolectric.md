@@ -191,9 +191,10 @@ android {
 
 <div align="center">
 
-|       序号        |                      摘要                       |
-| :---------------: | :---------------------------------------------: |
-| [案例一](#案例一) | 在本地测试中，构造ComponentName实例得到了空值。 |
+|       序号        |                              摘要                              |
+| :---------------: | :------------------------------------------------------------: |
+| [案例一](#案例一) |        在本地测试中，构造ComponentName实例得到了空值。         |
+| [案例二](#案例二) | 在Robolectric环境中，测试用例运行时出现NoSuchMethodError异常。 |
 
 </div>
 
@@ -232,6 +233,37 @@ class TestBaseKT {
     fun test() {
         val cmpName = ComponentName("net.bi4vmr.test", "net.bi4vmr.test.MainActivity")
         println("ComponentName:[$cmpName]")
+    }
+}
+```
+
+## 案例二
+### 问题描述
+在Robolectric环境中，测试用例运行时出现NoSuchMethodError异常。
+
+```text
+Test > testOperations FAILED
+    java.lang.NoSuchMethodError: 'android.car.hardware.property.VehicleConfigHelper android.car.hardware.property.VehicleConfigHelper.getInstance(android.content.Context)'
+```
+
+### 问题分析
+Robolectric模拟环境只提供了标准的Android系统API，在本案例中，测试用例引入的某个库调用了非标准的VehicleConfigHelper API，因此出现了NoSuchMethodError异常。
+
+### 解决方案
+如果我们能够获取非标准API所在的JAR文件，可以将其作为测试模块的依赖，使运行环境拥有相应的API。
+
+如果我们无法获取对应的JAR文件，也可以在测试模块中创建同名类并编写空的方法，确保运行时不会出现异常。
+
+```kotlin
+class VehicleConfigHelper {
+
+    companion object {
+
+        @JvmStatic
+        fun getInstance(context: Context): VehicleConfigHelper {
+            println("FakeAPI-VehicleConfigHelper#getInstance($context)")
+            return VehicleConfigHelper()
+        }
     }
 }
 ```
