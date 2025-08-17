@@ -224,6 +224,8 @@ Log.e(TAG, "Error Log.")
 15:51:43.827 17872 17872 E TestUIBase: Error Log.
 ```
 
+日志输出方法还有一个包含Throwable参数的重载方法，可以将异常堆栈信息也使用指定的Tag输出，我们可以按需选用。
+
 # Java日志兼容性
 如果我们需要编写不包含Android组件依赖的纯Java组件，就无法使用Logcat工具输出日志了，此时只能使用Java的控制台输出指令。
 
