@@ -1,4 +1,4 @@
-# ----- 操作系统临时文件 -----
+# ----- 操作系统专有文件 -----
 # Windows
 desktop.ini
 # Linux
@@ -6,16 +6,19 @@ desktop.ini
 # Mac OS
 .DS_Store
 
-# ----- 编译工具输出目录 -----
+
+# ----- 编译工具输出文件 -----
 # Maven
 target/
 out/
 # Gradle
 build/
 
+
 # ----- 编译工具临时文件 -----
 # Gradle
 .gradle/
+
 
 # ----- IDE本地配置 -----
 # IntelliJ IDEA
@@ -23,12 +26,19 @@ build/
 # Visual Studio Code
 .vscode/
 
+
 # ----- Java工程 -----
 # Java错误日志
 hs_err_pid*.log
+# JVM内存分析文件
+*.hprof
+
 
 # ----- Android工程 -----
 # 本地属性配置文件
 local.properties
-# NDK
+# NDK编译输出
 .cxx/
+.externalNativeBuild/
+# LayoutInspector分析文件
+captures/
