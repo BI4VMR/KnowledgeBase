@@ -1835,4 +1835,9 @@ recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
 
 **注意：**
 - `setHasStableIds` 必须在 adapter 还未注册观察者（即未绑定到 RecyclerView）前调用，否则会抛异常。
+
+
+画面不显示内容？
+
+原因是忘记设置LayoutManager。
 -->
