@@ -1,7 +1,7 @@
 # 简介
-Mockito是一个针对Java语言的Mock工具，即使它提供了Kotlin扩展，其对于Kotlin的功能支持仍然有限，例如：无法模拟Kotlin的Object、函数式编程支持不佳等。
+Mockito是一个针对Java语言的Mock工具，即使提供了Kotlin扩展，它对Kotlin的功能支持仍然有限，例如：无法模拟Kotlin的Object、函数式编程支持不佳等。
 
-MockK是专门为Kotlin语言设计的Mock工具，使用方法与Mockito类似，并且支持Kotlin的部分特性，它的官方网站为： [🔗 MockK](https://mockk.io/) 。
+MockK是专门为Kotlin语言设计的Mock工具，使用方法与Mockito类似，并且支持Kotlin的专有特性，它的官方网站为： [🔗 MockK](https://mockk.io/) 。
 
 本章的示例工程详见以下链接：
 
@@ -601,6 +601,55 @@ every { mock invoke "openDoor" withArguments listOf("left", "rear") } returns "O
     every { mock setProperty "acceleration" value less(5) } just Runs
     verify { mock getProperty "speed" }
     verify { mock setProperty "acceleration" value less(5) }
+
+
+部分模拟：
+
+在Java环境中，Mock工具（如Mockito）的SPY模式主要用于部分模拟（Partial Mocking）的场景。SPY模式允许你在保留对象原有行为的同时，模拟其中的部分方法。这在需要测试复杂对象的部分功能时非常有用。
+使用场景
+测试部分功能：当你只想测试对象的某些方法，而不希望影响其他方法的真实行为时。
+依赖复杂逻辑的对象：当对象的某些方法依赖复杂的逻辑或外部资源（如数据库、网络）时，可以通过SPY模式模拟这些方法。
+验证方法调用：当你需要验证某些方法是否被调用，以及调用的参数是否正确时。
+
+
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
+import static org.mockito.Mockito.*;
+
+class Calculator {
+    public int add(int a, int b) {
+        return a + b;
+    }
+
+    public int multiply(int a, int b) {
+        return a * b;
+    }
+}
+
+public class SpyExampleTest {
+
+    @Test
+    public void testSpy() {
+        // 创建一个真实对象
+        Calculator realCalculator = new Calculator();
+
+        // 创建一个SPY对象
+        Calculator spyCalculator = Mockito.spy(realCalculator);
+
+        // 模拟add方法的行为
+        doReturn(10).when(spyCalculator).add(2, 3);
+
+        // 调用add方法，返回模拟值
+        System.out.println(spyCalculator.add(2, 3)); // 输出：10
+
+        // 调用multiply方法，返回真实值
+        System.out.println(spyCalculator.multiply(2, 3)); // 输出：6
+
+        // 验证add方法是否被调用
+        verify(spyCalculator).add(2, 3);
+    }
+}
 
 
 -->
