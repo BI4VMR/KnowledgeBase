@@ -375,7 +375,7 @@ fun verify(
     verifyOrder{...}：验证代码按顺序执行
 
 
-
+verify不会重置调用记录，因此如果需要复用mock对象，次数需要加1，或者重置mock对象
 
 
 # 参数匹配器
