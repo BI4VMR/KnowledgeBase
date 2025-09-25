@@ -1410,7 +1410,7 @@ fun updateData(newDatas: List<ItemVOKT>) {
 ## 局部刷新
 在前文“示例五”中，我们只实现了DiffUtil.Callback的两个抽象方法，此时若检测到表项发生变化，DiffUtil会调用Adapter的 `notifyItemChanged(int position)` 方法刷新整个表项，这种方式性能较低，不适合用来构建具有复杂布局的列表。
 
-DiffUtil.Callback的 `getChangePayload()` 方法用于实现局部刷新，当 `areContentsTheSame()` 方法返回 `false` 时，DiffUtil将会回调 `Object getChangePayload(int oldItemPosition, int newItemPosition)` 方法，该方法的返回值将作为 `payload` 参数被传递给Adapter的 `notifyItemChanged(int position, Object payload)` 方法，我们可以在此处编写检测表项局部变化的逻辑代码，配合Adapter实现局部刷新功能。
+DiffUtil.Callback的 `getChangePayload()` 方法用于实现局部刷新，当 `areContentsTheSame()` 方法返回 `false` 时，DiffUtil将在实施更新阶段回调 `Object getChangePayload(int oldItemPosition, int newItemPosition)` 方法，并将返回值作为 `payload` 参数传递给Adapter的 `notifyItemChanged(int position, Object payload)` 方法，我们可以在此处编写检测表项局部变化的逻辑代码，配合Adapter实现局部刷新功能。
 
 🟣 示例六：通过DiffUtil实现局部刷新。
 
@@ -1461,6 +1461,9 @@ override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any {
 ```
 
 第二步，我们再次运行示例程序，并通过日志观察带有Payload的 `onBindViewHolder()` 方法是否接收到Payload参数。
+
+areContentsTheSame
+与 不同， getChangePayload方法将在dispatchUpdatesTo内部被调用，此时为主线程，因此我们不能在其中放置耗时操作，还要注意 TODO
 
 ## 异步计算
 在前文章节中，我们直接使用主线程调用DiffUtil的 `calculateDiff()` 方法计算差异，这在规模较小的列表中没有问题，但如果列表规模较大，计算过程可能会花费较长的时间，导致界面卡顿。为了解决此类问题，Google官方提供了AsyncListDiffer工具，它接管了数据源，开发者提交新的列表后将在子线程中计算差异，并在计算完毕后回到主线程更新界面。
