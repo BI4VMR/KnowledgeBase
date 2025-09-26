@@ -1292,7 +1292,7 @@ DiffUtil是RecyclerView提供的辅助工具，它可以对比新旧数据源的
 
 🔵 示例五：通过DiffUtil实现差异对比。
 
-在本示例中，我们编写自定义DiffUtil.Callback，实现自动差异对比与刷新功能。
+在本示例中，我们通过DiffUtil，实现自动差异对比与列表刷新功能。
 
 第一步，我们创建DiffUtil.Callback的子类，实现其中的抽象方法。
 
@@ -1321,15 +1321,15 @@ public class MyDiffCallback extends DiffUtil.Callback {
 
     @Override
     public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-        ItemVO oldItem = oldList.get(oldItemPosition);
-        ItemVO newItem = newList.get(newItemPosition);
-        return oldItem.equals(newItem);
+        // 此处只有一种表项类型，视图都可复用，直接返回 `true` 即可。
+        return true;
     }
 
     @Override
     public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
         ItemVO oldItem = oldList.get(oldItemPosition);
         ItemVO newItem = newList.get(newItemPosition);
+        // 比较二者的内容是否相同
         return oldItem.equals(newItem);
     }
 }
@@ -1354,10 +1354,12 @@ class MyDiffCallbackKT(
     }
 
     override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-        return oldList[oldItemPosition] == newList[newItemPosition]
+        // 此处只有一种表项类型，视图都可复用，直接返回 `true` 即可。
+        return true
     }
 
     override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+        // 比较二者的内容是否相同
         return oldList[oldItemPosition] == newList[newItemPosition]
     }
 }
@@ -1371,7 +1373,7 @@ DiffUtil对比表项差异时，首先调用 `areItemsTheSame()` 方法判断两
 
 第二步，我们在Adapter中封装差异比较与更新视图的方法。
 
-我们需要通过DiffUtil的 `calculateDiff()` 方法执行差异计算操作，此方法的返回值是一个DiffUtil.DiffResult类型的实例，它的 `dispatchUpdatesTo()` 方法可以直接将变化应用到RecyclerView适配器，完成界面的刷新工作。
+我们需要通过DiffUtil的 `calculateDiff()` 方法执行差异计算操作，此方法的返回值是一个DiffUtil.DiffResult类型的实例，它的 `dispatchUpdatesTo()` 方法可以直接将变化应用到RecyclerView适配器，完成列表的刷新工作。
 
 "MyAdapter.java":
 
@@ -1403,18 +1405,18 @@ fun updateData(newDatas: List<ItemVOKT>) {
 }
 ```
 
-值得注意的是，调用 `dispatchUpdatesTo()` 之前，我们需要更新适配器的数据集，因为该方法会调用 `notify` 系列方法更新界面，而 `notify` 系列方法依赖最新的数据源绘制表项，如果操作顺序不当，可能会产生 `Inconsistency detected` 错误并导致程序崩溃。
+在调用 `dispatchUpdatesTo()` 方法更新列表之前，我们应当先更新适配器的数据集，因为该方法本质上是通过 `notify` 系列方法更新界面的，而 `notify` 系列方法依赖最新的数据源绘制表项，如果操作顺序不当，可能会产生 `Inconsistency detected` 错误并导致程序崩溃。
 
 `calculateDiff()` 方法默认会检测新旧列表的表项是否发生了移动，如果列表中已有表项的位置总是固定不变，或者新旧表项以相同的规则排序，我们可以调用 `calculateDiff(DiffUtil.Callback cb, boolean detectMoves)` 方法，并将第二参数 `detectMoves` 设为 `false` 关闭移动检测功能，提升计算速度。
 
 ## 局部刷新
 在前文“示例五”中，我们只实现了DiffUtil.Callback的两个抽象方法，此时若检测到表项发生变化，DiffUtil会调用Adapter的 `notifyItemChanged(int position)` 方法刷新整个表项，这种方式性能较低，不适合用来构建具有复杂布局的列表。
 
-DiffUtil.Callback的 `getChangePayload()` 方法用于实现局部刷新，当 `areContentsTheSame()` 方法返回 `false` 时，DiffUtil将在实施更新阶段回调 `Object getChangePayload(int oldItemPosition, int newItemPosition)` 方法，并将返回值作为 `payload` 参数传递给Adapter的 `notifyItemChanged(int position, Object payload)` 方法，我们可以在此处编写检测表项局部变化的逻辑代码，配合Adapter实现局部刷新功能。
+DiffUtil.Callback的 `getChangePayload()` 方法用于实现局部刷新，当 `areContentsTheSame()` 方法返回 `false` 时，DiffUtil会在 `dispatchUpdatesTo()` 阶段回调 `Object getChangePayload(int oldItemPosition, int newItemPosition)` 方法，并将返回值作为 `payload` 参数传递给Adapter的 `notifyItemChanged(int position, Object payload)` 方法，我们可以在此处编写检测表项局部变化的逻辑代码，配合Adapter实现局部刷新功能。
 
 🟣 示例六：通过DiffUtil实现局部刷新。
 
-在本示例中，我们编写自定义DiffUtil.Callback，实现表项的局部刷新。
+在本示例中，我们通过DiffUtil，实现表项的局部刷新。
 
 第一步，我们在前文“示例五”的基础上进行扩展，为其添加局部刷新功能。
 
@@ -1460,10 +1462,58 @@ override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any {
 }
 ```
 
-第二步，我们再次运行示例程序，并通过日志观察带有Payload的 `onBindViewHolder()` 方法是否接收到Payload参数。
+第二步，我们修改Adapter的 `updateData()` 方法，适配局部刷新功能。
 
-areContentsTheSame
-与 不同， getChangePayload方法将在dispatchUpdatesTo内部被调用，此时为主线程，因此我们不能在其中放置耗时操作，还要注意 TODO
+"MyAdapter.java":
+
+```java
+public void updateData(List<ItemVO> newDatas) {
+    // 复制一份旧数据源以便 `getChangePayload()` 回调能够对比内容差异。
+    List<ItemVO> oldDatas = new ArrayList<>(newDatas);
+    // 对比新旧列表的差异
+    DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new MyDiffCallback(oldDatas, newDatas));
+    // 更新数据源
+    dataSource.clear();
+    dataSource.addAll(newDatas);
+    // 更新视图
+    diffResult.dispatchUpdatesTo(this);
+}
+```
+
+上述内容也可以使用Kotlin语言编写：
+
+"MyAdapterKT.kt":
+
+```kotlin
+fun updateData(newDatas: List<ItemVOKT>) {
+    // 复制一份旧数据源以便 `getChangePayload()` 回调能够对比内容差异。
+    val oldDatas: List<ItemVOKT> = mDataSource.toList()
+    // 对比新旧列表的差异
+    val diffResult = DiffUtil.calculateDiff(MyDiffCallbackKT(oldDatas, newDatas))
+    // 更新数据源
+    mDataSource.clear()
+    mDataSource.addAll(newDatas)
+    // 更新视图
+    diffResult.dispatchUpdatesTo(this)
+}
+```
+
+`getChangePayload()` 方法与 `areItemsTheSame()` 和 `areContentsTheSame()` 方法不同，后两者在调用 `calculateDiff()` 的线程中执行，而 `getChangePayload()` 则在 `dispatchUpdatesTo()` 方法更新列表时由主线程执行，我们不能在此处放置耗时操作，并且要为DiffUtil.Callback复制一份旧的数据源，不可引用 `mDataSource` ，因为 `getChangePayload()` 方法在 `mDataSource` 更新之后执行，如果直接进行引用， `oldDatas` 和 `newDatas` 的内容完全一致，无法获取差异。
+
+此时运行示例程序，并查看控制台输出信息与界面外观：
+
+```text
+10:10:19.353 23438 23438 I MyAdapter: OnBindViewHolder. Position:[0] PayloadsNum:[1]
+10:10:19.353 23438 23438 I MyAdapter: Payload flags:[1]
+10:10:19.355 23438 23438 I MyAdapter: OnBindViewHolder. Position:[1] PayloadsNum:[1]
+10:10:19.355 23438 23438 I MyAdapter: Payload flags:[2]
+10:10:19.356 23438 23438 I MyAdapter: OnBindViewHolder. Position:[3] PayloadsNum:[1]
+10:10:19.356 23438 23438 I MyAdapter: Payload flags:[1]
+```
+
+根据上述输出内容可知：
+
+当DiffUtil更新列表时，通过 `getChangePayload()` 方法获取了新旧表项的差异，并通过Payload通知Adapter进行局部刷新。
 
 ## 异步计算
 在前文章节中，我们直接使用主线程调用DiffUtil的 `calculateDiff()` 方法计算差异，这在规模较小的列表中没有问题，但如果列表规模较大，计算过程可能会花费较长的时间，导致界面卡顿。为了解决此类问题，Google官方提供了AsyncListDiffer工具，它接管了数据源，开发者提交新的列表后将在子线程中计算差异，并在计算完毕后回到主线程更新界面。
