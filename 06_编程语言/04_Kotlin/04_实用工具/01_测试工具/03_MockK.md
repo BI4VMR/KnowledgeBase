@@ -521,6 +521,25 @@ Index:[2] Value:[系统找不到指定的路径。]
 
 <!-- TODO
 
+# 捕获Lambda
+
+
+```kotlin
+        // 捕获待测实例注册的广播接收器
+        val receiverSlot = slot<(Intent) -> Unit>()
+        every { mockContext.registerReceiver(any(), capture(receiverSlot), captureLambda()) } answers {
+            // 此处将在registerReceiver被调用时立即执行lambda
+            lambda<IntentFilter.() -> Unit>().invoke(IntentFilter())
+        }
+
+        // 延后回调Lambda
+        receiverSlot.captured.invoke(intentLowSpeed)
+```
+
+
+
+# 验证私有方法
+
 如果你要验证、执行 object类里面的私有方法，你需要在mock的时候指定一个值 recordPrivateCalls， 它默认是false：
 
 mockkObject(ObjectClass, recordPrivateCalls = true)
