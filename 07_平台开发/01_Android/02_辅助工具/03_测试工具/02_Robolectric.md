@@ -225,6 +225,27 @@ jar cf android-all-instrumented-13-robolectric-9030017-i7.jar -C android-all-ins
 
 test sourceset不会打包，所以其中的类无法加入运行环境，我们可以单独建立模块，将编译后的aar作为testRuntimeonly使用。
 
+## 屏蔽部分组件
+某些工具不支持在Robolectric环境中运行，它们会导致初始化测试用例前出现异常，此时所有用例都无法执行，例如：Facebook的性能监控工具Profilo。
+
+Robolectric环境的特征是 `Build.FINGERPRINT` 属性值固定为 `robolectric` ，因此我们可以在初始化此类工具前进行判断，若为Robolectric环境则不进行初始化。
+
+```kotlin
+class MyApp : Application() {
+
+    override fun onCreate() {
+        super.onCreate()
+        if(isRobolectricEnv()){
+            SoLoader.init(context, 0)
+        }
+    }
+
+    fun isRobolectricEnv(): Boolean {
+        return Build.FINGERPRINT == "robolectric"
+    }
+}
+```
+
 
 # 疑难解答
 ## 索引
