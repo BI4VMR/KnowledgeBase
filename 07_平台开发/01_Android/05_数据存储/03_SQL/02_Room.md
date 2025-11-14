@@ -128,7 +128,7 @@ public interface StudentDAO {
 
     // 查询所有学生信息
     @Query("SELECT * FROM student_info")
-    List<Student> getStudent();
+    List<Student> getStudents();
 
     // 新增学生记录
     @Insert
@@ -153,7 +153,7 @@ interface StudentDAOKT {
 
     // 查询所有学生信息
     @Query("SELECT * FROM student_info")
-    fun getStudent(): List<StudentKT>
+    fun getStudents(): List<StudentKT>
 
     // 新增学生记录
     @Insert
@@ -295,7 +295,7 @@ dao.delStudent(student);
 
 
 /* 查询所有记录 */
-List<Student> result = dao.getStudent();
+List<Student> result = dao.getStudents();
 ```
 
 上述内容也可以使用Kotlin语言编写：
@@ -336,7 +336,7 @@ studentDB.getStudentDAO().delStudent(student)
 
 
 /* 查询所有记录 */
-val result: List<StudentKT> = studentDB.getStudentDAO().getStudent()
+val result: List<StudentKT> = studentDB.getStudentDAO().getStudents()
 ```
 
 此处省略了UI控件声明与异常处理等逻辑，详见本章示例工程。
