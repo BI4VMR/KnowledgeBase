@@ -132,7 +132,7 @@ class TestBase {
 
 
 # 实用技巧
-## 配置Maven镜像
+## 改进组件下载
 Robolectric会在测试用例执行前从Maven中心仓库下载其所需的环境模拟组件，这些文件体积较大，网络环境不佳时会导致运行困难。为了适应多种网络环境，Robolectric提供了一些配置项，详细信息可参考官方论坛： [🔗 Robolectric Blog - 改进下载速度](https://robolectric.org/blog/2023/11/11/improving-android-all-downloading/) 。
 
 Robolectric的环境模拟组件存储在本地Maven仓库中，默认路径为： `~/.m2/repository/org/robolectric/android-all-instrumented/` ，而不是Gradle缓存目录，因此我们在Gradle配置文件中所设置的仓库镜像不会生效。我们可以从其他设备上复制已有的环境模拟组件到目标设备，保持相同的目录结构即可生效。
@@ -245,6 +245,8 @@ class MyApp : Application() {
     }
 }
 ```
+
+此类工具通常在应用的自定义App类中加载，如果我们在测试类的Config注解中采用测试专用的App类，不加载原本的App类，也可以实现屏蔽并提高测试速度。
 
 
 # 疑难解答
