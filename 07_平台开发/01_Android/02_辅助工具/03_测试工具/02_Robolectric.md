@@ -22,7 +22,7 @@ Robolectric通过一系列JAR包模拟Android SDK中的接口，使得应用程�
 
 第一步，我们为当前模块添加Robolectric依赖声明与相关配置项。
 
-"build.gradle":
+`build.gradle` :
 
 ```groovy
 android {
@@ -42,7 +42,7 @@ android {
 
 上述内容也可以使用Kotlin语言编写：
 
-"build.gradle.kts":
+`build.gradle.kts` :
 
 ```kotlin
 android {
@@ -70,7 +70,7 @@ dependencies {
 
 第二步，我们编写测试代码，获取Robolectric提供的模拟Application，并获取文本资源。
 
-"TestBase.java":
+`TestBase.java` :
 
 ```java
 @RunWith(RobolectricTestRunner.class)
@@ -99,7 +99,7 @@ public class TestBase {
 
 上述内容也可以使用Kotlin语言编写：
 
-"TestBaseKT.kt":
+`TestBaseKT.kt` :
 
 ```kotlin
 @RunWith(RobolectricTestRunner::class)
@@ -131,9 +131,122 @@ class TestBase {
 在初始化方法 `setup()` 中，我们可以调用 `RuntimeEnvironment.getApplication()` 获取Robolectric提供的模拟Application实例，然后就可以在测试代码中访问Android相关接口了。
 
 
+# 屏蔽部分组件
+部分工具不支持在Robolectric环境中运行，它们会使Robolectric执行测试用例前出现异常，导致所有用例都无法执行成功，例如：Facebook的性能监控工具Profilo。
+
+此类工具通常为性能监控等调试工具，由于单元测试仅针对业务逻辑，我们可以利用下文示例中的方式，在Robolectric环境中跳过此类工具的初始化语句，确保测试用例正常执行。
+
+🟠 示例二：替换自定义Application。
+
+Profilo等工具通常在自定义Application类中完成初始化，我们可以在测试代码集中编写一个专用的Application类，移除不需要在Robolectric环境中加载的组件，避免出错并提高测试速度。
+
+在本示例中，我们为Robolectric测试类指定专用的Application，替换业务代码中定义的Application。
+
+第一步，我们在测试代码集中创建测试专用Application类，移除业务代码中Profilo等工具的初始化逻辑。
+
+`AppForTest.java` :
+
+```java
+public class AppForTest extends Application {
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        System.out.println("这是单元测试专用的Application类。");
+    }
+}
+```
+
+上述内容也可以使用Kotlin语言编写：
+
+`AppForTestKT.kt` :
+
+```kotlin
+class AppForTestKT : Application() {
+
+    override fun onCreate() {
+        super.onCreate()
+        println("这是单元测试专用的Application类。")
+    }
+}
+```
+
+第二步，我们在测试类上添加 `@Config` 注解，指定使用AppForTest作为测试环境的Application类。
+
+`CustomAppTest.java` :
+
+```java
+@RunWith(RobolectricTestRunner.class)
+@Config(application = AppForTest.class)
+public class CustomAppTest {
+
+    @Test
+    public void test_CustomApp() {
+        Application app = RuntimeEnvironment.getApplication();
+        System.out.println(app);
+    }
+}
+```
+
+上述内容也可以使用Kotlin语言编写：
+
+`CustomAppTestKT.kt` :
+
+```kotlin
+@RunWith(RobolectricTestRunner::class)
+@Config(application = AppForTestKT::class)
+class CustomAppTestKT {
+
+    @Test
+    fun test_CustomApp() {
+        val app = RuntimeEnvironment.getApplication()
+        println(app)
+    }
+}
+```
+
+🟡 示例三：根据运行环境可选加载组件。
+
+Robolectric环境的特征是 `Build.FINGERPRINT` 属性值固定为 `robolectric` ，因此我们可以在初始化Profilo等工具前进行判断，若为Robolectric环境则不进行初始化。
+
+在本示例中，我们判断当前程序的运行环境，如果是Robolectric环境，则跳过Profilo等工具的初始化逻辑。
+
+```java
+void setupProfilo() {
+    if (isRobolectricEnv()) {
+        Log.d(TAG, "Run in Java unit test environment, skip init Profilo!");
+        return
+    }
+}
+
+boolean isRobolectricEnv() {
+    return Build.FINGERPRINT.equals("robolectric");
+}
+```
+
+上述内容也可以使用Kotlin语言编写：
+
+```kotlin
+fun setupProfilo() {
+    if (isRobolectricEnv()) {
+        Log.d(TAG, "Run in Java unit test environment, skip init Profilo!")
+        return
+    }
+
+    SoLoader.init(context, 0)
+}
+
+fun isRobolectricEnv(): Boolean {
+    return Build.FINGERPRINT == "robolectric"
+}
+```
+
+与“示例二”中的方案相比，该方案需要修改业务代码，侵入性较强，因此不建议优先选用。
+
+
 # 实用技巧
-## 改进组件下载
-Robolectric会在测试用例执行前从Maven中心仓库下载其所需的环境模拟组件，这些文件体积较大，网络环境不佳时会导致运行困难。为了适应多种网络环境，Robolectric提供了一些配置项，详细信息可参考官方论坛： [🔗 Robolectric Blog - 改进下载速度](https://robolectric.org/blog/2023/11/11/improving-android-all-downloading/) 。
+## 提升组件下载速度
+Robolectric会在测试用例执行前从Maven中心仓库下载其所需的模拟环境相关组件，这些文件体积较大，网络环境不佳时会导致运行困难。为了适应多种网络环境，Robolectric提供了一些配置项，详细信息可参考官方论坛： [🔗 Robolectric Blog - 改进下载速度](https://robolectric.org/blog/2023/11/11/improving-android-all-downloading/) 。
 
 Robolectric的环境模拟组件存储在本地Maven仓库中，默认路径为： `~/.m2/repository/org/robolectric/android-all-instrumented/` ，而不是Gradle缓存目录，因此我们在Gradle配置文件中所设置的仓库镜像不会生效。我们可以从其他设备上复制已有的环境模拟组件到目标设备，保持相同的目录结构即可生效。
 
@@ -224,29 +337,6 @@ jar cf android-all-instrumented-13-robolectric-9030017-i7.jar -C android-all-ins
 
 
 test sourceset不会打包，所以其中的类无法加入运行环境，我们可以单独建立模块，将编译后的aar作为testRuntimeonly使用。
-
-## 屏蔽部分组件
-某些工具不支持在Robolectric环境中运行，它们会导致初始化测试用例前出现异常，此时所有用例都无法执行，例如：Facebook的性能监控工具Profilo。
-
-Robolectric环境的特征是 `Build.FINGERPRINT` 属性值固定为 `robolectric` ，因此我们可以在初始化此类工具前进行判断，若为Robolectric环境则不进行初始化。
-
-```kotlin
-class MyApp : Application() {
-
-    override fun onCreate() {
-        super.onCreate()
-        if(isRobolectricEnv()){
-            SoLoader.init(context, 0)
-        }
-    }
-
-    fun isRobolectricEnv(): Boolean {
-        return Build.FINGERPRINT == "robolectric"
-    }
-}
-```
-
-此类工具通常在应用的自定义App类中加载，如果我们在测试类的Config注解中采用测试专用的App类，不加载原本的App类，也可以实现屏蔽并提高测试速度。
 
 
 # 疑难解答
@@ -349,18 +439,23 @@ fun setup() {
 
 实测此方法不可行，因为Robolectric运行时将会首先执行Application类的代码，再执行测试代码，初始化阶段已经出现了NPE导致测试任务终止。
 
-Robolectric环境中 `Build.FINGERPRINT` 属性的值固定为 `robolectric` ，因此我们可以在Application中添加判断语句，如果处于Robolectric环境中则忽略Profilo工具的初始化逻辑，避免NPE。
+如果Profilo工具在自定义Application类中进行初始化，我们可以使用前文 “示例二”中的方式针对单元测试屏蔽原有Application类的逻辑，跳过Profilo工具的初始化语句。
 
-"MyApp.kt":
+如果因为某种原因无法直接屏蔽自定义Application类，我们也可以判断当前是否为Robolectric环境，仅当非Robolectric环境时加载Profilo工具。
 
 ```kotlin
-private fun setupProfilo() {
-    if (Build.FINGERPRINT == "robolectric") {
-        println("Run in Java unit test environment, skip init Profilo!")
-        return
+class MyApp : Application() {
+
+    override fun onCreate() {
+        super.onCreate()
+        if (!isRobolectricEnv()){
+            SoLoader.init(context, 0)
+        }
     }
 
-    // Profilo工具的初始化代码...
+    fun isRobolectricEnv(): Boolean {
+        return Build.FINGERPRINT == "robolectric"
+    }
 }
 ```
 
@@ -377,7 +472,7 @@ Test > testOperations FAILED
 Robolectric模拟环境只提供了标准的Android系统API，在本案例中，测试用例引入的某个库调用了非标准的VehicleConfigHelper API，因此出现了NoSuchMethodError异常。
 
 ### 解决方案
-如果我们能够获取非标准API所在的JAR文件，可以将其作为测试模块的依赖，使运行环境拥有相应的API。
+如果我们能够获取非标准API所在的JAR文件，可以将其作为测试模块的依赖项，使运行环境拥有相应的API。
 
 如果我们无法获取对应的JAR文件，也可以在测试模块中创建同名类并编写空的方法，确保运行时不会出现异常。
 
@@ -396,8 +491,6 @@ class VehicleConfigHelper {
     }
 }
 ```
-
-
 
 ## 案例四
 ### 问题描述
@@ -418,7 +511,7 @@ java.lang.ClassFormatError: Absent Code attribute in method that is not native o
 ```
 
 ### 问题分析
-该类是通过Jar包引入的，其中构造方法没有调用 `super()` 、 普通方法没有返回值，因为Jar已被编译为字节码，因此引用它们时不会再次编译，编译器也不会提示我们错误，直到运行时缺少部分指令才会抛出异常。
+该类是通过Jar包引入的，其中构造方法没有调用 `super()` 、 普通方法没有返回值，因为Jar已被编译为字节码，引用它们时不会再次编译，编译器也不会提示我们错误，直到运行时缺少部分指令才会抛出异常。
 
 ```java
 public final class CarProjectionManager extends CarManagerBase {
@@ -438,6 +531,6 @@ public final class CarProjectionManager extends CarManagerBase {
 ```
 
 ### 解决方案
-如果能够获取Jar包源码，则可以从源头上修复，修正代码更新Jar包即可。
+如果能够获取Jar包源码，则可以从源头上修复，修正代码并更新Jar包即可。
 
-如果无法修改Jar包，可以修改运行环境。
+如果无法修改Jar包，我们可以将其改为编译时依赖，然后修改Robolectric运行环境Jar包，使用相关API编译生成的Class文件替换原文件。
