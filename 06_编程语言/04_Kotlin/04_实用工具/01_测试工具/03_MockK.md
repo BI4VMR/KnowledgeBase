@@ -9,8 +9,8 @@ MockK是专门为Kotlin语言设计的Mock工具，使用方法与Mockito类似�
 
 
 # 基本应用
-## 依赖隔离
-Mock工具的基本用途是模拟待测组件所依赖的外部接口，提供假的数据与行为，使我们专注于待测组件本身，不必关心外围环境的变化。
+## 隔离依赖
+Mock工具的基本用途是模拟被测组件所依赖的外部接口，提供假的数据与行为，使我们专注于被测组件本身的业务逻辑，不必关心外围环境的变化。
 
 🔴 示例一：模拟待测组件的依赖项。
 
@@ -133,15 +133,16 @@ Index:[2] Name:[用户B]
 UserManager调用DBHelper中的接口后，输出内容确实为测试代码提供的模拟数据，并非DBHelper的内置数据，这表明Mock操作成功，测试代码已经隔离了UserManager的外部依赖DBHelper。
 
 ## 宽松模式
-若待测方法调用了Mock对象中的某个方法，且我们没有预先为此Mock方法定义行为，MockK不知道应当执行何种动作，就会抛出异常提醒开发者。
+若待测方法调用了Mock对象中的某个方法，但我们没有预先为此Mock方法定义行为，MockK不知道应当执行何种动作，就会抛出异常提醒开发者。
 
 Mock对象中的部分方法执行与否对测试逻辑没有负面影响，例如：日志记录，我们可以使用 `every { <日志记录方法> } just runs` 语句定义它们的行为：“什么都不做”，避免运行时出现异常；但有时此类方法数量较多，手动定义会产生大量重复代码，更好的方案是使用宽松模式创建Mock对象。
 
-宽松模式的Mock对象会为每个方法添加默认行为：“什么都不做”，对于有返回值的方法，返回值内容如下文列表所示：
+宽松模式的Mock对象会为每个方法添加默认行为：“什么都不做”，对于有返回值的方法，返回值如下文列表所示：
 
 - 数值型：返回 `0` 。
 - 布尔型：返回 `false` 。
-- 引用类型：返回 `null` 。
+- 可空引用类型：返回 `null` 。
+- 非空引用类型：返回该类型的宽松模式Mock对象。
 - 集合类型：返回空集合。
 
 🟠 示例二：使用宽松模式创建Mock对象。
@@ -175,7 +176,7 @@ io.mockk.MockKException: no answer found for DBHelper(#1).saveLog(GetUserNames) 
 
 第二步，我们使用宽松模式生成DBHelper的Mock对象。
 
-由于 `saveLog()` 方法对测试逻辑没有任何影响，我们可以用宽松模式创建DBHelper的Mock对象，为其定义“什么都不做”的默认行为。
+由于 `saveLog()` 方法的行为对测试结果没有任何影响，我们可以使用宽松模式创建DBHelper的Mock对象，为该方法定义“什么都不做”的默认行为。
 
 "UserManagerTest.kt":
 
@@ -200,10 +201,10 @@ fun testGetUserNames2() {
 
 `mockk()` 方法的 `relaxed` 参数用于控制是否需要启用宽松模式，默认为禁用，我们将其设为 `true` 即可为所有方法定义默认行为。
 
-有时宽松模式的默认返回值会误导我们编写错误的代码，为了解决此类问题， `mockk()` 方法提供了一个 `relaxUnitFun` 参数，这种模式只为Mock对象的无返回值方法定义默认行为，而有返回值方法则保持“若未定义行为则抛出异常”。我们可以根据实际情况选择 `relaxed` 或 `relaxUnitFun` 模式。
+有时宽松模式的默认返回值会误导我们编写错误的测试代码，为了解决此类问题， `mockk()` 方法还提供了一个 `relaxUnitFun` 参数，该模式只为Mock对象的无返回值方法定义默认行为，而有返回值方法则保持“若未定义行为则抛出异常”。我们可以根据实际情况选择 `relaxed` 或 `relaxUnitFun` 模式。
 
 ## 常用注解
-在前文示例中，我们使用 `mockk()` 方法创建了一些Mock对象；如果需要Mock的对象数量较多，我们也可以使用MockK提供的注解。
+在前文示例中，我们使用 `mockk()` 方法创建了一些局部Mock对象，它们仅能在单一测试方法内部被访问；有时我们需要在多个测试方法中共享Mock对象，并在JUnit的 `setup()` 方法中统一设置Mock行为，此时可以使用MockK提供的注解。
 
 🟡 示例三：使用注解创建Mock对象。
 
@@ -250,9 +251,72 @@ fun testGetUserNames(){
 
 `@RelaxedMockK` 注解等同于 `@MockK(relaxed = true)` 。
 
-上述注解默认没有任何效果，为了使它们生效，我们需要在测试代码执行前调用 `MockKAnnotations.init(this)` 方法；测试代码执行完毕后，我们还应该调用 `unmockkAll()` 方法撤销所有Mock行为。
+为了使上述注解生效，我们需要在测试代码执行前调用 `MockKAnnotations.init(this)` 方法；当测试代码执行完毕后，我们还应该调用 `unmockkAll()` 方法撤销所有Mock行为，防止当前测试方法中设置的Mock行为干扰后续的其他测试方法。
 
-## Kotlin相关
+## 定义行为
+Mock对象的方法默认行为是抛出异常或返回默认值，
+
+`every {}` 语句可以定义Mock对象的属性与方法被调用时的行为。every { mockDBHelper.queryUsers() } returns mockDatas 定义mockDBHelper的该方法被调用时，返回mockDatas
+
+下文列表展示了 `every {}` 语句后可填写的后继语句：
+
+- `just runs` : “什么都不做”，仅适用于无返回值的方法。
+- `return <返回值类型的实例>` : 返回指定的实例。
+- `returnsMany List<返回值类型的实例>` : 该方法被多次调用时，依次返回列表中的元素。
+- `answers {}` : 执行某个语句块，并将最后一行作为返回值。
+- `throws <异常对象>` : 当指定方法被调用时抛出异常。
+- `throwsMany List<异常对象>` : 该方法被多次调用时，依次抛出列表中的异常。
+
+
+
+匹配器
+`every {}` 语句中的方法参数可以填写具体的数值，此时表示仅当调用者传入匹配的参数时才会触发对应的行为，如果我们希望匹配所有方法，可以使用 `any()` 作为匹配器，方法重载时 `any()` 的参数为对应类型的Class。
+
+私有方法
+every { mockClass["privateFunName"](arg1, arg2, ...) }
+
+
+
+## 验证行为
+
+
+测试框架可以验证有直接返回值的方法，但是对于没有返回值的 void 方法应该如何测试呢？void 方法的输出结果其实是调用了另外一个方法，所以需要验证该方法是否有被调用，调用时参数是否正确。
+
+
+verify 是用来检查方法是否触发，当然它也很强大，它有许多参数可选，来看看这些参数：
+
+fun verify(
+    ordering: Ordering = Ordering.UNORDERED,
+    inverse: Boolean = false,
+    atLeast: Int = 1,
+    atMost: Int = Int.MAX_VALUE,
+    exactly: Int = -1,
+    timeout: Long = 0,
+    verifyBlock: MockKVerificationScope.() -> Unit
+){}
+
+他们作用如下：
+
+    ordering： 表示verify{ .. } 中的内容（下面简称语句块）是按照顺序执行。 默认是无序的
+    inverse：如果为true，表示语句块中的内容不发生（即方法不执行）
+    atLeast：语句块中方法最少执行次数
+    atMost：语句块中方法最多执行次数
+    exactly：语句块中的方法具体执行次数
+    timeout：语句块内容执行时间，如果超过该事件，则测试会失败
+    verifyBlock： Lambda表达式，语句块本身
+
+除了这些，还有别的 verify 语句，方便你使用：
+
+    verifySequence{...}：验证代码按顺序执行，而且要每一行的代码都要在语句块中指定出来。
+    verifyAll{...}：验证代码全部都执行，没有顺序的规定
+    verifyOrder{...}：验证代码按顺序执行
+
+
+verify不会重置调用记录，因此如果需要复用mock对象，次数需要加1，或者重置mock对象
+
+
+
+# Kotlin相关
 Mockk
 
 
@@ -323,64 +387,6 @@ every { Utils.getURL() } returns "http://example.com/"
 // 调用Mock方法
 println("Utils#getURL:[${Utils.getURL()}]")
 ```
-
-
-
-
-<!-- TODO
-# 行为定义
-
-every{...} 语句 没有什么好解释的，它就是 Mockito 中的when，用来监听指定的代码语句，并做出接下来的动作，例如：
-
-    return value 返回某个值
-    just Runs 继续执行（仅用于 Unit 方法）
-    answer {} 执行某个语句块
-
-因为Kotlin中有 协程 这个特性（本质上是线程），所以单元测试在执行时可能会遇到执行协程中代码的问题，这个时候如果需要监听，则需要使用 coEvery{ ... }
-当然了除了 coEvery{...} ， 还有 coVerify{...}、 coRun、 coAssert 、 coAnswer、coInvoke 等用于协程中的方法，后面就不再赘述了。
-
-
-
-# 行为验证
-
-测试框架可以验证有直接返回值的方法，但是对于没有返回值的 void 方法应该如何测试呢？void 方法的输出结果其实是调用了另外一个方法，所以需要验证该方法是否有被调用，调用时参数是否正确。
-
-
-verify 是用来检查方法是否触发，当然它也很强大，它有许多参数可选，来看看这些参数：
-
-fun verify(
-    ordering: Ordering = Ordering.UNORDERED,
-    inverse: Boolean = false,
-    atLeast: Int = 1,
-    atMost: Int = Int.MAX_VALUE,
-    exactly: Int = -1,
-    timeout: Long = 0,
-    verifyBlock: MockKVerificationScope.() -> Unit
-){}
-
-他们作用如下：
-
-    ordering： 表示verify{ .. } 中的内容（下面简称语句块）是按照顺序执行。 默认是无序的
-    inverse：如果为true，表示语句块中的内容不发生（即方法不执行）
-    atLeast：语句块中方法最少执行次数
-    atMost：语句块中方法最多执行次数
-    exactly：语句块中的方法具体执行次数
-    timeout：语句块内容执行时间，如果超过该事件，则测试会失败
-    verifyBlock： Lambda表达式，语句块本身
-
-除了这些，还有别的 verify 语句，方便你使用：
-
-    verifySequence{...}：验证代码按顺序执行，而且要每一行的代码都要在语句块中指定出来。
-    verifyAll{...}：验证代码全部都执行，没有顺序的规定
-    verifyOrder{...}：验证代码按顺序执行
-
-
-verify不会重置调用记录，因此如果需要复用mock对象，次数需要加1，或者重置mock对象
-
-
-# 参数匹配器
-
--->
 
 
 # 参数捕获器
