@@ -275,12 +275,14 @@ fun testGetUserNames(){
 `every {}` 语句中的方法参数可以填写具体的数值，此时表示仅当调用者传入匹配的参数时才会触发对应的行为，如果我们希望匹配所有方法，可以使用 `any()` 作为匹配器，方法重载时 `any()` 的参数为对应类型的Class。
 
 
-any()	匹配任意非空值（对于可空类型需用 any<T?>()）
-any<String>()	显式指定类型，避免歧义
-any(String::class)	显式指定类型，避免歧义
-value 精确匹配等于 value 的参数
-eq(value)	精确匹配等于 value 的参数
-match { predicate }	自定义 lambda 表达式判断是否匹配
+- `<参数值>` : 精确匹配参数值与字面量一致的调用。
+- `eq(<参数值>)` : 精确匹配参数值与字面量一致的调用。
+- `refEq(<参数值>)` :
+- `neq(<参数值>)` : 
+- `nrefEq(<参数值>)` :
+- `any()` : 匹配任意
+
+- `match {<表达式>}` : 自定义 lambda 表达式判断是否匹配
 
 
 
@@ -307,7 +309,7 @@ match { predicate }	自定义 lambda 表达式判断是否匹配
 
 第二步，我们使用宽松模式生成DBHelper的Mock对象。
 
-由于 `saveLog()` 方法的行为对测试结果没有任何影响，我们可以使用宽松模式创建DBHelper的Mock对象，为该方法定义“什么都不做”的默认行为。
+测试多个条件
 
 "UserManagerTest.kt":
 
