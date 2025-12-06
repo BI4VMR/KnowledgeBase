@@ -253,26 +253,91 @@ fun testGetUserNames(){
 
 为了使上述注解生效，我们需要在测试代码执行前调用 `MockKAnnotations.init(this)` 方法；当测试代码执行完毕后，我们还应该调用 `unmockkAll()` 方法撤销所有Mock行为，防止当前测试方法中设置的Mock行为干扰后续的其他测试方法。
 
-## 定义行为
-Mock对象的方法默认行为是抛出异常或返回默认值，
-
-`every {}` 语句可以定义Mock对象的属性与方法被调用时的行为。every { mockDBHelper.queryUsers() } returns mockDatas 定义mockDBHelper的该方法被调用时，返回mockDatas
+# 定义行为
+## TODO
+为了模拟外部接口各种情况的行为，我们可以使用 `every {}` 语句定义Mock对象的属性与方法被调用时的行为，例如前文示例中的 `every { mockDBHelper.queryUsers() } returns mockDatas` 表示当mockDBHelper的该方法被调用时，返回mockDatas。
 
 下文列表展示了 `every {}` 语句后可填写的后继语句：
 
 - `just runs` : “什么都不做”，仅适用于无返回值的方法。
 - `return <返回值类型的实例>` : 返回指定的实例。
 - `returnsMany List<返回值类型的实例>` : 该方法被多次调用时，依次返回列表中的元素。
-- `answers {}` : 执行某个语句块，并将最后一行作为返回值。
+- `answers {}` : 执行某个语句块，如果 `every {}` 中的方法有返回值，则将`answers {}`块的最后一行作为返回值。
 - `throws <异常对象>` : 当指定方法被调用时抛出异常。
 - `throwsMany List<异常对象>` : 该方法被多次调用时，依次抛出列表中的异常。
 
 
 
-匹配器
+
+
+## 匹配参数
+
 `every {}` 语句中的方法参数可以填写具体的数值，此时表示仅当调用者传入匹配的参数时才会触发对应的行为，如果我们希望匹配所有方法，可以使用 `any()` 作为匹配器，方法重载时 `any()` 的参数为对应类型的Class。
 
-私有方法
+
+any()	匹配任意非空值（对于可空类型需用 any<T?>()）
+any<String>()	显式指定类型，避免歧义
+any(String::class)	显式指定类型，避免歧义
+value 精确匹配等于 value 的参数
+eq(value)	精确匹配等于 value 的参数
+match { predicate }	自定义 lambda 表达式判断是否匹配
+
+
+
+🟠 示例二：参数匹配器。
+
+在本示例中，我们使用参数匹配器定义Mock对象被调用时的多种行为。
+
+第一步，我们对前文“示例一”的业务代码进行修改。
+
+我们在DBHelper类中新增一个日志记录方法 `saveLog()` ，然后在UserManager中调用该方法。
+
+"DBHelper.kt":
+
+```kotlin
+    class DBHelper {
+
+        // 根据用户ID查询姓名
+        fun queryUserName(id: Int): String = "Real Name"
+
+        // 根据身份证号查询姓名
+        fun queryUserName(cardID: String): String = "Real Name"
+    }
+```
+
+第二步，我们使用宽松模式生成DBHelper的Mock对象。
+
+由于 `saveLog()` 方法的行为对测试结果没有任何影响，我们可以使用宽松模式创建DBHelper的Mock对象，为该方法定义“什么都不做”的默认行为。
+
+"UserManagerTest.kt":
+
+```kotlin
+@Test
+fun testGetUserNames2() {
+        val mockDBHelper = mockk<DBHelper>()
+        every { mockDBHelper.queryUserName(any<Int>()) } returns "MockUser"
+        every { mockDBHelper.queryUserName(1) } returns "Alice"
+        every { mockDBHelper.queryUserName(2) } returns "Bob"
+
+
+        println("QueryUserName of ID=1:[${mockDBHelper.queryUserName(1)}]")
+        println("QueryUserName of ID=2:[${mockDBHelper.queryUserName(2)}]")
+        println("QueryUserName of ID=3:[${mockDBHelper.queryUserName(3)}]")
+}
+```
+
+
+
+```text
+QueryUserName of ID=1:[Alice]
+QueryUserName of ID=2:[Bob]
+QueryUserName of ID=3:[MockUser]
+```
+
+每个Mock对象的同一方法可以设置多个条件，只要匹配器不冲突即可共存，实际运行时较晚设置的条件最先被匹配，所以我们应当先设置范围较大的行为，再设置范围精确的行为。
+
+
+## 私有方法
 every { mockClass["privateFunName"](arg1, arg2, ...) }
 
 
