@@ -251,11 +251,12 @@ fun testGetUserNames(){
 
 `@RelaxedMockK` 注解等同于 `@MockK(relaxed = true)` 。
 
-为了使上述注解生效，我们需要在测试代码执行前调用 `MockKAnnotations.init(this)` 方法；当测试代码执行完毕后，我们还应该调用 `unmockkAll()` 方法撤销所有Mock行为，防止当前测试方法中设置的Mock行为干扰后续的其他测试方法。
+为了使上述注解生效，我们需要在测试代码执行前调用 `MockKAnnotations.init(this)` 方法；当测试代码执行完毕后，我们还应该调用 `unmockkAll()` 方法撤销所有Mock行为，防止当前测试用例中设置的Mock行为干扰后续其他测试用例。
+
 
 # 定义行为
-## TODO
-为了模拟外部接口各种情况的行为，我们可以使用 `every {}` 语句定义Mock对象的属性与方法被调用时的行为，例如前文示例中的 `every { mockDBHelper.queryUsers() } returns mockDatas` 表示当mockDBHelper的该方法被调用时，返回mockDatas。
+## 基本应用
+为了观察被测对象在不同外部环境下的行为是否符合预期，我们可以通过 `every {}` 语句定义其依赖的Mock对象属性或方法被访问时的动作，例如前文示例中的 `every { mockDBHelper.queryUsers() } returns mockDatas` 语句表示当 `mockDBHelper` 的 `queryUsers()` 方法被访问时，返回测试用例中指定的模拟数据 `mockDatas` 。
 
 下文列表展示了 `every {}` 语句后可填写的后继语句：
 
@@ -268,7 +269,126 @@ fun testGetUserNames(){
 
 
 
+🟠 示例四：模拟固定返回值。
 
+在本示例中，我们为Mock对象定义行为，每当指定方法被调用时，返回测试用例指定的值。
+
+"DefineBehaviorTest.kt":
+
+```kotlin
+// 创建Mock对象
+val mockFile = mockk<File>()
+// 定义行为：当 `mockFile` 的 `getCanonicalPath()` 方法被访问时，返回 `/data/file1` 。
+every { mockFile.canonicalPath } returns "/data/file1"
+
+// 调用Mock对象的 `getCanonicalPath()` 方法并输出结果
+println("File Path:[${mockFile.canonicalPath}]")
+
+// 修改行为：当 `mockFile` 的 `getCanonicalPath()` 方法被访问时，返回 `/data/file2` 。
+every { mockFile.canonicalPath } returns "/data/file2"
+
+// 调用Mock对象的 `getCanonicalPath()` 方法并输出结果
+println("File Path:[${mockFile.canonicalPath}]")
+```
+
+此时运行示例程序，并查看控制台输出信息：
+
+```text
+File Path:[/data/file1]
+File Path:[/data/file2]
+```
+
+根据上述输出内容可知：
+
+Mock对象的行为可以被覆盖，以便我们复用测试环境对不同的输入条件进行验证。
+
+🟠 示例五：模拟序列返回值。
+
+在本示例中，我们为Mock对象定义行为，每当指定方法被调用时，依次返回不同的值。
+
+"DefineBehaviorTest.kt":
+
+```kotlin
+        // 创建Mock对象
+        val mockFile = mockk<File>()
+        // 设置每次调用时返回的值序列
+        val mockResult = listOf(100L, 200L, 1024L)
+        // 定义行为：当 `mockFile` 的 `length()` 方法被访问时，依次返回 `mockResult` 列表中的值。
+        every { mockFile.length() } returnsMany mockResult
+
+        // 多次访问Mock对象的属性并输出结果
+        for (i in 1..5) {
+            println("第 $i 次调用： Length:[${mockFile.length()}]")
+        }
+```
+
+此时运行示例程序，并查看控制台输出信息：
+
+```text
+第 1 次调用： Length:[100]
+第 2 次调用： Length:[200]
+第 3 次调用： Length:[1024]
+第 4 次调用： Length:[1024]
+第 5 次调用： Length:[1024]
+```
+
+根据上述输出内容可知：
+
+前三次调用返回值与 `mockResult` 列表中的元素顺序一致，超出列表后的调用，则返回列表中的最后一个元素。
+
+🟠 示例六：自定义行为。
+
+在本示例中，我们为Mock对象定义行为，每当指定方法被调用时，输出控制台消息。
+
+"DefineBehaviorTest.kt":
+
+```kotlin
+        // 创建Mock对象
+        val mockFile = mockk<File>()
+        // 定义行为：当 `mockFile` 的 `getCanonicalPath()` 方法被访问时，返回 `/data/file1` 。
+        every { mockFile.canonicalPath } answers {
+            // 输出消息
+            println("$mockFile `canonicalPath()` was called.")
+
+            // 此时 `answers {}` 块的最后一行将作为返回值
+            "/data/file1"
+        }
+
+        // 调用Mock对象的 `getCanonicalPath()` 方法并输出结果
+        println("File Path:[${mockFile.canonicalPath}]")
+```
+
+此时运行示例程序，并查看控制台输出信息：
+
+```text
+File(#2) `canonicalPath()` was called.
+File Path:[/data/file1]
+```
+
+根据上述输出内容可知：
+
+方法被调用时，首先执行了 `answers {}` 块中的内容，输出消息，并将表达式最后一行的内容作为返回值传递给调用者。
+
+🟠 示例七：模拟异常。
+
+在本示例中，我们为Mock对象定义行为，每当指定方法被调用时，抛出测试用例指定的异常。
+
+"DefineBehaviorTest.kt":
+
+```kotlin
+    @Test(expected = IOException::class)
+    fun test_define_exception() {
+        // 创建Mock对象
+        val mockFile = mockk<File>()
+        // 定义行为：当 `mockFile` 的 `getCanonicalPath()` 方法被访问时，抛出异常。
+        every { mockFile.canonicalPath } throws IOException("This is a mock exception!")
+
+        // 调用Mock对象的 `getCanonicalPath()` 方法并输出结果
+        println("File Path:[${mockFile.canonicalPath}]")
+    }
+```
+
+此时调用mockFile的getCanonicalPath()方法会抛出IOException异常，但异常已被JUnit捕获，因此测试用例不会失败，在实际应用中可以检测被测对象是否正确地处理了异常。
 
 ## 匹配参数
 
@@ -286,28 +406,29 @@ fun testGetUserNames(){
 
 
 
-🟠 示例二：参数匹配器。
+🟠 示例八：参数匹配器。
 
-在本示例中，我们使用参数匹配器定义Mock对象被调用时的多种行为。
+在本示例中，我们使用参数匹配器定义Mock方法接收到不同参数时的行为。
 
-第一步，我们对前文“示例一”的业务代码进行修改。
+第一步，我们定义DBHelper类，并添加一些方法以便进行Mock测试。
 
-我们在DBHelper类中新增一个日志记录方法 `saveLog()` ，然后在UserManager中调用该方法。
-
-"DBHelper.kt":
+"DefineBehaviorTest.kt":
 
 ```kotlin
-    class DBHelper {
+class DBHelper {
 
-        // 根据用户ID查询姓名
-        fun queryUserName(id: Int): String = "Real Name"
+    // 根据用户ID查询姓名
+    fun queryUserName(id: Int): String = "Real Name"
 
-        // 根据身份证号查询姓名
-        fun queryUserName(cardID: String): String = "Real Name"
-    }
+    // 根据身份证号查询姓名
+    fun queryUserName(cardID: String): String = "Real Name"
+
+    // 查询所有年龄和性别符合要求的用户ID
+    fun queryUserNames(age: Int, male: Boolean): List<String> = listOf("Real Name")
+}
 ```
 
-第二步，我们使用宽松模式生成DBHelper的Mock对象。
+第二步，我们对。
 
 测试多个条件
 
@@ -344,10 +465,8 @@ every { mockClass["privateFunName"](arg1, arg2, ...) }
 
 
 
-## 验证行为
-
-
-测试框架可以验证有直接返回值的方法，但是对于没有返回值的 void 方法应该如何测试呢？void 方法的输出结果其实是调用了另外一个方法，所以需要验证该方法是否有被调用，调用时参数是否正确。
+# 验证行为
+对于有返回值的方法，我们可以通过测试框架提供的断言比较结果是否与预期相符，对于无返回值的方法，我们就需要通过Mock框架进行验证。Mock对象会记录所有方法是否被调用过、被调用时的参数等信息。
 
 
 verify 是用来检查方法是否触发，当然它也很强大，它有许多参数可选，来看看这些参数：
