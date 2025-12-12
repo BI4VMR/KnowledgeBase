@@ -256,22 +256,18 @@ fun testGetUserNames(){
 
 # 定义行为
 ## 基本应用
-为了观察被测对象在不同外部环境下的行为是否符合预期，我们可以通过 `every {}` 语句定义其依赖的Mock对象属性或方法被访问时的动作，例如前文示例中的 `every { mockDBHelper.queryUsers() } returns mockDatas` 语句表示当 `mockDBHelper` 的 `queryUsers()` 方法被访问时，返回测试用例中指定的模拟数据 `mockDatas` 。
+为了观察被测对象在不同环境中的行为是否符合预期，我们可以通过 `every {}` 语句定义其依赖的Mock对象被访问时的动作。在前文示例中，我们已经初步应用了指定方法返回值的 `returns <返回值>` 语句和无返回值方法的 `just runs` 语句，下文列表展示了 `every {}` 语句后可填写的所有后继语句：
 
-下文列表展示了 `every {}` 语句后可填写的后继语句：
-
-- `just runs` : “什么都不做”，仅适用于无返回值的方法。
-- `return <返回值类型的实例>` : 返回指定的实例。
-- `returnsMany List<返回值类型的实例>` : 该方法被多次调用时，依次返回列表中的元素。
-- `answers {}` : 执行某个语句块，如果 `every {}` 中的方法有返回值，则将`answers {}`块的最后一行作为返回值。
-- `throws <异常对象>` : 当指定方法被调用时抛出异常。
+- `just runs` : 该方法被调用时，“什么都不做”，仅适用于无返回值的方法。
+- `returns <返回值>` : 该方法被调用时，始终返回固定的值。
+- `returnsMany List<返回值>` : 该方法被多次调用时，依次返回列表中的元素。
+- `answers {<语句块>}` : 该方法被调用时，执行语句块。若该方法有返回值，则将语句块的最后一行内容作为返回值。
+- `throws <异常对象>` : 该方法被调用时，抛出指定的异常。
 - `throwsMany List<异常对象>` : 该方法被多次调用时，依次抛出列表中的异常。
-
-
 
 🟠 示例四：模拟固定返回值。
 
-在本示例中，我们为Mock对象定义行为，每当指定方法被调用时，返回测试用例指定的值。
+在本示例中，我们为Mock对象定义行为，每当指定方法被调用时，返回测试用例中指定的值。
 
 "DefineBehaviorTest.kt":
 
@@ -283,6 +279,9 @@ every { mockFile.canonicalPath } returns "/data/file1"
 
 // 调用Mock对象的 `getCanonicalPath()` 方法并输出结果
 println("File Path:[${mockFile.canonicalPath}]")
+// 再次调用Mock对象的 `getCanonicalPath()` 方法并输出结果
+println("File Path:[${mockFile.canonicalPath}]\n")
+
 
 // 修改行为：当 `mockFile` 的 `getCanonicalPath()` 方法被访问时，返回 `/data/file2` 。
 every { mockFile.canonicalPath } returns "/data/file2"
@@ -295,12 +294,16 @@ println("File Path:[${mockFile.canonicalPath}]")
 
 ```text
 File Path:[/data/file1]
+File Path:[/data/file1]
+
 File Path:[/data/file2]
 ```
 
 根据上述输出内容可知：
 
-Mock对象的行为可以被覆盖，以便我们复用测试环境对不同的输入条件进行验证。
+当我们定义Mock对象的 `getCanonicalPath()` 方法返回 `/data/file1` 后，调用者始终能够接收到该字符串；随后我们重新定义该方法的返回值为 `/data/file2` ，调用者就会接收到新字符串。
+
+我们可以在前一个测试用例之后，利用现有环境重新定义Mock对象的行为，继续执行后一个测试用例，以便对不同的输入条件进行验证。
 
 🟠 示例五：模拟序列返回值。
 
@@ -309,17 +312,17 @@ Mock对象的行为可以被覆盖，以便我们复用测试环境对不同的�
 "DefineBehaviorTest.kt":
 
 ```kotlin
-        // 创建Mock对象
-        val mockFile = mockk<File>()
-        // 设置每次调用时返回的值序列
-        val mockResult = listOf(100L, 200L, 1024L)
-        // 定义行为：当 `mockFile` 的 `length()` 方法被访问时，依次返回 `mockResult` 列表中的值。
-        every { mockFile.length() } returnsMany mockResult
+// 创建Mock对象
+val mockFile = mockk<File>()
+// 设置每次调用时返回的值序列
+val mockResult = listOf(100L, 200L, 1024L)
+// 定义行为：当 `mockFile` 的 `length()` 方法被访问时，依次返回 `mockResult` 列表中的值。
+every { mockFile.length() } returnsMany mockResult
 
-        // 多次访问Mock对象的属性并输出结果
-        for (i in 1..5) {
-            println("第 $i 次调用： Length:[${mockFile.length()}]")
-        }
+// 多次访问Mock对象的属性并输出结果
+for (i in 1..5) {
+    println("第 $i 次调用： Length:[${mockFile.length()}]")
+}
 ```
 
 此时运行示例程序，并查看控制台输出信息：
@@ -334,7 +337,7 @@ Mock对象的行为可以被覆盖，以便我们复用测试环境对不同的�
 
 根据上述输出内容可知：
 
-前三次调用返回值与 `mockResult` 列表中的元素顺序一致，超出列表后的调用，则返回列表中的最后一个元素。
+第1至3次调用的返回值与 `mockResult` 列表中的元素一一对应，而超过列表长度的调用则会返回列表中的最后一个元素。
 
 🟠 示例六：自定义行为。
 
@@ -343,19 +346,19 @@ Mock对象的行为可以被覆盖，以便我们复用测试环境对不同的�
 "DefineBehaviorTest.kt":
 
 ```kotlin
-        // 创建Mock对象
-        val mockFile = mockk<File>()
-        // 定义行为：当 `mockFile` 的 `getCanonicalPath()` 方法被访问时，返回 `/data/file1` 。
-        every { mockFile.canonicalPath } answers {
-            // 输出消息
-            println("$mockFile `canonicalPath()` was called.")
+// 创建Mock对象
+val mockFile = mockk<File>()
+// 定义行为：当 `mockFile` 的 `getCanonicalPath()` 方法被访问时，返回 `/data/file1` 。
+every { mockFile.canonicalPath } answers {
+    // 输出消息
+    println("$mockFile `canonicalPath()` was called.")
 
-            // 此时 `answers {}` 块的最后一行将作为返回值
-            "/data/file1"
-        }
+    // 此时 `answers {}` 块的最后一行将作为返回值
+    "/data/file1"
+}
 
-        // 调用Mock对象的 `getCanonicalPath()` 方法并输出结果
-        println("File Path:[${mockFile.canonicalPath}]")
+// 调用Mock对象的 `getCanonicalPath()` 方法并输出结果
+println("File Path:[${mockFile.canonicalPath}]")
 ```
 
 此时运行示例程序，并查看控制台输出信息：
@@ -390,21 +393,22 @@ File Path:[/data/file1]
 
 此时调用mockFile的getCanonicalPath()方法会抛出IOException异常，但异常已被JUnit捕获，因此测试用例不会失败，在实际应用中可以检测被测对象是否正确地处理了异常。
 
-## 匹配参数
-
-`every {}` 语句中的方法参数可以填写具体的数值，此时表示仅当调用者传入匹配的参数时才会触发对应的行为，如果我们希望匹配所有方法，可以使用 `any()` 作为匹配器，方法重载时 `any()` 的参数为对应类型的Class。
-
-
-- `<参数值>` : 精确匹配参数值与字面量一致的调用。
-- `eq(<参数值>)` : 精确匹配参数值与字面量一致的调用。
-- `refEq(<参数值>)` :
-- `neq(<参数值>)` : 
-- `nrefEq(<参数值>)` :
-- `any()` : 匹配任意
-
-- `match {<表达式>}` : 自定义 lambda 表达式判断是否匹配
+## 参数匹配器
+有参方法的行为与参数密切相关，因此我们可以根据调用者传入的参数来定义不同的行为。模拟多种场景
 
 
+下文列表展示了常用的参数匹配器：
+
+- `any()` : 匹配任意参数值。
+- `isNull()` : 匹配传入参数为空值的调用。
+- `<参数值>` : 精确匹配调用者传入参数与指定参数值一致的调用。
+- `eq(<参数值>)` : 精确匹配调用者传入参数与指定参数值一致的调用。
+- `refEq(<参数值>)` : 精确匹配调用者传入实例与指定实例内存地址相同的调用。
+- `neq(<参数值>)` : 匹配所有传入参数与指定参数值不一致的调用。
+- `nrefEq(<参数值>)` : 匹配所有传入实例与指定实例内存地址不同的调用。
+- `match {<语句块>}` : 自定义匹配规则。
+
+下文示例展示了参数匹配器的具体用法。
 
 🟠 示例八：参数匹配器。
 
@@ -449,7 +453,7 @@ fun testGetUserNames2() {
 }
 ```
 
-
+此时运行示例程序，并查看控制台输出信息：
 
 ```text
 QueryUserName of ID=1:[Alice]
@@ -459,6 +463,44 @@ QueryUserName of ID=3:[MockUser]
 
 每个Mock对象的同一方法可以设置多个条件，只要匹配器不冲突即可共存，实际运行时较晚设置的条件最先被匹配，所以我们应当先设置范围较大的行为，再设置范围精确的行为。
 
+
+🟠 示例九：匹配重载方法。
+
+在本示例中，我们使用参数匹配器定义不同重载方法的行为。
+
+第二步，我们对。
+
+测试多个条件
+
+"UserManagerTest.kt":
+
+```kotlin
+// 匹配参数为Int类型的方法
+every { mockDBHelper.queryUserName(any<Int>()) } returns "MockUserA"
+// 匹配参数为Int类型的方法（等价写法）
+every { mockDBHelper.queryUserName(any(Int::class)) } returns "MockUserA"
+
+// 匹配参数为String类型的方法
+every { mockDBHelper.queryUserName(any<String>()) } returns "MockUserB"
+// 匹配参数为String类型的方法（等价写法）
+every { mockDBHelper.queryUserName(any(String::class)) } returns "MockUserB"
+
+// 查看返回值
+println("QueryUserName by ID:[${mockDBHelper.queryUserName(1)}]")
+println("QueryUserName by CardID:[${mockDBHelper.queryUserName("1999")}]")
+```
+
+此时运行示例程序，并查看控制台输出信息：
+
+```text
+QueryUserName of ID=1:[Alice]
+QueryUserName of ID=2:[Bob]
+QueryUserName of ID=3:[MockUser]
+```
+
+
+
+`every {}` 语句中的方法参数可以填写具体的数值，此时表示仅当调用者传入匹配的参数时才会触发对应的行为，如果我们希望匹配所有方法，可以使用 `any()` 作为匹配器，方法重载时 `any()` 的参数为对应类型的Class。
 
 ## 私有方法
 every { mockClass["privateFunName"](arg1, arg2, ...) }
