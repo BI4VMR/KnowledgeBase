@@ -256,7 +256,9 @@ fun testGetUserNames(){
 
 # 定义行为
 ## 基本应用
-为了观察被测对象在不同环境中的行为是否符合预期，我们可以通过 `every {}` 语句定义其依赖的Mock对象被访问时的动作。在前文示例中，我们已经初步应用了指定方法返回值的 `returns <返回值>` 语句和无返回值方法的 `just runs` 语句，下文列表展示了 `every {}` 语句后可填写的所有后继语句：
+为了观察被测对象在不同环境中的行为是否符合预期，我们可以通过 `every {}` 语句定义其依赖的Mock对象被访问时的动作。
+
+在前文示例中，我们已经初步应用了指定方法返回值的 `returns <返回值>` 语句，下文列表展示了 `every {}` 语句后可填写的所有后继语句：
 
 - `just runs` : 该方法被调用时，“什么都不做”，仅适用于无返回值的方法。
 - `returns <返回值>` : 该方法被调用时，始终返回固定的值。
@@ -265,7 +267,9 @@ fun testGetUserNames(){
 - `throws <异常对象>` : 该方法被调用时，抛出指定的异常。
 - `throwsMany List<异常对象>` : 该方法被多次调用时，依次抛出列表中的异常。
 
-🟠 示例四：模拟固定返回值。
+下文示例展示了行为定义语句的具体用法。
+
+🟢 示例四：模拟固定返回值。
 
 在本示例中，我们为Mock对象定义行为，每当指定方法被调用时，返回测试用例中指定的值。
 
@@ -301,11 +305,11 @@ File Path:[/data/file2]
 
 根据上述输出内容可知：
 
-当我们定义Mock对象的 `getCanonicalPath()` 方法返回 `/data/file1` 后，调用者始终能够接收到该字符串；随后我们重新定义该方法的返回值为 `/data/file2` ，调用者就会接收到新字符串。
+当我们定义Mock对象的 `getCanonicalPath()` 方法返回 `/data/file1` 后，调用者始终能够接收到该字符串；随后我们重新定义该方法的返回值为 `/data/file2` ，调用者则会接收到新字符串。
 
-我们可以在前一个测试用例之后，利用现有环境重新定义Mock对象的行为，继续执行后一个测试用例，以便对不同的输入条件进行验证。
+我们可以在前一个条件的测试完成之后，利用现有环境重新定义Mock对象的行为，继续测试后一个条件，以免为每个条件都创建单独的测试方法，产生过多的冗余代码。
 
-🟠 示例五：模拟序列返回值。
+🔵 示例五：模拟序列返回值。
 
 在本示例中，我们为Mock对象定义行为，每当指定方法被调用时，依次返回不同的值。
 
@@ -339,7 +343,7 @@ for (i in 1..5) {
 
 第1至3次调用的返回值与 `mockResult` 列表中的元素一一对应，而超过列表长度的调用则会返回列表中的最后一个元素。
 
-🟠 示例六：自定义行为。
+🟣 示例六：自定义行为。
 
 在本示例中，我们为Mock对象定义行为，每当指定方法被调用时，输出控制台消息。
 
@@ -370,32 +374,31 @@ File Path:[/data/file1]
 
 根据上述输出内容可知：
 
-方法被调用时，首先执行了 `answers {}` 块中的内容，输出消息，并将表达式最后一行的内容作为返回值传递给调用者。
+当Mock对象的 `getCanonicalPath()` 方法被调用时，`answers {}` 块中的语句被执行了，首先输出控制台消息，然后将表达式最后一行的内容作为返回值传递给调用者。
 
-🟠 示例七：模拟异常。
+🟤 示例七：模拟异常。
 
 在本示例中，我们为Mock对象定义行为，每当指定方法被调用时，抛出测试用例指定的异常。
 
 "DefineBehaviorTest.kt":
 
 ```kotlin
-    @Test(expected = IOException::class)
-    fun test_define_exception() {
-        // 创建Mock对象
-        val mockFile = mockk<File>()
-        // 定义行为：当 `mockFile` 的 `getCanonicalPath()` 方法被访问时，抛出异常。
-        every { mockFile.canonicalPath } throws IOException("This is a mock exception!")
+@Test(expected = IOException::class)
+fun test_define_exception() {
+    // 创建Mock对象
+    val mockFile = mockk<File>()
+    // 定义行为：当 `mockFile` 的 `getCanonicalPath()` 方法被访问时，抛出异常。
+    every { mockFile.canonicalPath } throws IOException("This is a mock exception!")
 
-        // 调用Mock对象的 `getCanonicalPath()` 方法并输出结果
-        println("File Path:[${mockFile.canonicalPath}]")
-    }
+    // 调用Mock对象的 `getCanonicalPath()` 方法并输出结果
+    println("File Path:[${mockFile.canonicalPath}]")
+}
 ```
 
-此时调用mockFile的getCanonicalPath()方法会抛出IOException异常，但异常已被JUnit捕获，因此测试用例不会失败，在实际应用中可以检测被测对象是否正确地处理了异常。
+当Mock对象的 `getCanonicalPath()` 方法被调用时，其会抛出IOException异常，此处我们通过JUnit捕获了异常，因此测试用例不会执行失败。
 
 ## 参数匹配器
-有参方法的行为与参数密切相关，因此我们可以根据调用者传入的参数来定义不同的行为。模拟多种场景
-
+有参方法的行为与调用者传入的参数密切相关，因此我们可以使用参数匹配器定义Mock对象的行为，以便模拟较为复杂的环境。
 
 下文列表展示了常用的参数匹配器：
 
@@ -410,11 +413,11 @@ File Path:[/data/file1]
 
 下文示例展示了参数匹配器的具体用法。
 
-🟠 示例八：参数匹配器。
+🔴 示例八：参数匹配器。
 
 在本示例中，我们使用参数匹配器定义Mock方法接收到不同参数时的行为。
 
-第一步，我们定义DBHelper类，并添加一些方法以便进行Mock测试。
+第一步，我们定义DBHelper类，并声明一些方法以便进行Mock测试。
 
 "DefineBehaviorTest.kt":
 
@@ -432,25 +435,21 @@ class DBHelper {
 }
 ```
 
-第二步，我们对。
+第二步，我们使用参数匹配器定义 `queryUserName(id: Int)` 方法在不同参数下的行为。
 
-测试多个条件
-
-"UserManagerTest.kt":
+"DefineBehaviorTest.kt":
 
 ```kotlin
-@Test
-fun testGetUserNames2() {
-        val mockDBHelper = mockk<DBHelper>()
-        every { mockDBHelper.queryUserName(any<Int>()) } returns "MockUser"
-        every { mockDBHelper.queryUserName(1) } returns "Alice"
-        every { mockDBHelper.queryUserName(2) } returns "Bob"
+val mockDBHelper = mockk<DBHelper>()
+// 定义不同条件下 `queryUserName()` 方法的返回值
+every { mockDBHelper.queryUserName(any<Int>()) } returns "MockUser"
+every { mockDBHelper.queryUserName(1) } returns "Alice"
+every { mockDBHelper.queryUserName(2) } returns "Bob"
 
-
-        println("QueryUserName of ID=1:[${mockDBHelper.queryUserName(1)}]")
-        println("QueryUserName of ID=2:[${mockDBHelper.queryUserName(2)}]")
-        println("QueryUserName of ID=3:[${mockDBHelper.queryUserName(3)}]")
-}
+// 查看返回值
+println("QueryUserName of ID=1:[${mockDBHelper.queryUserName(1)}]")
+println("QueryUserName of ID=2:[${mockDBHelper.queryUserName(2)}]")
+println("QueryUserName of ID=3:[${mockDBHelper.queryUserName(3)}]")
 ```
 
 此时运行示例程序，并查看控制台输出信息：
@@ -461,18 +460,23 @@ QueryUserName of ID=2:[Bob]
 QueryUserName of ID=3:[MockUser]
 ```
 
-每个Mock对象的同一方法可以设置多个条件，只要匹配器不冲突即可共存，实际运行时较晚设置的条件最先被匹配，所以我们应当先设置范围较大的行为，再设置范围精确的行为。
+根据上述输出内容可知：
+
+我们可以为Mock对象的同一方法注册多个行为定义语句，只要匹配器不冲突即可共存。
+
+当Mock方法被调用时，较晚设置的条件最先被匹配，因此在定义行为阶段，我们应当先设置匹配范围广泛的行为，再设置匹配范围精确的行为。
+
+
+在DBHelper类中存在一个参数类型为Int的 `queryUserName()` 方法和一个参数类型为String的 `queryUserName()` 方法，如果我们定义其中某个方法的行为时直接在参数位置填入 `queryUserName(any())`  ，就会产生歧义，无法确定我们需要定义哪个方法的行为。
+
+该匹配器的完整形式为： `any<T>(classifier: KClass<T>)` ，我们可以通过 `<T>` 或 `classifier` 参数指明匹配器的参数类型，解决此类问题。
 
 
 🟠 示例九：匹配重载方法。
 
 在本示例中，我们使用参数匹配器定义不同重载方法的行为。
 
-第二步，我们对。
-
-测试多个条件
-
-"UserManagerTest.kt":
+"DefineBehaviorTest.kt":
 
 ```kotlin
 // 匹配参数为Int类型的方法
@@ -484,23 +488,30 @@ every { mockDBHelper.queryUserName(any(Int::class)) } returns "MockUserA"
 every { mockDBHelper.queryUserName(any<String>()) } returns "MockUserB"
 // 匹配参数为String类型的方法（等价写法）
 every { mockDBHelper.queryUserName(any(String::class)) } returns "MockUserB"
-
-// 查看返回值
-println("QueryUserName by ID:[${mockDBHelper.queryUserName(1)}]")
-println("QueryUserName by CardID:[${mockDBHelper.queryUserName("1999")}]")
 ```
 
-此时运行示例程序，并查看控制台输出信息：
+---
 
-```text
-QueryUserName of ID=1:[Alice]
-QueryUserName of ID=2:[Bob]
-QueryUserName of ID=3:[MockUser]
+`<参数值>` 与 `eq(<参数值>)` 都表示精确匹配参数，它们的应用场景有一些区别。
+
+🟡 示例十：具体值与 `eq()` 匹配器的区别。
+
+在本示例中，我们演示字面量参数与 `eq()` 匹配器的区别。
+
+"DefineBehaviorTest.kt":
+
+```kotlin
+val mockDBHelper = mockk<DBHelper>()
+
+// 错误用法：字面量与匹配器混用
+every { mockDBHelper.queryUserNames(20, any()) } returns listOf()
+
+// 正确用法：全部使用匹配器
+every { mockDBHelper.queryUserNames(eq(20), any()) } returns listOf()
+// 正确用法：全部使用字面量
+every { mockDBHelper.queryUserNames(20, false) } returns listOf()
 ```
 
-
-
-`every {}` 语句中的方法参数可以填写具体的数值，此时表示仅当调用者传入匹配的参数时才会触发对应的行为，如果我们希望匹配所有方法，可以使用 `any()` 作为匹配器，方法重载时 `any()` 的参数为对应类型的Class。
 
 ## 私有方法
 every { mockClass["privateFunName"](arg1, arg2, ...) }
