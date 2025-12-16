@@ -145,6 +145,8 @@ Mock对象中的部分方法执行与否对测试逻辑没有负面影响，例�
 - 非空引用类型：返回该类型的宽松模式Mock对象。
 - 集合类型：返回空集合。
 
+下文示例展示了宽松模式的具体用法。
+
 🟠 示例二：使用宽松模式创建Mock对象。
 
 在本示例中，我们使用宽松模式创建Mock对象，并调用未手动定义行为的Mock方法。
@@ -309,6 +311,8 @@ File Path:[/data/file2]
 
 我们可以在前一个条件的测试完成之后，利用现有环境重新定义Mock对象的行为，继续测试后一个条件，以免为每个条件都创建单独的测试方法，产生过多的冗余代码。
 
+---
+
 🔵 示例五：模拟序列返回值。
 
 在本示例中，我们为Mock对象定义行为，每当指定方法被调用时，依次返回不同的值。
@@ -343,6 +347,8 @@ for (i in 1..5) {
 
 第1至3次调用的返回值与 `mockResult` 列表中的元素一一对应，而超过列表长度的调用则会返回列表中的最后一个元素。
 
+---
+
 🟣 示例六：自定义行为。
 
 在本示例中，我们为Mock对象定义行为，每当指定方法被调用时，输出控制台消息。
@@ -375,6 +381,8 @@ File Path:[/data/file1]
 根据上述输出内容可知：
 
 当Mock对象的 `getCanonicalPath()` 方法被调用时，`answers {}` 块中的语句被执行了，首先输出控制台消息，然后将表达式最后一行的内容作为返回值传递给调用者。
+
+---
 
 🟤 示例七：模拟异常。
 
@@ -466,11 +474,11 @@ QueryUserName of ID=3:[MockUser]
 
 当Mock方法被调用时，较晚设置的条件最先被匹配，因此在定义行为阶段，我们应当先设置匹配范围广泛的行为，再设置匹配范围精确的行为。
 
+---
 
-在DBHelper类中存在一个参数类型为Int的 `queryUserName()` 方法和一个参数类型为String的 `queryUserName()` 方法，如果我们定义其中某个方法的行为时直接在参数位置填入 `queryUserName(any())`  ，就会产生歧义，无法确定我们需要定义哪个方法的行为。
+在DBHelper类中存在 `queryUserName(id: Int)` 方法和 `queryUserName(cardID: String)` 方法，若我们定义方法的行为时直接在 `every {}` 中填入 `queryUserName(any())` ，就会产生歧义，此时MockK无法确定我们想要定义哪个方法的行为。
 
-该匹配器的完整形式为： `any<T>(classifier: KClass<T>)` ，我们可以通过 `<T>` 或 `classifier` 参数指明匹配器的参数类型，解决此类问题。
-
+`any()` 匹配器的完整形式为： `any<T>(classifier: KClass<T>)` ，我们可以通过泛型 `<T>` 或 `classifier` 参数指明匹配器的参数类型，解决重载方法的Mock问题。
 
 🟠 示例九：匹配重载方法。
 
@@ -492,11 +500,11 @@ every { mockDBHelper.queryUserName(any(String::class)) } returns "MockUserB"
 
 ---
 
-`<参数值>` 与 `eq(<参数值>)` 都表示精确匹配参数，它们的应用场景有一些区别。
+`<参数值>` 与匹配器 `eq(<参数值>)` 都表示精确匹配参数值，但它们的适用场景有一些区别，我们通过下文示例进行说明。
 
 🟡 示例十：具体值与 `eq()` 匹配器的区别。
 
-在本示例中，我们演示字面量参数与 `eq()` 匹配器的区别。
+在本示例中，我们演示参数具体值与 `eq()` 匹配器的区别。
 
 "DefineBehaviorTest.kt":
 
@@ -512,6 +520,7 @@ every { mockDBHelper.queryUserNames(eq(20), any()) } returns listOf()
 every { mockDBHelper.queryUserNames(20, false) } returns listOf()
 ```
 
+在同一条行为定义语句中，要么全部使用具体值，要么全部使用匹配器。我们不应将二者混用，虽然有时混用不会导致错误，但这属于未定义行为，应当尽量避免。
 
 ## 私有方法
 every { mockClass["privateFunName"](arg1, arg2, ...) }
