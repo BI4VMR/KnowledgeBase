@@ -522,10 +522,6 @@ every { mockDBHelper.queryUserNames(20, false) } returns listOf()
 
 在同一条行为定义语句中，要么全部使用具体值，要么全部使用匹配器。我们不应将二者混用，虽然有时混用不会导致错误，但这属于未定义行为，应当尽量避免。
 
-## 私有方法
-every { mockClass["privateFunName"](arg1, arg2, ...) }
-
-
 
 # 验证行为
 对于有返回值的方法，我们可以通过测试框架提供的断言比较结果是否与预期相符，对于无返回值的方法，我们就需要通过Mock框架进行验证。Mock对象会记录所有方法是否被调用过、被调用时的参数等信息。
@@ -561,6 +557,12 @@ fun verify(
 
 
 verify不会重置调用记录，因此如果需要复用mock对象，次数需要加1，或者重置mock对象
+
+
+<!-- TODO
+## 私有方法
+every { mockClass["privateFunName"](arg1, arg2, ...) }
+-->
 
 
 
