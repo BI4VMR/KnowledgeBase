@@ -567,13 +567,11 @@ every { mockClass["privateFunName"](arg1, arg2, ...) }
 
 
 # Kotlin相关
-Mockk
+MockK提供了针对Object、JVM静态方法等元素的Mock工具，以便我们在Kotlin环境中便捷地编写测试代码。
 
+🟢 示例X：模拟Object中的普通方法。
 
-
-🟢 示例四：Mock Object中的方法。
-
-在本示例中，我们使用MockK模拟Object中的方法。
+在本示例中，我们模拟Object中的非静态方法。
 
 第一步，我们编写业务代码。
 
@@ -590,10 +588,11 @@ object Utils {
 "UtilsTest.kt":
 
 ```kotlin
-// Mock Utils中的普通方法
+// 为Utils中的普通方法启用Mock
 mockkObject(Utils)
 // 定义行为
 every { Utils.getCurrentTime() } returns 1234567890L
+
 // 调用Mock方法
 println("Utils#getCurrentTime:[${Utils.getCurrentTime()}]")
 
@@ -601,16 +600,21 @@ println("Utils#getCurrentTime:[${Utils.getCurrentTime()}]")
 unmockkObject(Utils)
 ```
 
-我们可以使用 `mockkObject(objects: Any)` 方法启用Object的Mock，然后通过 `every {}` 语句定义Mock对象的行为。
+我们首先调用 `mockkObject(vararg objects: Any)` 方法并传入目标Object，为它们启用Mock功能，随后即可通过 `every {}` 语句定义方法的行为。
 
-如果我们不再需要针对某个Object的Mock，可以调用 `unmockkObject(objects: Any)` 方法撤销Mock行为。
+当Object的Mock行为使用完毕后，我们可以调用 `unmockkObject(vararg objects: Any)` 方法撤销所有行为定义。
 
+此时运行示例程序，并查看控制台输出信息：
 
+```text
+Utils#getCurrentTime:[1234567890]
+```
 
+---
 
-🔵 示例五：Mock Object中的静态方法。
+🔵 示例X：模拟Object中的静态方法。
 
-在本示例中，我们使用MockK模拟Object中的 `@JvmStatic` 方法。
+在本示例中，我们模拟Object中的JVM静态方法。
 
 第一步，我们编写业务代码。
 
@@ -618,6 +622,7 @@ unmockkObject(Utils)
 
 ```kotlin
 object Utils {
+
     @JvmStatic
     fun getURL(): String {
         return "http://192.168.1.1/"
@@ -630,12 +635,87 @@ object Utils {
 "UtilsTest.kt":
 
 ```kotlin
-// Mock Utils中的静态方法
+// 为Utils中的静态方法启用Mock
 mockkStatic(Utils::class)
+
 // 定义行为
-every { Utils.getURL() } returns "http://example.com/"
+every { Utils.getURL() } returns "http://test.com/"
+
 // 调用Mock方法
 println("Utils#getURL:[${Utils.getURL()}]")
+
+// 撤销Mock（可选）
+unmockkStatic(Utils::class)
+```
+
+我们首先调用 `mockkStatic(vararg classes: KClass<*>)` 方法并传入目标Object的KClass，为它们启用Mock功能，随后即可通过 `every {}` 语句定义JVM静态方法的行为。
+
+当静态方法的Mock行为使用完毕后，我们可以调用 `unmockkStatic(vararg classes: KClass<*>)` 方法撤销所有行为定义。
+
+此时运行示例程序，并查看控制台输出信息：
+
+```text
+Utils#getURL:[http://test.com/]
+```
+
+> 🚩 提示
+>
+> 对于使用Java语言编写的静态方法，我们也可以使用上述方式进行Mock。
+
+---
+
+🔵 示例X：模拟伴生对象中的方法。
+
+在本示例中，我们模拟类的伴生对象中的方法。
+
+第一步，我们编写业务代码。
+
+"Utils.kt":
+
+```kotlin
+class Utils2 {
+
+    companion object {
+
+        fun method(): String {
+            return "Method in companion object."
+        }
+
+        @JvmStatic
+        fun methodStatic(): String {
+            return "Static method in companion object."
+        }
+    }
+}
+```
+
+第二步，我们编写测试代码。
+
+"UtilsTest.kt":
+
+```kotlin
+// 为Utils2伴生对象中的方法启用Mock
+mockkObject(Utils2)
+
+// 使用该语句也能启用伴生对象的Mock
+// mockkObject(Utils2.Companion)
+
+every { Utils2.method() } returns "Test method."
+every { Utils2.methodStatic() } returns "Test static method."
+
+println("Utils2#method:[${Utils2.method()}]")
+println("Utils2#methodStatic:[${Utils2.methodStatic()}]")
+```
+
+对于类的伴生对象，我们可以直接调用 `mockkObject(<类名>.Companion)` 方法启用Mock；除此之外，我们也可以只传入类名，省略Companion部分，这是因为 `mockkObject()` 方法将会自动识别类的伴生对象并为其启用Mock。
+
+由于伴生对象中 `@JvmStatic` 注解只是生成了新的静态方法，并指向Companion原有的非静态方法，而 `mockkObject()` 已经启用了非静态方法的Mock功能，因此我们无需调用 `mockkStatic()` 也能为JVM静态方法启用Mock。
+
+此时运行示例程序，并查看控制台输出信息：
+
+```text
+Utils2#method:[Test method.]
+Utils2#methodStatic:[Test static method.]
 ```
 
 
