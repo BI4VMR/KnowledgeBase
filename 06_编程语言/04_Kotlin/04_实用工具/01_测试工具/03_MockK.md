@@ -1,7 +1,7 @@
 # 简介
-Mockito是一个针对Java语言的Mock工具，即使提供了Kotlin扩展，它对Kotlin的功能支持仍然有限，例如：无法模拟Kotlin的Object、函数式编程支持不佳等。
+Mockito是针对Java语言设计的Mock工具，即使它提供了Kotlin扩展，其对Kotlin的支持仍然有限，例如：无法模拟Kotlin中的Object、对函数式编程和协程支持欠佳等。
 
-MockK是专门为Kotlin语言设计的Mock工具，使用方法与Mockito类似，并且支持Kotlin的专有特性，它的官方网站为： [🔗 MockK](https://mockk.io/) 。
+MockK是专为Kotlin语言（JVM平台）所设计的Mock工具，它的用法与Mockito类似，并且支持Kotlin的专有特性，其官方网站为： [🔗 MockK](https://mockk.io/) 。
 
 本章的示例工程详见以下链接：
 
@@ -53,7 +53,7 @@ dependencies {
 
 第二步，我们编写业务代码。
 
-此处以用户管理功能为例，我们编写一个UserManager类提供用户信息查询接口，其依赖于数据库工具类DBHelper提供的接口。
+此处以用户管理功能为例，我们编写UserManager类提供用户信息查询接口，其依赖于数据库工具类DBHelper提供的接口。
 
 "DBHelper.kt":
 
@@ -83,13 +83,13 @@ class UserManager {
 
 第三步，我们编写测试代码。
 
-我们的目标是测试UserManager中的接口是否正常，并不关心DBHelper连接何种数据库、用户信息表具有何种结构，因此我们需要创建DBHelper类的Mock对象，给UserManager提供预设的用户信息。
+我们的目标是测试UserManager功能是否正常，并不关心DBHelper连接何种数据库、用户信息表具有何种结构，因此我们需要创建DBHelper类的Mock对象，给UserManager提供模拟的用户信息。
 
 "UserManagerTest.kt":
 
 ```kotlin
 @Test
-fun testGetUserNames() {
+fun test_GetUserNames() {
     // 模拟数据
     val mockDatas: Map<Long, String> = mapOf(1L to "来宾账户", 2L to "用户A", 3L to "用户B")
 
@@ -118,7 +118,7 @@ fun testGetUserNames() {
 
 我们首先通过 `mockk<T>()` 方法创建Mock对象，并通过 `every { mockDBHelper.queryUsers() } returns mockDatas` 语句定义Mock对象的行为：如果 `mockDBHelper` 对象的 `queryUsers()` 方法被调用，则返回 `mockDatas` 给调用者。
 
-接着，我们创建了待测接口所在类UserManager的对象，并通过反射将Mock对象注入到UserManager中，扩展方法 `injectMock()` 的具体实现详见本章示例工程。
+接着，我们创建待测接口所在类UserManager的实例，并通过反射将Mock对象注入到UserManager中，扩展方法 `injectMock()` 的具体实现详见本章示例工程。
 
 此时运行示例程序，并查看控制台输出信息：
 
@@ -133,17 +133,17 @@ Index:[2] Name:[用户B]
 UserManager调用DBHelper中的接口后，输出内容确实为测试代码提供的模拟数据，并非DBHelper的内置数据，这表明Mock操作成功，测试代码已经隔离了UserManager的外部依赖DBHelper。
 
 ## 宽松模式
-若待测方法调用了Mock对象中的某个方法，但我们没有预先为此Mock方法定义行为，MockK不知道应当执行何种动作，就会抛出异常提醒开发者。
+若待测对象调用了Mock对象中的某个方法，但我们没有预先为此Mock方法定义行为，MockK不知道应当执行何种动作，就会抛出异常提醒开发者。
 
-Mock对象中的部分方法执行与否对测试逻辑没有负面影响，例如：日志记录，我们可以使用 `every { <日志记录方法> } just runs` 语句定义它们的行为：“什么都不做”，避免运行时出现异常；但有时此类方法数量较多，手动定义会产生大量重复代码，更好的方案是使用宽松模式创建Mock对象。
+Mock对象中的部分方法执行与否对测试逻辑没有负面影响，例如：日志记录，我们可以使用 `every { <日志记录方法> } just runs` 语句定义它们的行为：“什么都不做”，避免运行时出现异常；有时此类方法数量较多，手动定义会产生大量重复代码，更好的方案是使用宽松模式创建Mock对象。
 
-宽松模式的Mock对象会为每个方法添加默认行为：“什么都不做”，对于有返回值的方法，返回值如下文列表所示：
+宽松模式的Mock对象会为每个方法添加默认行为：“什么都不做”，避免运行时异常；对于有返回值的方法，返回值如下文列表所示：
 
 - 数值型：返回 `0` 。
 - 布尔型：返回 `false` 。
 - 可空引用类型：返回 `null` 。
 - 非空引用类型：返回该类型的宽松模式Mock对象。
-- 集合类型：返回空集合。
+- 集合类型：返回内容为空的集合。
 
 下文示例展示了宽松模式的具体用法。
 
@@ -153,7 +153,7 @@ Mock对象中的部分方法执行与否对测试逻辑没有负面影响，例�
 
 第一步，我们对前文“示例一”的业务代码进行修改。
 
-我们在DBHelper类中新增一个日志记录方法 `saveLog()` ，然后在UserManager中调用该方法。
+我们在DBHelper类中新增日志记录方法 `saveLog()` ，然后在UserManager中调用该方法。
 
 "UserManager.kt":
 
@@ -168,7 +168,7 @@ fun getUserNames2(): List<String> {
 }
 ```
 
-此时运行UserManagerTest中的测试方法，控制台就会输出以下错误信息：
+此时运行UserManagerTest中的测试用例，控制台将会输出以下错误信息：
 
 ```text
 io.mockk.MockKException: no answer found for DBHelper(#1).saveLog(GetUserNames) among the configured answers: (DBHelper(#1).queryUsers())
@@ -184,10 +184,10 @@ io.mockk.MockKException: no answer found for DBHelper(#1).saveLog(GetUserNames) 
 
 ```kotlin
 @Test
-fun testGetUserNames2() {
+fun test_GetUserNames2() {
     val mockDatas: Map<Long, String> = mapOf(1L to "来宾账户", 2L to "用户A", 3L to "用户B")
 
-    // 创建DBHelper的Mock对象（使用relaxed = true为没有明确定义行为的类添加默认行为）
+    // 创建DBHelper的Mock对象（使用 `relaxed = true` 为没有明确定义行为的类添加默认行为）
     val mockDBHelper: DBHelper = mockk(relaxed = true)
     // 定义行为：如果 `queryUsers()` 方法被调用，则返回模拟数据。
     every { mockDBHelper.queryUsers() } returns mockDatas
@@ -203,10 +203,14 @@ fun testGetUserNames2() {
 
 `mockk()` 方法的 `relaxed` 参数用于控制是否需要启用宽松模式，默认为禁用，我们将其设为 `true` 即可为所有方法定义默认行为。
 
-有时宽松模式的默认返回值会误导我们编写错误的测试代码，为了解决此类问题， `mockk()` 方法还提供了一个 `relaxUnitFun` 参数，该模式只为Mock对象的无返回值方法定义默认行为，而有返回值方法则保持“若未定义行为则抛出异常”。我们可以根据实际情况选择 `relaxed` 或 `relaxUnitFun` 模式。
+此时运行新的测试用例 `test_GetUserNames2` ，不会再出现 `no answer found for DBHelper(#1).saveLog(GetUserNames)` 错误，说明该方法已被宽松模式配置的默认行为。
+
+---
+
+有时宽松模式的默认返回值会误导我们编写不恰当的测试代码，为了解决此类问题， `mockk()` 方法还提供了一个 `relaxUnitFun` 参数，该模式只为Mock对象的无返回值方法定义默认行为，而有返回值方法则保持“若未定义行为则抛出异常”。我们可以根据实际情况选择 `relaxed` 或 `relaxUnitFun` 两种模式。
 
 ## 常用注解
-在前文示例中，我们使用 `mockk()` 方法创建了一些局部Mock对象，它们仅能在单一测试方法内部被访问；有时我们需要在多个测试方法中共享Mock对象，并在JUnit的 `setup()` 方法中统一设置Mock行为，此时可以使用MockK提供的注解。
+在前文示例中，我们使用 `mockk()` 方法创建了一些局部Mock对象，它们仅能在单一测试用例内部被访问；有时我们希望在JUnit的 `setUp()` 方法中统一配置Mock对象及行为，并在多个测试用例中共享Mock对象，此时可以使用MockK提供的注解。
 
 🟡 示例三：使用注解创建Mock对象。
 
@@ -232,33 +236,26 @@ lateinit var mockDBHelper3: DBHelper
 lateinit var mockDBHelper4: DBHelper
 
 @Before
-fun setup() {
+fun setUp() {
     // 若要使用MockK注解，需要在执行其他操作前先初始化。
     MockKAnnotations.init(this)
 }
 
-@After
-fun teardown() {
-    // 撤销所有Mock
-    unmockkAll()
-}
-
 @Test
-fun testGetUserNames(){
-    // 在此处使用Mock对象
+fun test_GetUserNames(){
+    // 在此处使用Mock对象...
+    every { mockDBHelper1.queryUsers() } returns mapOf(1L to "来宾账户", 2L to "用户A")
 }
 ```
 
-`@MockK` 注解表示被修饰的全局变量是Mock对象，程序运行时MockK会根据变量类型自动创建对象并完成赋值。该注解拥有两个属性，其中 `relaxed` 表示是否启用宽松模式； `relaxUnitFun` 表示是否启用仅针对无返回值方法的宽松模式。
+`@MockK` 注解表示被修饰的全局变量是Mock对象，程序运行时MockK会根据变量类型自动创建对象并完成赋值。该注解拥有两个属性，其中 `relaxed` 表示是否启用宽松模式； `relaxUnitFun` 表示是否启用仅针对无返回值方法的宽松模式。`@RelaxedMockK` 注解等同于 `@MockK(relaxed = true)` 。
 
-`@RelaxedMockK` 注解等同于 `@MockK(relaxed = true)` 。
-
-为了使上述注解生效，我们需要在测试代码执行前调用 `MockKAnnotations.init(this)` 方法；当测试代码执行完毕后，我们还应该调用 `unmockkAll()` 方法撤销所有Mock行为，防止当前测试用例中设置的Mock行为干扰后续其他测试用例。
+MockK的注解默认不会生效，为了使注解生效并创建Mock对象，我们需要在每个测试用例执行前调用 `MockKAnnotations.init(this)` 方法。
 
 
 # 定义行为
 ## 基本应用
-为了观察被测对象在不同环境中的行为是否符合预期，我们可以通过 `every {}` 语句定义其依赖的Mock对象被访问时的动作。
+为了观察被测实例在不同环境中的行为是否符合预期，我们可以通过 `every {}` 语句定义其依赖的Mock对象被访问时的动作。
 
 在前文示例中，我们已经初步应用了指定方法返回值的 `returns <返回值>` 语句，下文列表展示了 `every {}` 语句后可填写的所有后继语句：
 
@@ -478,7 +475,7 @@ QueryUserName of ID=3:[MockUser]
 
 在DBHelper类中存在 `queryUserName(id: Int)` 方法和 `queryUserName(cardID: String)` 方法，若我们定义方法的行为时直接在 `every {}` 中填入 `queryUserName(any())` ，就会产生歧义，此时MockK无法确定我们想要定义哪个方法的行为。
 
-`any()` 匹配器的完整形式为： `any<T>(classifier: KClass<T>)` ，我们可以通过泛型 `<T>` 或 `classifier` 参数指明匹配器的参数类型，解决重载方法的Mock问题。
+`any()` 匹配器的完整形式为： `any<T>(classifier: KClass<T>)` ，我们可以通过泛型 `<T>` 或 `classifier` 参数指明匹配器的参数类型，解决重载方法的匹配问题。
 
 🟠 示例九：匹配重载方法。
 
@@ -529,40 +526,31 @@ every { mockDBHelper.queryUserNames(20, false) } returns listOf()
 
 verify 是用来检查方法是否触发，当然它也很强大，它有许多参数可选，来看看这些参数：
 
-fun verify(
-    ordering: Ordering = Ordering.UNORDERED,
-    inverse: Boolean = false,
-    atLeast: Int = 1,
-    atMost: Int = Int.MAX_VALUE,
-    exactly: Int = -1,
-    timeout: Long = 0,
-    verifyBlock: MockKVerificationScope.() -> Unit
-){}
 
-他们作用如下：
+- `verifyBlock` : 待验证的语句，是最后一个lambda参数可以写在括号外，与 `every {}` 语句类似，可以使用参数匹配器，并且一个块可以填写多个语句。
+- `atLeast` : 语句块中方法最少执行次数，默认1次。
+- `atMost` : 语句块中方法最多执行次数，默认为Int类型最大值。
+- `exactly` : 精确次数，默认值 `-1` 表示不启用该功能，任意正整数将会覆盖`atLeast`和`atMost`参数的行为，例如设为1表示该方法必须被调用1次，未调用和调用次数大于1都会导致验证失败。
+- `inverse` : 反转条件，验证方法是否不满足预设的条件。
+- `timeout` : 语句块内容执行时间，如果超过该事件，则测试会失败
+- `ordering` : 如果 `verifyBlock` 表达式存在多个方法，是否要求它们按照编写顺序被调用。
 
-    ordering： 表示verify{ .. } 中的内容（下面简称语句块）是按照顺序执行。 默认是无序的
-    inverse：如果为true，表示语句块中的内容不发生（即方法不执行）
-    atLeast：语句块中方法最少执行次数
-    atMost：语句块中方法最多执行次数
-    exactly：语句块中的方法具体执行次数
-    timeout：语句块内容执行时间，如果超过该事件，则测试会失败
-    verifyBlock： Lambda表达式，语句块本身
-
-除了这些，还有别的 verify 语句，方便你使用：
-
-    verifySequence{...}：验证代码按顺序执行，而且要每一行的代码都要在语句块中指定出来。
-    verifyAll{...}：验证代码全部都执行，没有顺序的规定
-    verifyOrder{...}：验证代码按顺序执行
 
 
 verify不会重置调用记录，因此如果需要复用mock对象，次数需要加1，或者重置mock对象
 
 
-<!-- TODO
-## 私有方法
-every { mockClass["privateFunName"](arg1, arg2, ...) }
--->
+
+
+
+默认值 `Ordering.UNORDERED` 表示不限制，且任意方法被调用认为通过， `ALL` 不限制顺序，但Mock实际被调用的方法必须与verify匹配，缺少或多都会报错。 `ORDERED` 方法必须按编写顺序被调用，但不要求所有方法均被调用。 `SEQUENCE` 所有方法必须按顺序被调用。
+
+
+该属性有一些对应的快捷方式
+
+`verifyOrder {}` : 等同于 `verify (ordering = Ordering.ORDERED) {}` 。
+`verifyAll {}` : 等同于 `verify (ordering = Ordering.ALL) {}` 。
+`verifySequence {}` : 等同于 `verify (ordering = Ordering.SEQUENCE) {}` 。
 
 
 
@@ -575,39 +563,43 @@ MockK提供了针对Object、JVM静态方法等元素的Mock工具，以便我�
 
 第一步，我们编写业务代码。
 
-"Utils.kt":
+"UtilsObject.kt":
 
 ```kotlin
-object Utils {
+object UtilsObject {
     fun getCurrentTime(): Long = System.currentTimeMillis()
 }
 ```
 
 第二步，我们编写测试代码。
 
-"UtilsTest.kt":
+"UtilsObjectTest.kt":
 
 ```kotlin
-// 为Utils中的普通方法启用Mock
-mockkObject(Utils)
+// 为UtilsObject中的普通方法启用Mock
+mockkObject(UtilsObject)
 // 定义行为
-every { Utils.getCurrentTime() } returns 1234567890L
+every { UtilsObject.getCurrentTime() } returns 1234567890L
 
 // 调用Mock方法
-println("Utils#getCurrentTime:[${Utils.getCurrentTime()}]")
+println("UtilsObject#getCurrentTime:[${Utils.getCurrentTime()}]")
 
-// 撤销Mock（可选）
-unmockkObject(Utils)
+// 撤销指定Object的Mock设置（可选）
+unmockkObject(UtilsObject)
+// 撤销所有Object、Static、构造方法的Mock设置（可选）
+unmockkAll()
 ```
 
 我们首先调用 `mockkObject(vararg objects: Any)` 方法并传入目标Object，为它们启用Mock功能，随后即可通过 `every {}` 语句定义方法的行为。
 
-当Object的Mock行为使用完毕后，我们可以调用 `unmockkObject(vararg objects: Any)` 方法撤销所有行为定义。
+当Object的Mock行为使用完毕后，我们可以调用 `unmockkObject(vararg objects: Any)` 方法撤销目标Object的行为定义。如果我们为多个Object配置了Mock行为，也可以直接调用 `unmockkAll()` 方法进行撤销，无需指定目标。
+
+`unmockkAll()` 方法对Object、静态方法、构造方法等全局Mock配置均有效，因此我们通常会在JUnit的 `tearDown()` 方法中统一调用它，防止当前测试用例设置的Mock行为干扰后续其他测试用例。
 
 此时运行示例程序，并查看控制台输出信息：
 
 ```text
-Utils#getCurrentTime:[1234567890]
+UtilsObject#getCurrentTime:[1234567890]
 ```
 
 ---
@@ -618,49 +610,46 @@ Utils#getCurrentTime:[1234567890]
 
 第一步，我们编写业务代码。
 
-"Utils.kt":
+"UtilsObject.kt":
 
 ```kotlin
-object Utils {
-
+object UtilsObject {
     @JvmStatic
-    fun getURL(): String {
-        return "http://192.168.1.1/"
-    }
+    fun getURL(): String = "http://192.168.1.1/"
 }
 ```
 
 第二步，我们编写测试代码。
 
-"UtilsTest.kt":
+"UtilsObjectTest.kt":
 
 ```kotlin
-// 为Utils中的静态方法启用Mock
-mockkStatic(Utils::class)
+// 为UtilsObject中的静态方法启用Mock
+mockkStatic(UtilsObject::class)
 
 // 定义行为
-every { Utils.getURL() } returns "http://test.com/"
+every { UtilsObject.getURL() } returns "http://test.com/"
 
 // 调用Mock方法
-println("Utils#getURL:[${Utils.getURL()}]")
+println("UtilsObject#getURL:[${UtilsObject.getURL()}]")
 
-// 撤销Mock（可选）
-unmockkStatic(Utils::class)
+// 撤销指定Object的Mock设置（可选）
+unmockkStatic(UtilsObject::class)
 ```
 
 我们首先调用 `mockkStatic(vararg classes: KClass<*>)` 方法并传入目标Object的KClass，为它们启用Mock功能，随后即可通过 `every {}` 语句定义JVM静态方法的行为。
 
-当静态方法的Mock行为使用完毕后，我们可以调用 `unmockkStatic(vararg classes: KClass<*>)` 方法撤销所有行为定义。
+当静态方法的Mock行为使用完毕后，我们可以调用 `unmockkStatic(vararg classes: KClass<*>)` 方法撤销目标Object的行为定义。
 
 此时运行示例程序，并查看控制台输出信息：
 
 ```text
-Utils#getURL:[http://test.com/]
+UtilsObject#getURL:[http://test.com/]
 ```
 
 > 🚩 提示
 >
-> 对于使用Java语言编写的静态方法，我们也可以使用上述方式进行Mock。
+> 对于使用Java语言编写的非Final静态方法，我们也可以使用上述方式进行Mock。
 
 ---
 
@@ -670,10 +659,10 @@ Utils#getURL:[http://test.com/]
 
 第一步，我们编写业务代码。
 
-"Utils.kt":
+"UtilsClass.kt":
 
 ```kotlin
-class Utils2 {
+class UtilsClass {
 
     companion object {
 
@@ -691,35 +680,35 @@ class Utils2 {
 
 第二步，我们编写测试代码。
 
-"UtilsTest.kt":
+"UtilsClassTest.kt":
 
 ```kotlin
-// 为Utils2伴生对象中的方法启用Mock
-mockkObject(Utils2)
+// 为UtilsClass伴生对象中的方法启用Mock
+mockkObject(UtilsClass)
 
 // 使用该语句也能启用伴生对象的Mock
-// mockkObject(Utils2.Companion)
+// mockkObject(UtilsClass.Companion)
 
-every { Utils2.method() } returns "Test method."
-every { Utils2.methodStatic() } returns "Test static method."
+every { UtilsClass.method() } returns "Test method."
+every { UtilsClass.methodStatic() } returns "Test static method."
 
-println("Utils2#method:[${Utils2.method()}]")
-println("Utils2#methodStatic:[${Utils2.methodStatic()}]")
+println("UtilsClass#method:[${Utils2.method()}]")
+println("UtilsClass#methodStatic:[${Utils2.methodStatic()}]")
 ```
 
-对于类的伴生对象，我们可以直接调用 `mockkObject(<类名>.Companion)` 方法启用Mock；除此之外，我们也可以只传入类名，省略Companion部分，这是因为 `mockkObject()` 方法将会自动识别类的伴生对象并为其启用Mock。
+对于类的伴生对象，我们可以直接调用 `mockkObject(<类名>.Companion)` 方法启用Mock；除此之外，我们也可以只传入类名，省略Companion部分，这是因为 `mockkObject()` 方法能够自动识别类的伴生对象并为其启用Mock。
 
-由于伴生对象中 `@JvmStatic` 注解只是生成了新的静态方法，并指向Companion原有的非静态方法，而 `mockkObject()` 已经启用了非静态方法的Mock功能，因此我们无需调用 `mockkStatic()` 也能为JVM静态方法启用Mock。
+由于伴生对象中 `@JvmStatic` 注解只是生成了新的静态方法，并指向Companion内原有的非静态方法，而 `mockkObject()` 已经启用了Companion的Mock功能，因此我们无需调用 `mockkStatic()` 也能为此处的JVM静态方法启用Mock。
 
 此时运行示例程序，并查看控制台输出信息：
 
 ```text
-Utils2#method:[Test method.]
-Utils2#methodStatic:[Test static method.]
+UtilsClass#method:[Test method.]
+UtilsClass#methodStatic:[Test static method.]
 ```
 
 
-# 参数捕获器
+# 捕获参数
 
 前文章节中，我们通过verify方法对待测方法的参数进行验证，但仅限首次调用时，且匹配器只能匹配预设的类型，对于复杂条件无法处理，此时我们可以使用参数捕获器。
 
@@ -854,8 +843,11 @@ Index:[2] Value:[系统找不到指定的路径。]
 ```
 
 
-
 <!-- TODO
+
+# 部分模拟
+
+
 
 # 捕获Lambda
 
@@ -872,6 +864,10 @@ Index:[2] Value:[系统找不到指定的路径。]
         receiverSlot.captured.invoke(intentLowSpeed)
 ```
 
+
+
+## 私有方法
+every { mockClass["privateFunName"](arg1, arg2, ...) }
 
 
 # 验证私有方法
