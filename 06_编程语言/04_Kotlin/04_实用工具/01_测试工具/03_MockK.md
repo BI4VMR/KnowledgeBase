@@ -499,7 +499,7 @@ every { mockDBHelper.queryUserName(any(String::class)) } returns "MockUserB"
 
 `<参数值>` 与匹配器 `eq(<参数值>)` 都表示精确匹配参数值，但它们的适用场景有一些区别，我们通过下文示例进行说明。
 
-🟡 示例十：具体值与 `eq()` 匹配器的区别。
+🟡 示例十：具体值与 `eq()` 匹配器。
 
 在本示例中，我们演示参数具体值与 `eq()` 匹配器的区别。
 
@@ -521,43 +521,162 @@ every { mockDBHelper.queryUserNames(20, false) } returns listOf()
 
 
 # 验证行为
-对于有返回值的方法，我们可以通过测试框架提供的断言比较结果是否与预期相符，对于无返回值的方法，我们就需要通过Mock框架进行验证。Mock对象会记录所有方法是否被调用过、被调用时的参数等信息。
+## 基本应用
+对于被测实例的有返回值方法，我们可以通过断言比较返回值与预期值是否相符，从而验证方法行为是否符合预期；对于无返回值方法，我们则需要通过Mock框架进行验证。
 
+无返回值方法通常会调用依赖组件的方法以实现特定功能，在单元测试中，我们将Mock对象作为依赖组件，而Mock对象能够记录其方法是否被调用、调用参数以及调用次数等信息，因此我们可以通过检查Mock对象信息，间接验证被测实例的行为是否符合预期。
 
-verify 是用来检查方法是否触发，当然它也很强大，它有许多参数可选，来看看这些参数：
+MockK提供的行为验证方法是 `verify()` ，它的参数及含义如下文列表所示：
 
+- `atLeast = <次数>` : 指定目标方法被调用的最少次数，默认为一次。
+- `atMost = <次数>` : 指定目标方法被调用的最多次数，默认为Int类型的最大值。
+- `exactly = <次数>` : 指定目标方法被调用的次数，默认为 `-1` ，表示不启用该功能。如果该值为任意正整数，表示启用该功能，将会覆盖 `atLeast` 和 `atMost` 参数配置，例如：数值 `1` 表示目标方法必须被调用一次，未被调用或被调用次数大于 `1` 都会导致验证失败。
+- `inverse` : 反转其他条件，将不满足其他条件的场景视为验证成功。例如： `verify(inverse = true) {}` 表示“目标方法未被调用至少一次”，即目标方法从未被调用。
+- `timeout` : 指定目标方法最大允许执行的时长，单位为毫秒。
+- `ordering` : 如果 `verifyBlock` 表达式具有多个方法，是否要求它们按照编写顺序被调用。
+- `verifyBlock` : 待验证的方法调用，与 `every {}` 语句类似，此处可以使用参数匹配器，并且可以包含多个语句。
 
-- `verifyBlock` : 待验证的语句，是最后一个lambda参数可以写在括号外，与 `every {}` 语句类似，可以使用参数匹配器，并且一个块可以填写多个语句。
-- `atLeast` : 语句块中方法最少执行次数，默认1次。
-- `atMost` : 语句块中方法最多执行次数，默认为Int类型最大值。
-- `exactly` : 精确次数，默认值 `-1` 表示不启用该功能，任意正整数将会覆盖`atLeast`和`atMost`参数的行为，例如设为1表示该方法必须被调用1次，未调用和调用次数大于1都会导致验证失败。
-- `inverse` : 反转条件，验证方法是否不满足预设的条件。
-- `timeout` : 语句块内容执行时间，如果超过该事件，则测试会失败
-- `ordering` : 如果 `verifyBlock` 表达式存在多个方法，是否要求它们按照编写顺序被调用。
+下文示例展示了 `verify()` 方法的具体用法。
 
+🟢 示例十一：基本的行为验证。
 
+在本示例中，我们使用 `verify {}` 方法验证被测接口是否正确地调用了依赖组件。
 
-verify不会重置调用记录，因此如果需要复用mock对象，次数需要加1，或者重置mock对象
+第一步，我们编写业务代码。
 
+LogManager利用Logger实现日志输出功能，其中 `printInfo()` 方法能够将一组消息分行输出。
 
+"LogManager.kt":
 
+```kotlin
+class LogManager {
 
+    // 外部依赖
+    var logger: Logger = Logger.getAnonymousLogger()
 
-默认值 `Ordering.UNORDERED` 表示不限制，且任意方法被调用认为通过， `ALL` 不限制顺序，但Mock实际被调用的方法必须与verify匹配，缺少或多都会报错。 `ORDERED` 方法必须按编写顺序被调用，但不要求所有方法均被调用。 `SEQUENCE` 所有方法必须按顺序被调用。
+    // 业务方法：将一组消息分行输出
+    fun printInfo(messages: List<String>) {
+        messages.forEach { message ->
+            logger.log(Level.INFO, message)
+        }
+    }
+}
+```
 
+第二步，我们编写测试代码。
 
-该属性有一些对应的快捷方式
+"LogManagerTest.kt":
 
-`verifyOrder {}` : 等同于 `verify (ordering = Ordering.ORDERED) {}` 。
-`verifyAll {}` : 等同于 `verify (ordering = Ordering.ALL) {}` 。
-`verifySequence {}` : 等同于 `verify (ordering = Ordering.SEQUENCE) {}` 。
+```kotlin
+// 创建Logger的Mock对象
+val mockLogger: Logger = mockk(relaxed = true)
 
+// 创建待测类的实例并注入Mock对象
+val manager = LogManager()
+manager.logger = mockLogger
+// 执行业务方法
+val text: List<String> = listOf("LineA", "LineB")
+manager.printInfo(text)
+
+// 验证行为：Logger的记录方法应当被调用2次
+verify(exactly = 2) {
+    mockLogger.log(eq(Level.INFO), any<String>())
+}
+```
+
+此处我们将长度为2的List传递给 `printInfo()` 方法，预期输出两行日志，因此Logger的 `log()` 方法应当被调用两次， `verify()` 方法的参数为 `exactly = 2` 。
+
+随后，我们在同一个测试用例中再次调用 `printInfo()` 方法，传入一个长度为3的List。
+
+"LogManagerTest.kt":
+
+```kotlin
+// 再次执行业务方法
+val text2: List<String> = listOf("Line1", "Line2", "Line3")
+manager.printInfo(text2)
+
+// 验证行为：Logger的记录方法应当被调用2次 + 3次
+verify(exactly = 2 + text2.size) {
+    mockLogger.log(eq(Level.INFO), any<String>())
+}
+```
+
+此时预期的调用次数应当为5，即首次打印的2次及第二次打印的3次之和；这是因为我们使用了同一个Mock对象， `verify()` 方法不会重置调用记录，其中的调用次数会不断累加。
+
+## 验证调用顺序
+`verify()` 方法的 `ordering` 参数用于验证多个方法被调用的顺序，可选的值如下文列表所示：
+
+- `UNORDERED` : 默认值，不限制调用顺序，只要 `verify()` 语句指明的方法均被调用即验证通过。
+- `ALL` : 不限制调用顺序，但要求Mock对象的调用记录与 `verify()` 语句匹配，若调用记录中存在 `verify()` 语句未指明的方法，则视为验证失败。例如： `verify()` 语句要求调用“方法A和方法B”，而调用记录为“方法A、方法C、方法B”，此时将会验证失败，因为调用记录中包含了 `verify()` 语句未指明的“方法C”。
+- `ORDERED` : 限制调用顺序，但不验证调用记录中是否包含 `verify()` 语句未指明的方法。
+- `SEQUENCE` : 限制调用顺序，且要求Mock对象的调用记录与 `verify()` 语句匹配。
+
+该属性有一些对应的快捷方法可供选用：
+
+- `verifyOrder {}` : 等同于 `verify (ordering = Ordering.ORDERED) {}` 。
+- `verifyAll {}` : 等同于 `verify (ordering = Ordering.ALL) {}` 。
+- `verifySequence {}` : 等同于 `verify (ordering = Ordering.SEQUENCE) {}` 。
+
+下文示例以 `verifySequence {}` 方法为例，展示验证调用顺序的具体方法。
+
+🔵 示例十二：验证一组方法的调用顺序。
+
+在本示例中，我们使用 `verifySequence {}` 方法验证被测接口是否正确地调用了依赖组件。
+
+第一步，我们编写业务代码。
+
+"LogManager.kt":
+
+```kotlin
+class LogManager {
+
+    // 业务方法：导出日志
+    fun saveLog(callback: StateCallback) {
+        // 通知外部监听者操作开始
+        callback.onStart()
+
+        // 模拟耗时操作
+        Thread.sleep(200L)
+
+        // 通知外部监听者操作结束
+        callback.onEnd(200L)
+    }
+
+    // 事件监听器
+    interface StateCallback {
+
+        // 操作开始
+        fun onStart()
+
+        // 操作完成：通知消耗时长
+        fun onEnd(time: Long)
+    }
+}
+```
+
+第二步，我们编写测试代码。
+
+"LogManagerTest.kt":
+
+```kotlin
+// 创建监听器的Mock对象
+val mockListener: LogManager.StateCallback = mockk(relaxed = true)
+
+// 执行业务方法并传入监听器
+LogManager().saveLog(mockListener)
+
+// 验证行为：日志导出后，监听器中的起始和结束方法都应当被调用，且符合先开始后结束的顺序。
+verifySequence {
+    mockListener.onStart()
+    mockListener.onEnd(any())
+}
+```
 
 
 # Kotlin相关
 MockK提供了针对Object、JVM静态方法等元素的Mock工具，以便我们在Kotlin环境中便捷地编写测试代码。
 
-🟢 示例X：模拟Object中的普通方法。
+🟣 示例十三：模拟Object中的普通方法。
 
 在本示例中，我们模拟Object中的非静态方法。
 
@@ -604,7 +723,7 @@ UtilsObject#getCurrentTime:[1234567890]
 
 ---
 
-🔵 示例X：模拟Object中的静态方法。
+🟤 示例十四：模拟Object中的静态方法。
 
 在本示例中，我们模拟Object中的JVM静态方法。
 
@@ -653,7 +772,7 @@ UtilsObject#getURL:[http://test.com/]
 
 ---
 
-🔵 示例X：模拟伴生对象中的方法。
+🔴 示例十五：模拟伴生对象中的方法。
 
 在本示例中，我们模拟类的伴生对象中的方法。
 
@@ -707,15 +826,40 @@ UtilsClass#method:[Test method.]
 UtilsClass#methodStatic:[Test static method.]
 ```
 
+<!-- TODO
 
-# 捕获参数
+构造函数
 
-前文章节中，我们通过verify方法对待测方法的参数进行验证，但仅限首次调用时，且匹配器只能匹配预设的类型，对于复杂条件无法处理，此时我们可以使用参数捕获器。
+ 
 
-常见的场景：
+mockkConstructor(MyClass::class)
+every { 
+    anyConstructed<MyClass>().someMethod() 
+} returns "Mocked Result"// 执行测试代码
+unmockkConstructor(MyClass::class)
 
-参数为引用类型的回调方法： result(a: List<String>) 我们希望验证列表长度为5，匹配器无法处理这种场景。
-参数为引用类型的普通方法：proc(a: SS) 该方法会将变量的值进行修改，我们希望在方法结束后校验参数值的变化。
+备注：使用mockkConstructor方法mock构造函数，并通过anyConstructed进行类的构造，最后通过 unmockkConstructor取消构造函数的mock。
+
+
+
+Lambada表达式
+
+val lambdaMock: () -> Unit = mockk()
+every { 
+    lambdaMock.invoke() 
+} just Runs
+
+
+ 
+-->
+
+
+# 高级应用
+## 参数捕获器
+
+- 模拟事件： 被测对象通过注册回调方法与依赖组件交互，此时我们可以使用参数捕获器获取回调方法的参数值，以便模拟事件触发后的行为。
+- 复杂验证： 参数为引用类型的普通方法：proc(a: SS) 该方法会将变量的值进行修改，我们希望在方法结束后校验参数值的变化。
+
 
 🔴 示例一：使用参数捕获器验证回调方法。
 
@@ -845,116 +989,7 @@ Index:[2] Value:[系统找不到指定的路径。]
 
 <!-- TODO
 
-# 部分模拟
-
-
-
-# 捕获Lambda
-
-
-```kotlin
-        // 捕获待测实例注册的广播接收器
-        val receiverSlot = slot<(Intent) -> Unit>()
-        every { mockContext.registerReceiver(any(), capture(receiverSlot), captureLambda()) } answers {
-            // 此处将在registerReceiver被调用时立即执行lambda
-            lambda<IntentFilter.() -> Unit>().invoke(IntentFilter())
-        }
-
-        // 延后回调Lambda
-        receiverSlot.captured.invoke(intentLowSpeed)
-```
-
-
-
-## 私有方法
-every { mockClass["privateFunName"](arg1, arg2, ...) }
-
-
-# 验证私有方法
-
-如果你要验证、执行 object类里面的私有方法，你需要在mock的时候指定一个值 recordPrivateCalls， 它默认是false：
-
-mockkObject(ObjectClass, recordPrivateCalls = true)
-
-
-enum 类也是一样的mock方式
-
-
-
-
-验证mock对象私有方法
-
-验证是放在 verify{...} 中的，也是通过反射的方式来验证:
-
-verify{ mockClass["privateFunName"](arg1, arg2, ...) }
-
-主要分成三个部分：
-
-    mock类
-    中括号，里面填入双引号+私有方法名
-    小括号，里面填入传参，可以使用 allAny<T>()、mockk() … 或你想要的传入的实参
-
-
-
-
-    偏函数模拟
-
- 
-
-every { 
-    mockObject.someMethod(any()) 
-} answers { 
-    originalCall(it.invocation.args.first()) 
-}
-
-备注：对于某些方法调用，我们并不想完全使用模拟的值，而是想使用特定的函数调用过程，那么可以使用originalCall来实现对实际函数的调用。
-
-
-
-    构造函数
-
- 
-
-mockkConstructor(MyClass::class)
-every { 
-    anyConstructed<MyClass>().someMethod() 
-} returns "Mocked Result"// 执行测试代码
-unmockkConstructor(MyClass::class)
-
-备注：使用mockkConstructor方法mock构造函数，并通过anyConstructed进行类的构造，最后通过 unmockkConstructor取消构造函数的mock。
-
-    Lambada表达式
-
- 
-
-val lambdaMock: () -> Unit = mockk()
-every { 
-    lambdaMock.invoke() 
-} just Runs
-
-
-模拟私有函数
-
-在罕见情况下，可能需要模拟私有函数。这个过程较为复杂，因为不能直接调用此类函数。
-
-    val mock = spyk(ExampleClass(), recordPrivateCalls = true)
-    every { mock["sum"](any<Int>(), 5) } returns 25
-
-或使用:
-
-every { mock invoke "openDoor" withArguments listOf("left", "rear") } returns "OK"
-
-模拟属性
-
-通常可以像模拟 get/set 函数或字段访问一样模拟属性。对于更多场景，可以使用其他方法。
-
-    every { mock getProperty "speed" } returns 33
-    every { mock setProperty "acceleration" value less(5) } just Runs
-    verify { mock getProperty "speed" }
-    verify { mock setProperty "acceleration" value less(5) }
-
-
-部分模拟：
+## 部分模拟
 
 在Java环境中，Mock工具（如Mockito）的SPY模式主要用于部分模拟（Partial Mocking）的场景。SPY模式允许你在保留对象原有行为的同时，模拟其中的部分方法。这在需要测试复杂对象的部分功能时非常有用。
 使用场景
@@ -1001,6 +1036,84 @@ public class SpyExampleTest {
         verify(spyCalculator).add(2, 3);
     }
 }
+
+
+
+# 捕获Lambda
+
+
+```kotlin
+        // 捕获待测实例注册的广播接收器
+        val receiverSlot = slot<(Intent) -> Unit>()
+        every { mockContext.registerReceiver(any(), capture(receiverSlot), captureLambda()) } answers {
+            // 此处将在registerReceiver被调用时立即执行lambda
+            lambda<IntentFilter.() -> Unit>().invoke(IntentFilter())
+        }
+
+        // 延后回调Lambda
+        receiverSlot.captured.invoke(intentLowSpeed)
+```
+
+
+
+## 私有方法
+every { mockClass["privateFunName"](arg1, arg2, ...) }
+
+
+如果你要验证、执行 object类里面的私有方法，你需要在mock的时候指定一个值 recordPrivateCalls， 它默认是false：
+
+mockkObject(ObjectClass, recordPrivateCalls = true)
+enum 类也是一样的mock方式
+
+
+验证mock对象私有方法
+
+验证是放在 verify{...} 中的，也是通过反射的方式来验证:
+
+verify{ mockClass["privateFunName"](arg1, arg2, ...) }
+
+主要分成三个部分：
+
+    mock类
+    中括号，里面填入双引号+私有方法名
+    小括号，里面填入传参，可以使用 allAny<T>()、mockk() … 或你想要的传入的实参
+
+
+
+
+偏函数模拟
+
+every { 
+    mockObject.someMethod(any()) 
+} answers { 
+    originalCall(it.invocation.args.first()) 
+}
+
+备注：对于某些方法调用，我们并不想完全使用模拟的值，而是想使用特定的函数调用过程，那么可以使用originalCall来实现对实际函数的调用。
+
+
+
+
+模拟私有函数
+
+在罕见情况下，可能需要模拟私有函数。这个过程较为复杂，因为不能直接调用此类函数。
+
+    val mock = spyk(ExampleClass(), recordPrivateCalls = true)
+    every { mock["sum"](any<Int>(), 5) } returns 25
+
+或使用:
+
+every { mock invoke "openDoor" withArguments listOf("left", "rear") } returns "OK"
+
+模拟属性
+
+通常可以像模拟 get/set 函数或字段访问一样模拟属性。对于更多场景，可以使用其他方法。
+
+    every { mock getProperty "speed" } returns 33
+    every { mock setProperty "acceleration" value less(5) } just Runs
+    verify { mock getProperty "speed" }
+    verify { mock setProperty "acceleration" value less(5) }
+
 
 
 -->
