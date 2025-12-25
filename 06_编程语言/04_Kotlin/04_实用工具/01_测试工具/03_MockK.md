@@ -407,13 +407,20 @@ fun test_define_exception() {
 
 下文列表展示了常用的参数匹配器：
 
-- `any()` : 匹配任意参数值。
-- `isNull()` : 匹配传入参数为空值的调用。
 - `<参数值>` : 精确匹配调用者传入参数与指定参数值一致的调用。
 - `eq(<参数值>)` : 精确匹配调用者传入参数与指定参数值一致的调用。
+- `any()` : 匹配任意参数值。
+- `isNull(<是否取反>)` : 匹配传入参数为空值的调用。默认不取反，如果取反则表示匹配“传入参数非空值”的调用。
 - `refEq(<参数值>)` : 精确匹配调用者传入实例与指定实例内存地址相同的调用。
 - `neq(<参数值>)` : 匹配所有传入参数与指定参数值不一致的调用。
 - `nrefEq(<参数值>)` : 匹配所有传入实例与指定实例内存地址不同的调用。
+- `more(<参考值>, <是否包含边界值>)` : 匹配传入参数大于参考值的调用（基于Comparable接口）。第二参数用于指明是否包括参数与参考值相等的情况，默认为 `false` 。
+- `less(<参考值>, <是否包含边界值>)` : 匹配传入参数小于参考值的调用（基于Comparable接口）。
+- `range(<起始值>, <终止值>, <是否包含起始值>, <是否包含终止值>)` : 匹配传入参数在指定范围内的调用。默认包含两侧的边界值。
+- `ofType(<KClass>)` : 匹配传入参数类型与指定类型一致的调用。
+- `and(<匹配器1>, <匹配器2>)` : 匹配符合两条规则的调用。用于组合其他匹配器，例如： `and(isNull(true), ofType(String::class))` 表示匹配“传入参数非空且为字符串”的调用。
+- `or(<匹配器1>, <匹配器2>)` : 匹配符合任意规则的调用。
+- `not(<匹配器>)` : 匹配不符合该规则的调用。
 - `match {<语句块>}` : 自定义匹配规则。
 
 下文示例展示了参数匹配器的具体用法。
@@ -518,6 +525,24 @@ every { mockDBHelper.queryUserNames(20, false) } returns listOf()
 ```
 
 在同一条行为定义语句中，要么全部使用具体值，要么全部使用匹配器。我们不应将二者混用，虽然有时混用不会导致错误，但这属于未定义行为，应当尽量避免。
+
+<!-- TODO
+
+
+
+偏函数模拟
+
+every { 
+    mockObject.someMethod(any()) 
+} answers { 
+    originalCall(it.invocation.args.first()) 
+}
+
+备注：对于某些方法调用，我们并不想完全使用模拟的值，而是想使用特定的函数调用过程，那么可以使用originalCall来实现对实际函数的调用。
+
+
+
+-->
 
 
 # 验证行为
@@ -674,6 +699,7 @@ verifySequence {
 
 
 # Kotlin相关
+## 单例与静态方法
 MockK提供了针对Object、JVM静态方法等元素的Mock工具，以便我们在Kotlin环境中便捷地编写测试代码。
 
 🟣 示例十三：模拟Object中的普通方法。
@@ -828,18 +854,143 @@ UtilsClass#methodStatic:[Test static method.]
 
 <!-- TODO
 
-构造函数
+## 构造方法
+如果被测对象的依赖组件没有对外暴露，我们可以通过反射进行注入，但编写反射代码较为繁琐，我们也可以选择构造函数模拟来实现注入。
 
  
+🔴 示例十五：模拟构造方法。
 
-mockkConstructor(MyClass::class)
-every { 
-    anyConstructed<MyClass>().someMethod() 
-} returns "Mocked Result"// 执行测试代码
-unmockkConstructor(MyClass::class)
+在本示例中，我们模拟类的构造方法。
 
-备注：使用mockkConstructor方法mock构造函数，并通过anyConstructed进行类的构造，最后通过 unmockkConstructor取消构造函数的mock。
+第一步，我们编写业务代码。
 
+"Order.kt":
+
+```kotlin
+class Order {
+
+    private val list: MutableList<String> = mutableListOf()
+
+    constructor(goods: String) {
+        list.add(goods)
+    }
+
+    fun showInfo1(): String = list.toString()
+
+    fun showInfo2(): String = list.toString()
+}
+```
+
+第二步，我们编写测试代码。
+
+"ConstructorTest.kt":
+
+```kotlin
+// 为Order类的构造方法启用Mock
+mockkConstructor(Order::class)
+
+// 定义行为：当Order类的任意构造方法被调用时，返回Mock对象并指定 `showInfo1()` 方法的行为。
+every { anyConstructed<Order>().showInfo1() } returns "[Mocked Order Info]"
+
+// 新建Order对象并检查方法的行为
+val order = Order("Apple")
+println("已Mock的 `showInfo1()` 方法：${order.showInfo1()}")
+println("未Mock的 `showInfo2()` 方法：${order.showInfo2()}")
+
+// 撤销指定类的构造方法Mock设置（可选）
+unmockkConstructor(Order::class)
+```
+
+此时运行示例程序，并查看控制台输出信息：
+
+```text
+已Mock的 `showInfo1()` 方法：[Mocked Order Info]
+未Mock的 `showInfo2()` 方法：[Apple]
+```
+
+定义行为时，已Mock的方法将返回指定的Mock值，而未Mock的方法则会执行真实逻辑。
+
+
+
+---
+
+🔴 示例：模拟特定条件的构造方法。
+
+在本示例中，我们模拟输入参数与预定规则相符的构造方法。
+
+"ConstructorTest.kt":
+
+```kotlin
+// 为Order类的构造方法启用Mock
+mockkConstructor(Order::class)
+
+// 定义行为：仅当构造Order对象的参数为"Apple"时，返回Mock对象并指定 `showInfo1()` 方法的行为。
+every {
+    constructedWith<Order>(EqMatcher("Apple")).showInfo1()
+} returns "[Mocked Order Info]"
+
+// 新建Order对象并检查方法的行为
+println("使用Apple构造的实例：${Order("Apple").showInfo1()}")
+println("使用Banana构造的实例：${Order("Banana").showInfo1()}")
+
+// 撤销指定类的构造方法Mock设置（可选）
+unmockkConstructor(Order::class)
+```
+
+此时运行示例程序，并查看控制台输出信息：
+
+```text
+使用Apple构造的实例：[Mocked Order Info]
+使用Banana构造的实例：[Banana]
+```
+
+
+
+
+
+## 私有方法
+
+在罕见情况下，可能需要模拟私有函数。这个过程较为复杂，因为不能直接调用此类函数。
+
+    val mock = spyk(ExampleClass(), recordPrivateCalls = true)
+    every { mock["sum"](any<Int>(), 5) } returns 25
+
+或使用:
+
+every { mock invoke "openDoor" withArguments listOf("left", "rear") } returns "OK"
+
+
+
+
+验证mock对象私有方法
+
+验证是放在 verify{...} 中的，也是通过反射的方式来验证:
+
+verify{ mockClass["privateFunName"](arg1, arg2, ...) }
+
+主要分成三个部分：
+
+    mock类
+    中括号，里面填入双引号+私有方法名
+    小括号，里面填入传参，可以使用 allAny<T>()、mockk() … 或你想要的传入的实参
+
+object需要特殊处理
+
+如果你要验证、执行 object类里面的私有方法，你需要在mock的时候指定一个值 recordPrivateCalls， 它默认是false：
+
+mockkObject(ObjectClass, recordPrivateCalls = true)
+enum 类也是一样的mock方式
+
+
+
+## 模拟属性
+
+通常可以像模拟 get/set 函数或字段访问一样模拟属性。对于更多场景，可以使用其他方法。
+
+    every { mock getProperty "speed" } returns 33
+    every { mock setProperty "acceleration" value less(5) } just Runs
+    verify { mock getProperty "speed" }
+    verify { mock setProperty "acceleration" value less(5) }
 
 
 Lambada表达式
@@ -850,140 +1001,121 @@ every {
 } just Runs
 
 
- 
 -->
 
 
 # 高级应用
 ## 参数捕获器
+参数捕获器可以帮助我们获取Mock方法被调用时的参数值，以便进一步验证或处理。下文列表展示了一些典型的应用场景：
 
-- 模拟事件： 被测对象通过注册回调方法与依赖组件交互，此时我们可以使用参数捕获器获取回调方法的参数值，以便模拟事件触发后的行为。
-- 复杂验证： 参数为引用类型的普通方法：proc(a: SS) 该方法会将变量的值进行修改，我们希望在方法结束后校验参数值的变化。
+- 模拟事件触发：被测对象通过回调接口监听依赖组件的事件，此时我们可以模拟依赖组件并使用参数捕获器获取回调实现，然后调用其中的方法模拟事件触发。
+- 复杂验证逻辑： `verify()` 方法只能验证单次方法调用，有时我们希望收集多次调用的参数并进行评估，例如：记录某异步操作执行5次的回调结果，并找出平均值与最大值。
 
 
-🔴 示例一：使用参数捕获器验证回调方法。
+🔴 示例一：捕获回调接口并模拟事件。
 
-在本示例中，我们使用参数捕获器验证回调方法的参数是否符合预期。
+在本示例中，我们捕获被测对象向依赖组件注册的监听器实例，并模拟事件触发。
 
 第一步，编写业务代码。
 
+
+
 我们首先定义一个接口， `onResult()` 方法用于回调事件。
 
-"FileCallback.kt":
+
+
+"LogConfigTool.kt":
 
 ```kotlin
-interface FileCallback {
-    fun onResult(result: Boolean, message: String)
+object LogConfigTool {
+
+    private var listener: ConfigListener? = null
+
+    /**
+     * 注册回调。
+     *
+     * @param[l] 监听器实现。
+     */
+    fun addConfigListener(l: ConfigListener) {
+        listener = l
+    }
+
+    /**
+     * 回调接口：日志配置变更。
+     */
+    fun interface ConfigListener {
+
+        /**
+         * 回调方法：最小日志级别变更。
+         *
+         * @param[level] 日志级别。
+         */
+        fun onLevelChange(level: Level)
+    }
 }
 ```
 
-接下来，我们编写业务逻辑。
 
-"FileHelper.kt":
+
+"LogManager.kt":
 
 ```kotlin
-class FileHelper {
+class LogManager {
 
-    fun saveFile(path: String, callback: FileCallback) {
-        try {
-            File(path).createNewFile()
-            callback.onResult(true, "OK!")
-        } catch (e: Exception) {
-            callback.onResult(false, "${e.message}")
-            System.err.println("Save file failed! Reason:[${e.message}]")
+    var minLevel: Level = Level.INFO
+        private set
+
+    init {
+        // 注册配置变更监听器，并同步设置最小级别。
+        LogConfigTool.addConfigListener { newLevel ->
+            minLevel = newLevel
         }
     }
 }
 ```
 
-此处 `saveFile()` 方法的第二参数为FileCallback接口实现，文件操作结果将会通过 `onResult()` 方法反馈给调用者。
-
 第二步，编写测试代码。
 
-"FileHelperTest.kt":
+"CaptorTest.kt":
 
 ```kotlin
-@Test
-fun testSaveFile() {
-    val fileHelper = FileHelper()
-    // 创建Callback的Mock对象
-    val mockCallback: FileCallback = mockk(relaxed = true)
+        // 定义行为：当LogConfigTool的 `addConfigListener()` 方法被调用时，捕获调用者传入的实例。
+        val slot = slot<LogConfigTool.ConfigListener>()
+        mockkObject(LogConfigTool)
+        every { LogConfigTool.addConfigListener(capture(slot)) } just runs
 
-    // 调用待测方法，传入Callback的Mock对象
-    val invalidPath = "/invalid_path.txt"
-    fileHelper.saveFile(invalidPath, mockCallback)
+        // 创建被测类的实例
+        val manager = LogManager()
+        println("初始的日志级别：${manager.minLevel}")
 
-    // 定义捕获器， `slot()` 方法的泛型即参数类型。
-    val captorResult = slot<String>()
+        // 调用捕获到的监听器方法，模拟事件回调。
+        slot.captured.onLevelChange(Level.WARNING)
 
-    // 验证回调方法已触发，并使用 `capture()` 方法捕获第二个参数。
-    verify {
-        mockCallback.onResult(any(), capture(captorResult))
-    }
-
-    // 查看捕获到的参数值
-    val capturedValue: String = captorResult.captured
-    println("捕获到的参数值:[$capturedValue]")
-    // 进一步验证该参数值
-    assertFalse(capturedValue.startsWith("OK"))
-}
+        println("事件触发后的日志级别：${manager.minLevel}")
+        // 验证事件触发是否确实改变了被测对象的属性
+        assertEquals(Level.WARNING, manager.minLevel)
 ```
-
-
 
 
 当回调方法被触发后，我们可以在 `verify()` 方法中使用 `capture()` 方法配置参数捕获器，检测
 
 
 ```text
-捕获到的参数值:[拒绝访问。]
+初始的日志级别：INFO
+事件触发后的日志级别：WARNING
 ```
 
 
-
-
-🔴 示例一：使用参数捕获器记录所有参数。
-
-在本示例中，我们使用参数捕获器记录所有的参数值。
-
-我们在前文“示例”的基础上进行修改，在 `onResult()` 方法上设置捕获器。
-
-"FileHelperTest.kt":
-
-```kotlin
-@Test
-fun `testSaveFile2`() {
-    val capturedValues = mutableListOf<String>()
-
-    val fileHelper = FileHelper()
-    // 创建Callback的Mock对象
-    val mockCallback: FileCallback = mockk()
-    // Mock回调方法，使用List作为捕获接收器。
-    every { mockCallback.onResult(any(), capture(capturedValues)) } returns Unit
-
-    // 多次调用待测方法，传入Callback的Mock对象
-    val invalidPath = "/invalid_path.txt"
-    fileHelper.saveFile(invalidPath, mockCallback)
-    fileHelper.saveFile(invalidPath, mockCallback)
-    val validPath = "/tmp/valid_path.txt"
-    fileHelper.saveFile(validPath, mockCallback)
-    File(validPath).deleteOnExit()
-
-    // 查看捕获到的参数值
-    capturedValues.forEachIndexed { index, s ->
-        println("Index:[$index] Value:[$s]")
-    }
-}
-```
-
-此处我们需要在Mock回调方法时设置捕获器，与先前在 `verify()` 中设置捕获器的操作不同，因为我们需要捕获所有参数，`verify()` 只能单次验证。
 
 
 
 ```text
-Index:[0] Value:[拒绝访问。]
-Index:[1] Value:[拒绝访问。]
-Index:[2] Value:[系统找不到指定的路径。]
+第1次调用，耗时：200 ms。
+第2次调用，耗时：200 ms。
+第3次调用，耗时：200 ms。
+第4次调用，耗时：200 ms。
+第5次调用，耗时：200 ms。
+平均耗时：200.0 ms。
 ```
 
 
@@ -1055,64 +1187,6 @@ public class SpyExampleTest {
 ```
 
 
-
-## 私有方法
-every { mockClass["privateFunName"](arg1, arg2, ...) }
-
-
-如果你要验证、执行 object类里面的私有方法，你需要在mock的时候指定一个值 recordPrivateCalls， 它默认是false：
-
-mockkObject(ObjectClass, recordPrivateCalls = true)
-enum 类也是一样的mock方式
-
-
-验证mock对象私有方法
-
-验证是放在 verify{...} 中的，也是通过反射的方式来验证:
-
-verify{ mockClass["privateFunName"](arg1, arg2, ...) }
-
-主要分成三个部分：
-
-    mock类
-    中括号，里面填入双引号+私有方法名
-    小括号，里面填入传参，可以使用 allAny<T>()、mockk() … 或你想要的传入的实参
-
-
-
-
-偏函数模拟
-
-every { 
-    mockObject.someMethod(any()) 
-} answers { 
-    originalCall(it.invocation.args.first()) 
-}
-
-备注：对于某些方法调用，我们并不想完全使用模拟的值，而是想使用特定的函数调用过程，那么可以使用originalCall来实现对实际函数的调用。
-
-
-
-
-模拟私有函数
-
-在罕见情况下，可能需要模拟私有函数。这个过程较为复杂，因为不能直接调用此类函数。
-
-    val mock = spyk(ExampleClass(), recordPrivateCalls = true)
-    every { mock["sum"](any<Int>(), 5) } returns 25
-
-或使用:
-
-every { mock invoke "openDoor" withArguments listOf("left", "rear") } returns "OK"
-
-模拟属性
-
-通常可以像模拟 get/set 函数或字段访问一样模拟属性。对于更多场景，可以使用其他方法。
-
-    every { mock getProperty "speed" } returns 33
-    every { mock setProperty "acceleration" value less(5) } just Runs
-    verify { mock getProperty "speed" }
-    verify { mock setProperty "acceleration" value less(5) }
 
 
 
