@@ -554,10 +554,10 @@ every {
 MockK提供的行为验证方法是 `verify()` ，它的参数及含义如下文列表所示：
 
 - `atLeast = <次数>` : 指定目标方法被调用的最少次数，默认为一次。
-- `atMost = <次数>` : 指定目标方法被调用的最多次数，默认为Int类型的最大值。
+- `atMost = <次数>` : 指定目标方法被调用的最多次数，默认为Int的最大值。
 - `exactly = <次数>` : 指定目标方法被调用的次数，默认为 `-1` ，表示不启用该功能。如果该值为任意正整数，表示启用该功能，将会覆盖 `atLeast` 和 `atMost` 参数配置，例如：数值 `1` 表示目标方法必须被调用一次，未被调用或被调用次数大于 `1` 都会导致验证失败。
 - `inverse` : 反转其他条件，将不满足其他条件的场景视为验证成功。例如： `verify(inverse = true) {}` 表示“目标方法未被调用至少一次”，即目标方法从未被调用。
-- `timeout` : 指定目标方法最大允许执行的时长，单位为毫秒。
+- `timeout = <毫秒>` : 指定目标方法最大允许执行的时长。
 - `ordering` : 如果 `verifyBlock` 表达式具有多个方法，是否要求它们按照编写顺序被调用。
 - `verifyBlock` : 待验证的方法调用，与 `every {}` 语句类似，此处可以使用参数匹配器，并且可以包含多个语句。
 
@@ -852,32 +852,27 @@ UtilsClass#method:[Test method.]
 UtilsClass#methodStatic:[Test static method.]
 ```
 
-<!-- TODO
-
 ## 构造方法
-如果被测对象的依赖组件没有对外暴露，我们可以通过反射进行注入，但编写反射代码较为繁琐，我们也可以选择构造函数模拟来实现注入。
+在前文“示例一”中，UserManager的依赖组件DBHelper是一个私有变量，测试代码无法正常注入Mock对象，因此我们通过反射将Mock对象传入到变量中。编写反射代码较为繁琐，MockK能够拦截构造方法并返回Mock对象，简化此类场景的注入过程。
 
- 
 🔴 示例十五：模拟构造方法。
 
 在本示例中，我们模拟类的构造方法。
 
 第一步，我们编写业务代码。
 
+订单类Order的构造方法需要接收一个字符串，表示商品信息，并且提供了两个方法输出商品信息。
+
 "Order.kt":
 
 ```kotlin
-class Order {
+class Order(
+    private val goods: String
+) {
 
-    private val list: MutableList<String> = mutableListOf()
+    fun showInfo1(): String = goods
 
-    constructor(goods: String) {
-        list.add(goods)
-    }
-
-    fun showInfo1(): String = list.toString()
-
-    fun showInfo2(): String = list.toString()
+    fun showInfo2(): String = goods
 }
 ```
 
@@ -901,6 +896,12 @@ println("未Mock的 `showInfo2()` 方法：${order.showInfo2()}")
 unmockkConstructor(Order::class)
 ```
 
+我们首先调用 `mockkConstructor(vararg classes: KClass<*>)` 方法并传入目标类的KClass，为它们的构造方法启用Mock功能，随后即可通过 `every {}` 语句定义方法的行为。
+
+`anyConstructed<Order>().showInfo1()` 表示当Order类的任意构造方法被调用时，返回Mock对象，且该对象的 `showInfo1()` 方法具有此处 `every {}` 语句所定义的行为。
+
+当构造方法的Mock行为使用完毕后，我们可以调用 `unmockkConstructor(vararg classes: KClass<*>)` 方法撤销行为定义。
+
 此时运行示例程序，并查看控制台输出信息：
 
 ```text
@@ -908,11 +909,13 @@ unmockkConstructor(Order::class)
 未Mock的 `showInfo2()` 方法：[Apple]
 ```
 
-定义行为时，已Mock的方法将返回指定的Mock值，而未Mock的方法则会执行真实逻辑。
+根据上述输出内容可知：
 
-
+在Mock构造方法的同时我们也要配置实例方法的行为，若调用者访问已定义行为的实例方法，Mock对象将执行 `every {}` 语句中指定的逻辑；若调用者访问未定义行为的实例方法，Mock对象将执行真实的逻辑。
 
 ---
+
+如果我们希望针对不同的构造参数设置差异化的Mock行为，可以使用参数匹配器。
 
 🔴 示例：模拟特定条件的构造方法。
 
@@ -932,10 +935,9 @@ every {
 // 新建Order对象并检查方法的行为
 println("使用Apple构造的实例：${Order("Apple").showInfo1()}")
 println("使用Banana构造的实例：${Order("Banana").showInfo1()}")
-
-// 撤销指定类的构造方法Mock设置（可选）
-unmockkConstructor(Order::class)
 ```
+
+`constructedWith()` 方法可以配置参数匹配器，但此处不支持 `any()` 、 `eq()` 等简化形式，我们需要创建匹配器实例，例如此处的 `EqMatcher("Apple")` 表示匹配参数值等于 `Apple` 的调用。
 
 此时运行示例程序，并查看控制台输出信息：
 
@@ -944,10 +946,7 @@ unmockkConstructor(Order::class)
 使用Banana构造的实例：[Banana]
 ```
 
-
-
-
-
+<!--
 ## 私有方法
 
 在罕见情况下，可能需要模拟私有函数。这个过程较为复杂，因为不能直接调用此类函数。
@@ -1009,8 +1008,9 @@ every {
 参数捕获器可以帮助我们获取Mock方法被调用时的参数值，以便进一步验证或处理。下文列表展示了一些典型的应用场景：
 
 - 模拟事件触发：被测对象通过回调接口监听依赖组件的事件，此时我们可以模拟依赖组件并使用参数捕获器获取回调实现，然后调用其中的方法模拟事件触发。
-- 复杂验证逻辑： `verify()` 方法只能验证单次方法调用，有时我们希望收集多次调用的参数并进行评估，例如：记录某异步操作执行5次的回调结果，并找出平均值与最大值。
+- 复杂验证场景： `verify()` 方法只能验证单次方法调用，有时我们希望收集多次调用的参数并进行评估，例如：记录某异步操作执行5次的回调结果，并找出平均值与最大值。
 
+下文示例展示了参数捕获器的具体用法。
 
 🔴 示例一：捕获回调接口并模拟事件。
 
@@ -1018,11 +1018,7 @@ every {
 
 第一步，编写业务代码。
 
-
-
-我们首先定义一个接口， `onResult()` 方法用于回调事件。
-
-
+我们定义LogConfigTool作为LogManager的依赖组件，LogManager通过回调接口监听日志配置变更事件，并同步更新自身的最小日志级别。
 
 "LogConfigTool.kt":
 
@@ -1055,8 +1051,6 @@ object LogConfigTool {
 }
 ```
 
-
-
 "LogManager.kt":
 
 ```kotlin
@@ -1079,43 +1073,193 @@ class LogManager {
 "CaptorTest.kt":
 
 ```kotlin
-        // 定义行为：当LogConfigTool的 `addConfigListener()` 方法被调用时，捕获调用者传入的实例。
-        val slot = slot<LogConfigTool.ConfigListener>()
-        mockkObject(LogConfigTool)
-        every { LogConfigTool.addConfigListener(capture(slot)) } just runs
+// 定义行为：当LogConfigTool的 `addConfigListener()` 方法被调用时，捕获调用者传入的实例。
+val slot = slot<LogConfigTool.ConfigListener>()
+mockkObject(LogConfigTool)
+every { LogConfigTool.addConfigListener(capture(slot)) } just runs
 
-        // 创建被测类的实例
-        val manager = LogManager()
-        println("初始的日志级别：${manager.minLevel}")
+// 创建被测类的实例
+val manager = LogManager()
+println("初始的日志级别：${manager.minLevel}")
 
-        // 调用捕获到的监听器方法，模拟事件回调。
-        slot.captured.onLevelChange(Level.WARNING)
+// 调用捕获到的监听器方法，模拟事件回调。
+slot.captured.onLevelChange(Level.WARNING)
 
-        println("事件触发后的日志级别：${manager.minLevel}")
-        // 验证事件触发是否确实改变了被测对象的属性
-        assertEquals(Level.WARNING, manager.minLevel)
+println("事件触发后的日志级别：${manager.minLevel}")
+// 验证事件触发是否确实改变了被测对象的属性
+assertEquals(Level.WARNING, manager.minLevel)
 ```
 
+`slot<T>()` 表示创建一个参数捕获容器，用于接收捕获到的参数引用；捕获操作需要在 `every {}` 语句中定义， `capture(<参数容器>)` 表示捕获其所在位置的参数，当 `addConfigListener()` 方法被调用时，调用者传入的参数实例将会被存储到 `slot` 容器中。
 
-当回调方法被触发后，我们可以在 `verify()` 方法中使用 `capture()` 方法配置参数捕获器，检测
+当被测对象注册回调后，该回调实现应当被捕获并存储在 `slot` 容器中，我们可以通过 `slot.captured` 访问捕获到的实例，并调用其中的方法模拟事件触发。
 
+此时运行示例程序，并查看控制台输出信息：
 
 ```text
 初始的日志级别：INFO
 事件触发后的日志级别：WARNING
 ```
 
+---
 
+`slot<T>()` 容器只能存储单个引用，如果捕获器多次触发，其中只会保留最后一次捕获的引用；如果我们希望收集多次调用的参数，可以使用 `mutableListOf<T>()` 容器。
 
+🔴 示例：捕获多次调用的参数。
 
+在本示例中，我们捕获被测对象向依赖组件注册的监听器实例，并计算平均耗时。
+
+第一步，我们对前文“示例一”中的 `saveLog()` 方法进行修改，每次回调 `onEnd()` 事件时采用随机时长，模拟真实的场景。
+
+"LogManager.kt":
+
+```kotlin
+fun saveLog(callback: StateCallback) {
+    // 通知外部监听者操作开始
+    callback.onStart()
+
+    // 生成随机耗时以模拟实际操作
+    val time = (100..500).random().toLong()
+    callback.onEnd(time)
+}
+```
+
+第二步，编写测试代码。
+
+我们使用List作为捕获容器，并调用5次 `saveLog()` 方法，收集每次 `onEnd()` 回调方法的参数值，最后计算平均耗时。
+
+"CaptorTest.kt":
+
+```kotlin
+// 创建列表以接收多次调用参数
+val slots = mutableListOf<Long>()
+// 创建监听器的Mock对象
+val mockListener: LogManager.StateCallback = mockk(relaxed = true)
+// 定义行为：当监听器的 `onEnd()` 方法被调用时，捕获传入的参数。
+every { mockListener.onEnd(capture(slots)) } just runs
+
+// 创建被测类的实例
+val manager = LogManager()
+// 调用5次保存日志的方法
+repeat(5) {
+    manager.saveLog(mockListener)
+}
+
+// 查看捕获到的参数
+slots.forEachIndexed { i, v ->
+    println("第${i + 1}次调用，耗时：${v} ms。")
+}
+// 计算平均耗时
+println("平均耗时：${slots.average()} ms。")
+```
+
+此时运行示例程序，并查看控制台输出信息：
 
 ```text
-第1次调用，耗时：200 ms。
-第2次调用，耗时：200 ms。
-第3次调用，耗时：200 ms。
-第4次调用，耗时：200 ms。
-第5次调用，耗时：200 ms。
-平均耗时：200.0 ms。
+第1次调用，耗时：450 ms。
+第2次调用，耗时：187 ms。
+第3次调用，耗时：162 ms。
+第4次调用，耗时：280 ms。
+第5次调用，耗时：373 ms。
+平均耗时：290.4 ms。
+```
+
+---
+
+Lambda表达式作为函数式接口的实现，有时也需要使用参数捕获器进行模拟。
+
+
+🔴 示例：捕获Lambda表达式。
+
+在本示例中，我们捕获Mock方法中的Lambda表达式，并进行调用以模拟事件。
+
+第一步，编写业务代码。
+
+"LogConfigTool.kt":
+
+```kotlin
+fun prepare(onComplet: (dir: String) -> Unit) {
+    // 模拟耗时操作
+    Thread.sleep(5000L)
+    // 触发回调方法，通知调用者初始化完成。
+    onComplet.invoke("/var/log/2025-12-31/")
+}
+```
+
+第二步，编写测试代码。
+
+测试环境避免访问真实的文件，因此我们使用参数捕获器模拟 `prepare()` 方法的行为。
+当这个方法被调用时，立刻通过回调返回一个虚拟路径给调用者
+
+"CaptorTest.kt":
+
+```kotlin
+mockkObject(LogConfigTool)
+// 定义行为：当LogConfigTool的 `prepare()` 方法被调用时，捕获调用者传入的Lambda表达式。
+every { LogConfigTool.prepare(captureLambda()) } answers {
+    // 获取捕获到的Lambda表达式，并立即调用它。
+    lambda<(String) -> Unit>().invoke("/mock/log/")
+}
+
+// 调用Mock方法，并传入Lambda作为回调实现。
+LogConfigTool.prepare {
+    println("目录准备完成，路径：[$it]")
+}
+```
+
+`captureLambda()` 表示捕获其所在位置的Lambda表达式，随后我们可以在 `answers {}` 语句块中通过 `lambda<T>()` 访问捕获到的表达式，并调用它以模拟事件触发。
+
+
+此时运行示例程序，并查看控制台输出信息：
+
+```text
+目录准备完成，路径：[/mock/log/]
+```
+
+---
+
+`captureLambda()` 捕获器具有一些限制，它只能配合 `answers {}` 语句块使用，这意味着Mock方法被调用时立刻触发，无法延后触发。除此之外，如果Mock方法具有多个Lambda参数， ``captureLambda()`` 方法只能出现一次，如果我们在多个参数处填写`captureLambda()`会导致错误。
+
+对于这些场景我们也可以使用常规的捕获器。
+
+
+🔴 示例：捕获Lambda表达式。
+
+在本示例中，我们捕获Mock方法中的Lambda表达式，并进行调用以模拟事件。
+
+第一步，编写业务代码。
+
+"LogConfigTool.kt":
+
+```kotlin
+fun prepare(onComplet: (dir: String) -> Unit) {
+    // 模拟耗时操作
+    Thread.sleep(5000L)
+    // 触发回调方法，通知调用者初始化完成。
+    onComplet.invoke("/var/log/2025-12-31/")
+}
+```
+
+第二步，编写测试代码。
+
+"CaptorTest.kt":
+
+```kotlin
+mockkObject(LogConfigTool)
+// 使用CapturingSlot承载Lambda表达式
+val slot = slot<(String) -> Unit>()
+every { LogConfigTool.prepare(capture(slot)) } answers {
+    // 可以在 `answers {}` 代码块中调用捕获到的Lambda表达式
+    slot.invoke("/mock/log/")
+}
+
+// 调用Mock方法，并传入Lambda作为回调实现。
+LogConfigTool.prepare {
+    println("目录准备完成，路径：[$it]")
+}
+
+// 也可以在调用发生后使用Lambda表达式，模拟异步回调。
+slot.invoke("/mock/log2/")
 ```
 
 
@@ -1168,25 +1312,6 @@ public class SpyExampleTest {
         verify(spyCalculator).add(2, 3);
     }
 }
-
-
-
-# 捕获Lambda
-
-
-```kotlin
-        // 捕获待测实例注册的广播接收器
-        val receiverSlot = slot<(Intent) -> Unit>()
-        every { mockContext.registerReceiver(any(), capture(receiverSlot), captureLambda()) } answers {
-            // 此处将在registerReceiver被调用时立即执行lambda
-            lambda<IntentFilter.() -> Unit>().invoke(IntentFilter())
-        }
-
-        // 延后回调Lambda
-        receiverSlot.captured.invoke(intentLowSpeed)
-```
-
-
 
 
 
