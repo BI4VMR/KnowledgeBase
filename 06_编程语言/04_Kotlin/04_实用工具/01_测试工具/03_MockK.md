@@ -526,23 +526,39 @@ every { mockDBHelper.queryUserNames(20, false) } returns listOf()
 
 在同一条行为定义语句中，要么全部使用具体值，要么全部使用匹配器。我们不应将二者混用，虽然有时混用不会导致错误，但这属于未定义行为，应当尽量避免。
 
-<!-- TODO
+## 偏函数模拟
+默认情况下，Mock对象的所有方法实现均为模拟行为，要么执行我们通过 `every {}` 语句块定义的行为，要么返回宽松模式的默认值。有时我们希望执行原始方法的逻辑，或者获取原始方法的返回值并进行处理，这种需求被称为“偏函数模拟”。
 
+在 `answers {}` 语句块中，我们可以调用 `callOriginal()` 方法，此方法将会调用 `every {}` 语句中的原始方法，若原始方法具有返回值，也会通过此方法返回，以便我们实现偏函数模拟。
 
+🟡 示例六：偏函数模拟。
 
-偏函数模拟
+在本示例中，我们调用Mock对象的原始方法，对返回值进行处理后再传递给调用者。
 
-every { 
-    mockObject.someMethod(any()) 
-} answers { 
-    originalCall(it.invocation.args.first()) 
+"DefineBehaviorTest.kt":
+
+```kotlin
+val mockDBHelper = mockk<DBHelper>()
+every { mockDBHelper.queryUserNames(any(), any()) } answers {
+    // 调用原始方法
+    val rawList = callOriginal()
+    println("真实调用的返回值：$rawList")
+
+    // 追加一些模拟数据再作为新的返回值
+    ArrayList(rawList + "MockUser1" + "MockUser2")
 }
 
-备注：对于某些方法调用，我们并不想完全使用模拟的值，而是想使用特定的函数调用过程，那么可以使用originalCall来实现对实际函数的调用。
+// 调用Mock对象的 `queryUserNames()` 方法并输出结果
+val result = mockDBHelper.queryUserNames(22, false)
+println("Mock方法的返回值：$result")
+```
 
+此时运行示例程序，并查看控制台输出信息：
 
-
--->
+```text
+真实调用的返回值：[Real Name]
+Mock方法的返回值：[Real Name, MockUser1, MockUser2]
+```
 
 
 # 验证行为
@@ -947,6 +963,17 @@ println("使用Banana构造的实例：${Order("Banana").showInfo1()}")
 ```
 
 <!--
+
+## 模拟属性
+
+通常可以像模拟 get/set 函数或字段访问一样模拟属性。对于更多场景，可以使用其他方法。
+
+    every { mock getProperty "speed" } returns 33
+    every { mock setProperty "acceleration" value less(5) } just Runs
+    verify { mock getProperty "speed" }
+    verify { mock setProperty "acceleration" value less(5) }
+
+
 ## 私有方法
 
 在罕见情况下，可能需要模拟私有函数。这个过程较为复杂，因为不能直接调用此类函数。
@@ -982,23 +1009,6 @@ enum 类也是一样的mock方式
 
 
 
-## 模拟属性
-
-通常可以像模拟 get/set 函数或字段访问一样模拟属性。对于更多场景，可以使用其他方法。
-
-    every { mock getProperty "speed" } returns 33
-    every { mock setProperty "acceleration" value less(5) } just Runs
-    verify { mock getProperty "speed" }
-    verify { mock setProperty "acceleration" value less(5) }
-
-
-Lambada表达式
-
-val lambdaMock: () -> Unit = mockk()
-every { 
-    lambdaMock.invoke() 
-} just Runs
-
 
 -->
 
@@ -1027,29 +1037,21 @@ object LogConfigTool {
 
     private var listener: ConfigListener? = null
 
-    /**
-     * 注册回调。
-     *
-     * @param[l] 监听器实现。
-     */
+    // 注册回调
     fun addConfigListener(l: ConfigListener) {
         listener = l
     }
 
-    /**
-     * 回调接口：日志配置变更。
-     */
+    // 回调接口：日志配置变更
     fun interface ConfigListener {
 
-        /**
-         * 回调方法：最小日志级别变更。
-         *
-         * @param[level] 日志级别。
-         */
+        // 回调方法：最小日志级别变更
         fun onLevelChange(level: Level)
     }
 }
 ```
+
+当LogManager初始化时，其向LogConfigTool注册监听器，接收日志级别变更事件并更新自身的全局变量。
 
 "LogManager.kt":
 
@@ -1090,7 +1092,7 @@ println("事件触发后的日志级别：${manager.minLevel}")
 assertEquals(Level.WARNING, manager.minLevel)
 ```
 
-`slot<T>()` 表示创建一个参数捕获容器，用于接收捕获到的参数引用；捕获操作需要在 `every {}` 语句中定义， `capture(<参数容器>)` 表示捕获其所在位置的参数，当 `addConfigListener()` 方法被调用时，调用者传入的参数实例将会被存储到 `slot` 容器中。
+`slot<T>()` 表示创建一个参数捕获容器，用于接收捕获到的参数引用；捕获操作需要在 `every {}` 语句块中定义， `capture(<参数容器>)` 表示捕获其所在位置的参数，当 `addConfigListener()` 方法被调用时，调用者传入的参数实例将会被存储到 `slot` 容器中。
 
 当被测对象注册回调后，该回调实现应当被捕获并存储在 `slot` 容器中，我们可以通过 `slot.captured` 访问捕获到的实例，并调用其中的方法模拟事件触发。
 
@@ -1109,7 +1111,7 @@ assertEquals(Level.WARNING, manager.minLevel)
 
 在本示例中，我们捕获被测对象向依赖组件注册的监听器实例，并计算平均耗时。
 
-第一步，我们对前文“示例一”中的 `saveLog()` 方法进行修改，每次回调 `onEnd()` 事件时采用随机时长，模拟真实的场景。
+第一步，我们对前文“示例一”中的 `saveLog()` 方法进行修改，每次回调 `onEnd()` 事件时采用随机时长，模拟真实的文件读写场景。
 
 "LogManager.kt":
 
@@ -1126,7 +1128,7 @@ fun saveLog(callback: StateCallback) {
 
 第二步，编写测试代码。
 
-我们使用List作为捕获容器，并调用5次 `saveLog()` 方法，收集每次 `onEnd()` 回调方法的参数值，最后计算平均耗时。
+我们使用MutableList作为捕获容器，并调用5次 `saveLog()` 方法，收集每次 `onEnd()` 回调方法的参数值，最后计算平均耗时。
 
 "CaptorTest.kt":
 
@@ -1262,57 +1264,64 @@ LogConfigTool.prepare {
 slot.invoke("/mock/log2/")
 ```
 
-
-<!-- TODO
-
-## 部分模拟
-
-在Java环境中，Mock工具（如Mockito）的SPY模式主要用于部分模拟（Partial Mocking）的场景。SPY模式允许你在保留对象原有行为的同时，模拟其中的部分方法。这在需要测试复杂对象的部分功能时非常有用。
-使用场景
-测试部分功能：当你只想测试对象的某些方法，而不希望影响其他方法的真实行为时。
-依赖复杂逻辑的对象：当对象的某些方法依赖复杂的逻辑或外部资源（如数据库、网络）时，可以通过SPY模式模拟这些方法。
-验证方法调用：当你需要验证某些方法是否被调用，以及调用的参数是否正确时。
+## Spy模式
+Spy模式与Mock模式是相反的，Mock对象的所有方法均为模拟行为，而Spy对象的所有方法均为真实行为，我们可以为需要模拟的方法单独定义行为，适用于仅少部分方法需要模拟的场景。
 
 
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+🔴 示例十五：Spy模式。
 
-import static org.mockito.Mockito.*;
+在本示例中，我们创建MemoryInfo的Spy对象，并为 `getFreeMemory()` 方法定义行为，模拟剩余内存较低的场景。
 
-class Calculator {
-    public int add(int a, int b) {
-        return a + b;
-    }
+第一步，我们编写业务代码。
 
-    public int multiply(int a, int b) {
-        return a * b;
-    }
+MemoryInfo提供了两个方法用于获取JVM内存总量和空闲内存量。
+
+"MemoryInfo.kt":
+
+```kotlin
+class MemoryInfo {
+
+    private val runtime = Runtime.getRuntime()
+
+    fun getTotalMemory(): Long = runtime.totalMemory()
+
+    fun getFreeMemory(): Long = runtime.freeMemory()
 }
+```
 
-public class SpyExampleTest {
+第二步，我们编写测试代码。
 
-    @Test
-    public void testSpy() {
-        // 创建一个真实对象
-        Calculator realCalculator = new Calculator();
+"SpyTest.kt":
 
-        // 创建一个SPY对象
-        Calculator spyCalculator = Mockito.spy(realCalculator);
+```kotlin
+// 创建Spy对象
+val spyMemoryInfo = spyk(MemoryInfo())
 
-        // 模拟add方法的行为
-        doReturn(10).when(spyCalculator).add(2, 3);
+println("初始状态...")
+println("内存总量：${spyMemoryInfo.getTotalMemory()}")
+println("空闲内存：${spyMemoryInfo.getFreeMemory()}")
 
-        // 调用add方法，返回模拟值
-        System.out.println(spyCalculator.add(2, 3)); // 输出：10
+// 定义行为：模拟剩余内存为8KB的情况
+every { spyMemoryInfo.getFreeMemory() } returns 8 * 1024L
 
-        // 调用multiply方法，返回真实值
-        System.out.println(spyCalculator.multiply(2, 3)); // 输出：6
+println("定义行为后...")
+println("内存总量：${spyMemoryInfo.getTotalMemory()}")
+println("空闲内存：${spyMemoryInfo.getFreeMemory()}")
+```
 
-        // 验证add方法是否被调用
-        verify(spyCalculator).add(2, 3);
-    }
-}
+`spyk()` 方法用于创建Spy对象，参数是目标类的实例，该方法将会复制现有实例内的属性值并生成新的Spy对象。
 
+如果目标类具有无参构造方法，我们也可以使用简化的方式创建，例如： `spyk<MemoryInfo>()` 。
 
+此时运行示例程序，并查看控制台输出信息：
 
--->
+```text
+初始状态...
+内存总量：526385152
+空闲内存：502728992
+定义行为后...
+内存总量：526385152
+空闲内存：8192
+```
+
+当Spy对象被创建后，其所有方法均为真实行为，我们可以通过 `every {}` 语句为特定方法定义模拟行为，当再次调用该方法时，Spy对象将执行 `every {}` 语句中指定的逻辑，未定义的方法仍然执行真实逻辑。
