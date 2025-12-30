@@ -1,7 +1,7 @@
 # 简介
 Mockito是针对Java语言设计的Mock工具，即使它提供了Kotlin扩展，其对Kotlin的支持仍然有限，例如：无法模拟Kotlin中的Object、对函数式编程和协程支持欠佳等。
 
-MockK是专为Kotlin语言（JVM平台）所设计的Mock工具，它的用法与Mockito类似，并且支持Kotlin的专有特性，其官方网站为： [🔗 MockK](https://mockk.io/) 。
+MockK是专为JVM平台Kotlin语言所设计的Mock工具，它的用法与Mockito类似，并且支持Kotlin的专有特性，其官方网站为： [🔗 MockK](https://mockk.io/) 。
 
 本章的示例工程详见以下链接：
 
@@ -10,7 +10,7 @@ MockK是专为Kotlin语言（JVM平台）所设计的Mock工具，它的用法�
 
 # 基本应用
 ## 隔离依赖
-Mock工具的基本用途是模拟被测组件所依赖的外部接口，提供假的数据与行为，使我们专注于被测组件本身的业务逻辑，不必关心外围环境的变化。
+Mock工具的基本用途是模拟被测组件所依赖的外部接口，提供测试数据与行为，使我们专注于被测组件本身的业务逻辑，不必关心外围环境的变化。
 
 🔴 示例一：模拟待测组件的依赖项。
 
@@ -130,7 +130,7 @@ Index:[2] Name:[用户B]
 
 根据上述输出内容可知：
 
-UserManager调用DBHelper中的接口后，输出内容确实为测试代码提供的模拟数据，并非DBHelper的内置数据，这表明Mock操作成功，测试代码已经隔离了UserManager的外部依赖DBHelper。
+UserManager调用DBHelper中的接口后，输出内容确实为测试代码提供的模拟数据，并非DBHelper的内置数据，表明Mock操作成功，测试代码已经隔离了UserManager的外部依赖DBHelper。
 
 ## 宽松模式
 若待测对象调用了Mock对象中的某个方法，但我们没有预先为此Mock方法定义行为，MockK不知道应当执行何种动作，就会抛出异常提醒开发者。
@@ -529,9 +529,9 @@ every { mockDBHelper.queryUserNames(20, false) } returns listOf()
 ## 偏函数模拟
 默认情况下，Mock对象的所有方法实现均为模拟行为，要么执行我们通过 `every {}` 语句块定义的行为，要么返回宽松模式的默认值。有时我们希望执行原始方法的逻辑，或者获取原始方法的返回值并进行处理，这种需求被称为“偏函数模拟”。
 
-在 `answers {}` 语句块中，我们可以调用 `callOriginal()` 方法，此方法将会调用 `every {}` 语句中的原始方法，若原始方法具有返回值，也会通过此方法返回，以便我们实现偏函数模拟。
+在 `answers {}` 语句块中，我们可以调用 `callOriginal()` 方法，此方法将会调用 `every {}` 语句中的原始方法；若原始方法具有返回值，也会通过此方法返回，以便我们实现偏函数模拟。
 
-🟡 示例六：偏函数模拟。
+🟢 示例十一：偏函数模拟。
 
 在本示例中，我们调用Mock对象的原始方法，对返回值进行处理后再传递给调用者。
 
@@ -579,7 +579,7 @@ MockK提供的行为验证方法是 `verify()` ，它的参数及含义如下文
 
 下文示例展示了 `verify()` 方法的具体用法。
 
-🟢 示例十一：基本的行为验证。
+🔵 示例十二：基本的行为验证。
 
 在本示例中，我们使用 `verify {}` 方法验证被测接口是否正确地调用了依赖组件。
 
@@ -660,7 +660,7 @@ verify(exactly = 2 + text2.size) {
 
 下文示例以 `verifySequence {}` 方法为例，展示验证调用顺序的具体方法。
 
-🔵 示例十二：验证一组方法的调用顺序。
+🟣 示例十三：验证一组方法的调用顺序。
 
 在本示例中，我们使用 `verifySequence {}` 方法验证被测接口是否正确地调用了依赖组件。
 
@@ -718,7 +718,7 @@ verifySequence {
 ## 单例与静态方法
 MockK提供了针对Object、JVM静态方法等元素的Mock工具，以便我们在Kotlin环境中便捷地编写测试代码。
 
-🟣 示例十三：模拟Object中的普通方法。
+🟤 示例十四：模拟Object中的普通方法。
 
 在本示例中，我们模拟Object中的非静态方法。
 
@@ -765,7 +765,7 @@ UtilsObject#getCurrentTime:[1234567890]
 
 ---
 
-🟤 示例十四：模拟Object中的静态方法。
+🔴 示例十五：模拟Object中的静态方法。
 
 在本示例中，我们模拟Object中的JVM静态方法。
 
@@ -814,7 +814,7 @@ UtilsObject#getURL:[http://test.com/]
 
 ---
 
-🔴 示例十五：模拟伴生对象中的方法。
+🟠 示例十六：模拟伴生对象中的方法。
 
 在本示例中，我们模拟类的伴生对象中的方法。
 
@@ -871,7 +871,7 @@ UtilsClass#methodStatic:[Test static method.]
 ## 构造方法
 在前文“示例一”中，UserManager的依赖组件DBHelper是一个私有变量，测试代码无法正常注入Mock对象，因此我们通过反射将Mock对象传入到变量中。编写反射代码较为繁琐，MockK能够拦截构造方法并返回Mock对象，简化此类场景的注入过程。
 
-🔴 示例十五：模拟构造方法。
+🟡 示例十七：模拟构造方法。
 
 在本示例中，我们模拟类的构造方法。
 
@@ -933,7 +933,7 @@ unmockkConstructor(Order::class)
 
 如果我们希望针对不同的构造参数设置差异化的Mock行为，可以使用参数匹配器。
 
-🔴 示例：模拟特定条件的构造方法。
+🟢 示例十八：模拟特定条件的构造方法。
 
 在本示例中，我们模拟输入参数与预定规则相符的构造方法。
 
@@ -962,55 +962,97 @@ println("使用Banana构造的实例：${Order("Banana").showInfo1()}")
 使用Banana构造的实例：[Banana]
 ```
 
-<!--
+## 属性
+MockK允许我们对Kotlin的属性进行模拟与验证，下文示例展示了相关方法。
 
-## 模拟属性
+🔵 示例十九：模拟与验证属性的Get调用。
 
-通常可以像模拟 get/set 函数或字段访问一样模拟属性。对于更多场景，可以使用其他方法。
+在本示例中，我们模拟与验证Kotlin属性的Get调用。
 
-    every { mock getProperty "speed" } returns 33
-    every { mock setProperty "acceleration" value less(5) } just Runs
-    verify { mock getProperty "speed" }
-    verify { mock setProperty "acceleration" value less(5) }
+第一步，编写业务代码。
 
+"Properties.kt":
 
-## 私有方法
+```kotlin
+class Properties {
+    var name: String = "Real User"
+}
+```
 
-在罕见情况下，可能需要模拟私有函数。这个过程较为复杂，因为不能直接调用此类函数。
+第二步，编写测试代码。
 
-    val mock = spyk(ExampleClass(), recordPrivateCalls = true)
-    every { mock["sum"](any<Int>(), 5) } returns 25
+"PropertiesTest.kt":
 
-或使用:
+```kotlin
+val mock = mockk<Properties>()
 
-every { mock invoke "openDoor" withArguments listOf("left", "rear") } returns "OK"
+// 定义行为：如果调用者访问 `name` 属性，则返回 "Mock User"。
+every { mock.name } returns "Mock User"
+// 对于读取属性的调用，也可以使用 `getProperty()` 进行定义，与前一行等价。
+every { mock getProperty ("name") } returns "Mock User"
 
+println("访问 `name` 属性：${mock.name}")
 
+// 验证属性是否已被访问
+verify { mock.name }
+// 对于读取属性的调用，也可以使用 `getProperty()` 进行验证，与前一行等价。
+verify { mock getProperty ("name") }
+```
 
+在 `every {}` 与 `verify {}` 语句块中，我们可以通过 `getProperty(<属性名称>)` 指明模拟或验证属性的Get方法。为了简化代码，我们也可以直接使用 `<Mock对象>.<属性>` 语句，它与 `getProperty(<属性名称>)` 是等价的。
 
-验证mock对象私有方法
+---
 
-验证是放在 verify{...} 中的，也是通过反射的方式来验证:
+🟣 示例二十：模拟与验证属性的Set调用。
 
-verify{ mockClass["privateFunName"](arg1, arg2, ...) }
+在本示例中，我们模拟与验证Kotlin属性的Set调用。
 
-主要分成三个部分：
+第一步，编写业务代码。
 
-    mock类
-    中括号，里面填入双引号+私有方法名
-    小括号，里面填入传参，可以使用 allAny<T>()、mockk() … 或你想要的传入的实参
+"Properties.kt":
 
-object需要特殊处理
+```kotlin
+class Properties {
+    var age: Int = 20
+}
+```
 
-如果你要验证、执行 object类里面的私有方法，你需要在mock的时候指定一个值 recordPrivateCalls， 它默认是false：
+第二步，编写测试代码。
 
-mockkObject(ObjectClass, recordPrivateCalls = true)
-enum 类也是一样的mock方式
+"PropertiesTest.kt":
 
+```kotlin
+val mock = mockk<Properties>()
 
+// 暂存调用者设置的值
+var mockAge = 0
+// 对于设置属性的调用，需要使用 `setProperty()` 进行定义，并且可以设置匹配器。
+every { mock setProperty ("age") value less(0) } answers {
+    // 可以通过 `firstArg<T>()` 获取属性值
+    val v = firstArg<Int>()
+    println("年龄不能为负数($v)，最低为 `0` 。")
+    mockAge = 0
+}
+every { mock.age } returns mockAge
 
+// 设置属性
+println("试图设置 `age` 属性为 -1 。")
+mock.age = -1
+println("访问 `age` 属性：${mock.age}")
 
--->
+// 验证属性是否已被设置
+verify { mock setProperty ("age") value less(0) }
+```
+
+对于属性的Set方法，我们需要通过 `setProperty(<属性名称>)` 进行指明，并且可以在 `value` 之后设置参数匹配器。
+
+此时运行示例程序，并查看控制台输出信息：
+
+```text
+试图设置 `age` 属性为 -1 。
+年龄不能为负数(-1)，最低为 `0` 。
+访问 `age` 属性：0
+```
 
 
 # 高级应用
@@ -1022,7 +1064,7 @@ enum 类也是一样的mock方式
 
 下文示例展示了参数捕获器的具体用法。
 
-🔴 示例一：捕获回调接口并模拟事件。
+🟤 示例二十一：捕获回调接口并模拟事件。
 
 在本示例中，我们捕获被测对象向依赖组件注册的监听器实例，并模拟事件触发。
 
@@ -1107,7 +1149,7 @@ assertEquals(Level.WARNING, manager.minLevel)
 
 `slot<T>()` 容器只能存储单个引用，如果捕获器多次触发，其中只会保留最后一次捕获的引用；如果我们希望收集多次调用的参数，可以使用 `mutableListOf<T>()` 容器。
 
-🔴 示例：捕获多次调用的参数。
+🔴 示例二十二：捕获多次调用的参数。
 
 在本示例中，我们捕获被测对象向依赖组件注册的监听器实例，并计算平均耗时。
 
@@ -1167,15 +1209,15 @@ println("平均耗时：${slots.average()} ms。")
 ```
 
 ---
+Kotlin支持将Lambda表达式作为参数，MockK也提供了对应的捕获工具。
 
-Lambda表达式作为函数式接口的实现，有时也需要使用参数捕获器进行模拟。
+🟠 示例二十三：捕获Lambda表达式。
 
-
-🔴 示例：捕获Lambda表达式。
-
-在本示例中，我们捕获Mock方法中的Lambda表达式，并进行调用以模拟事件。
+在本示例中，我们捕获Mock方法中的Lambda表达式，并在 `answers {}` 语句块中调用。
 
 第一步，编写业务代码。
+
+我们在LogConfigTool中新增 `prepare()` 方法模拟准备日志目录的功能，当准备完毕后回调 `onComplet` 参数提供的Lambda表达式通知日志路径。
 
 "LogConfigTool.kt":
 
@@ -1190,8 +1232,7 @@ fun prepare(onComplet: (dir: String) -> Unit) {
 
 第二步，编写测试代码。
 
-测试环境避免访问真实的文件，因此我们使用参数捕获器模拟 `prepare()` 方法的行为。
-当这个方法被调用时，立刻通过回调返回一个虚拟路径给调用者
+测试环境通常不便访问真实的文件系统，因此我们使用参数捕获器捕获 `prepare()` 方法的Lambda表达式，并传递一个虚拟路径给调用者。
 
 "CaptorTest.kt":
 
@@ -1209,8 +1250,7 @@ LogConfigTool.prepare {
 }
 ```
 
-`captureLambda()` 表示捕获其所在位置的Lambda表达式，随后我们可以在 `answers {}` 语句块中通过 `lambda<T>()` 访问捕获到的表达式，并调用它以模拟事件触发。
-
+`captureLambda()` 表示捕获其所在位置的Lambda表达式，随后我们便可在 `answers {}` 语句块中通过 `lambda<T>()` 访问捕获到的表达式并调用它， `T` 为Lambda表达式的参数与返回值。
 
 此时运行示例程序，并查看控制台输出信息：
 
@@ -1220,29 +1260,13 @@ LogConfigTool.prepare {
 
 ---
 
-`captureLambda()` 捕获器具有一些限制，它只能配合 `answers {}` 语句块使用，这意味着Mock方法被调用时立刻触发，无法延后触发。除此之外，如果Mock方法具有多个Lambda参数， ``captureLambda()`` 方法只能出现一次，如果我们在多个参数处填写`captureLambda()`会导致错误。
+`captureLambda()` 捕获器具有一些限制，它只能在 `answers {}` 语句块内部被调用，在某些场景中难以实现按需触发。除此之外，如果Mock方法具有多个Lambda参数， `captureLambda()` 方法只能使用一次，如果我们在多个Lambda参数处填写 `captureLambda()` 会导致异常。
 
-对于这些场景我们也可以使用常规的捕获器。
+对于上述场景，我们可以使用常规的参数捕获器。
 
+🟡 示例二十四：捕获Lambda表达式（方法二）。
 
-🔴 示例：捕获Lambda表达式。
-
-在本示例中，我们捕获Mock方法中的Lambda表达式，并进行调用以模拟事件。
-
-第一步，编写业务代码。
-
-"LogConfigTool.kt":
-
-```kotlin
-fun prepare(onComplet: (dir: String) -> Unit) {
-    // 模拟耗时操作
-    Thread.sleep(5000L)
-    // 触发回调方法，通知调用者初始化完成。
-    onComplet.invoke("/var/log/2025-12-31/")
-}
-```
-
-第二步，编写测试代码。
+在本示例中，我们捕获Mock方法中的Lambda表达式，并在适当的时机调用。
 
 "CaptorTest.kt":
 
@@ -1264,11 +1288,12 @@ LogConfigTool.prepare {
 slot.invoke("/mock/log2/")
 ```
 
+`slot<T>()` 容器也可以承载Lambda参数，我们只需在泛型 `T` 处填写Lambda表达式的参数与返回值即可。
+
 ## Spy模式
-Spy模式与Mock模式是相反的，Mock对象的所有方法均为模拟行为，而Spy对象的所有方法均为真实行为，我们可以为需要模拟的方法单独定义行为，适用于仅少部分方法需要模拟的场景。
+Spy模式与Mock模式是相反的，Mock对象的所有方法均为模拟行为，而Spy对象的所有方法均为真实行为，我们可以按需定义模拟行为，适用于仅需要模拟少部分方法的场景。
 
-
-🔴 示例十五：Spy模式。
+🟢 示例二十五：Spy模式。
 
 在本示例中，我们创建MemoryInfo的Spy对象，并为 `getFreeMemory()` 方法定义行为，模拟剩余内存较低的场景。
 
@@ -1311,7 +1336,7 @@ println("空闲内存：${spyMemoryInfo.getFreeMemory()}")
 
 `spyk()` 方法用于创建Spy对象，参数是目标类的实例，该方法将会复制现有实例内的属性值并生成新的Spy对象。
 
-如果目标类具有无参构造方法，我们也可以使用简化的方式创建，例如： `spyk<MemoryInfo>()` 。
+如果目标类具有无参构造方法，我们也可以使用简化的方式创建Spy对象，例如： `spyk<MemoryInfo>()` 。
 
 此时运行示例程序，并查看控制台输出信息：
 
@@ -1324,4 +1349,51 @@ println("空闲内存：${spyMemoryInfo.getFreeMemory()}")
 空闲内存：8192
 ```
 
-当Spy对象被创建后，其所有方法均为真实行为，我们可以通过 `every {}` 语句为特定方法定义模拟行为，当再次调用该方法时，Spy对象将执行 `every {}` 语句中指定的逻辑，未定义的方法仍然执行真实逻辑。
+## 私有方法
+在某些特殊的环境中，我们可能需要为私有方法或无法直接通过代码引用的公开方法设置Mock行为、验证调用情况，例如：Android SDK中的隐藏方法，下文示例展示了具体语法。
+
+🔵 示例二十六：模拟与验证私有方法。
+
+在本示例中，我们为类的私有方法设置Mock行为，并进行调用与验证。
+
+第一步，编写业务代码。
+
+"Privates.kt":
+
+```kotlin
+class Privates {
+    private fun foo(p0: String): String = "Real!"
+}
+```
+
+第二步，编写测试代码。
+
+"PrivatesTest.kt":
+
+```kotlin
+// 创建Spy对象并开启私有方法调用记录
+val mock = spyk<Privates>(recordPrivateCalls = true)
+
+// 定义行为：当私有方法 `foo()` 被调用时，返回 `Mock!` 。
+every { mock invoke "foo" withArguments listOf(any<String>()) } returns "Mock!"
+
+// 简化写法
+every { mock["foo"].invoke(any<String>()) } returns "Mock!"
+
+// 通过反射调用私有方法
+mock.getMethod("foo", String::class.java)?.let {
+    val result = it.invoke(mock, "Hello!")
+    println("私有方法的返回值：$result")
+}
+
+// 验证私有方法是否被调用
+verify { mock["foo"].invoke("Hello!") }
+```
+
+我们可以模拟Mock对象的私有方法，但它们不会记录调用情况，如果需要验证私有方法，我们应当创建Spy对象，并指定 `recordPrivateCalls = true` 。
+
+在 `every {}` 或 `verify {}` 语句块中，我们可以通过 `<Mock对象> invoke "<目标方法名称>" withArguments listOf(<参数匹配器> ...)` 指明需要模拟或验证的方法，此处Kotlin无法自动推断参数类型，因此参数匹配器必须指明参数的Class。
+
+MockK还提供了一种简化语法： `<Mock对象>["<目标方法名称>"].invoke(<参数匹配器> ...)` ，它与完整语法是等价的。
+
+对于无法在代码中直接引用的类，我们可以通过字符串形式指明KClass，例如： `any<String>()` 等价于 `any(Class.forName("java.lang.String").kotlin)` 。
