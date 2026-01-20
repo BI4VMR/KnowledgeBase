@@ -3,7 +3,7 @@
 
 Robolectric通过一系列JAR包模拟Android SDK中的接口，使得应用程序可以在标准的JVM中运行，不再依赖Android特有的JVM。当项目配置了Robolectric之后，我们便可通过本地测试环境测试Android业务代码以及简单的UI逻辑。
 
-本章的相关知识可以参考以下链接：
+本章的相关知识详见以下链接：
 
 - [🔗 Robolectric - 官方网站](https://robolectric.org/)
 - [🔗 Robolectric - Android开发文档](https://developer.android.com/training/testing/local-tests/robolectric?hl=zh-cn)
