@@ -43,7 +43,7 @@ dependencies {
 
 "build.gradle.kts":
 
-```groovy
+```kotlin
 dependencies {
     // Room核心
     implementation("androidx.room:room-runtime:2.5.1")
