@@ -1,7 +1,11 @@
 # 简介
 我们日常使用的软件界面由各类控件组成，例如按钮、文本框、列表等。Android中的控件都继承自 `android.view.View` 类，View是对所有UI组件的抽象，它描述了UI组件的公共属性，例如宽度与高度；它还拥有设置事件监听的相关方法，例如“点击事件”、“长按事件”等。
 
-View是单个控件，其内部无法容纳子控件，ViewGroup继承自View，它能够拥有多个子控件并管理排列方式，典型应用是布局管理器和列表类控件。ViewGroup可以嵌套使用，这意味着我们可以在布局管理器中添加列表类控件或另一个布局管理器，灵活地进行界面设计。
+View是单体控件，通常是按钮、文本框等，其内部无法容纳子控件，ViewGroup继承自View，它能够拥有多个子控件并管理排列方式，典型应用是布局管理器和列表类控件。ViewGroup可以嵌套使用，这意味着我们可以在布局管理器中添加列表类控件或另一个布局管理器，灵活地进行界面设计。
+
+
+# 布局文件
+布局文件描述了一组View的层级关系与初始属性，我们在开发阶段通过布局文件描述页面的初始状态，程序运行阶段系统会根据布局文件创建每个控件对象，并构建为树状结构，
 
 静态的XML布局文件描述了界面在初始状态下拥有的控件与排列方式，当XML文件渲染时，控件标签将被系统解析并生成相应的Java或Kotlin实例；除了静态声明控件，我们也可以在逻辑代码中动态创建控件对象并添加至ViewGroup。
 
@@ -84,6 +88,51 @@ xmlns:<自定义名称>="http://schemas.android.com/apk/res-auto"
 部分属性在app和android NS都存在，例如app:tint和android:tint，我们应该注意区分它们，SDK中的组件会识别android属性，而第三方库(androidx materier等)会识别app。
 如果我们将appns的属性配置给andorid包中的组件，可能不会生效。
 
+
+
+public View inflate(@LayoutRes int resource, @Nullable ViewGroup root, boolean attachToRoot)
+
+root不为null，attachToRoot为true
+
+解析为View对象后自动添加到parent中，不能再手动调用root.addView方法，否则会出现IllegalStateException异常
+
+
+root不为null，attachToRoot为false
+
+解析为View对象后暂不添加到parent，后续我们可以按需通过root.addView方法添加。
+
+rootview可以为空，此时布局根容器的layout_width和height属性将会失效。
+
+
+两个参数的inflate也是调用三个参数的inflate方法，当root为空时不会attach，非空时自动attach。
+public View inflate(@LayoutRes int resource, @Nullable ViewGroup root) {
+        return inflate(resource, root, root != null);
+    }
+
+activity的setContentView(@LayoutRes int resId)内部就是通过context创建了inflater，并调用inflate方法，DecorView作为root，所以我们设置的布局文件根容器属性有效，并且设置后会自动显示，无需再手动执行addview操作。
+
+# 代码控制
+## 构建
+有些View需要跟随用户操作或特定条件出现，此时我们无法在布局文件中预先写入，就需要通过代码创建并动态添加到容器中。
+
+
+## 操作控件
+布局确定了初始状态，我们也可以根据需要在代码中动态改变属性。
+
+
+# 更新界面
+单线程模型，必须从主线程触发
+post
+
+修改宽高或从子线程切换到主线程更新UI
+
+通过 View.post() 添加的任务，是在 View 绘制流程的开始阶段，将所有任务重新发送到消息队列的尾部，此时相关任务的执行已经在 View 绘制任务之后，即 View 绘制流程已经结束，此时便可以正确获取到 View 的宽高了
+
+post也是handler，但其会等到绘制后再执行
+经过前面的分析我们已经知道 AttachInfo 的赋值操作是在 View 绘制任务的开始阶段，而它的调用者是 ActivityThread 的 handleResumeActivity 方法，即 Activity 生命周期 onResume 方法之后。
+
+
+
 # 事件监听器
 ## 简介
 控件的监听器用于接收控件产生的各类事件，开发者可以通过注册监听器实现事件的处理逻辑，例如界面上有一个“新建文件”按钮，我们为其设置点击事件监听器，并在回调方法中预先配置相关逻辑；当用户点击按钮时，监听器的回调方法将会触发，执行新建文件的相关操作。
@@ -123,41 +172,6 @@ btnTest.setOnClickListener {
 
 我们将上述代码放置在界面的初始化回调方法 `onCreate()` 中，当界面加载后，点击监听器即被设置；后续用户每点击一次按钮，此处的 `onClick()` 回调方法将被触发一次，控制台中也将显示相应的日志内容。
 
-
-# 疑难解答
-## 索引
-
-<div align="center">
-
-|       序号        |                    摘要                     |
-| :---------------: | :-----------------------------------------: |
-| [案例一](#案例一) | 调用 `setBackgroundResource()` 方法无效果。 |
-
-</div>
-
-## 案例一
-### 问题描述
-当我们调用View的 `setBackgroundResource()` 方法更新背景资源时，实际无任何效果。
-
-### 问题分析
-在本案例中，我们切换主题后调用View的 `setBackgroundResource()` 方法，希望控件重新加载资源，由于AOSP原生主题机制通过主题属性切换资源，属性本身的ID是不变的，这导致 `setBackgroundResource()` 方法调用在第一个 `if` 语句就被Return了，后续逻辑均不会执行。
-
-"frameworks/base/core/java/android/view/View.java":
-
-```java
-public void setBackgroundResource(@DrawableRes int resid) {
-    if (resid != 0 && resid == mBackgroundResource) {
-        return;
-    }
-
-    // 此处已省略部分代码...
-}
-```
-
-### 解决方案
-`setBackgroundResource()` 是SDK的内置方法，相关逻辑无法修改。
-
-我们可以先根据资源ID获取当前环境下的最新Drawable对象，再调用View的 `setBackground()` 方法更新UI。
 
 
 
@@ -206,3 +220,39 @@ tvNickName.setOnClickListener {
 
 
 -->
+
+
+# 疑难解答
+## 索引
+
+<div align="center">
+
+|       序号        |                    摘要                     |
+| :---------------: | :-----------------------------------------: |
+| [案例一](#案例一) | 调用 `setBackgroundResource()` 方法无效果。 |
+
+</div>
+
+## 案例一
+### 问题描述
+当我们调用View的 `setBackgroundResource()` 方法更新背景资源时，实际无任何效果。
+
+### 问题分析
+在本案例中，我们切换主题后调用View的 `setBackgroundResource()` 方法，希望控件重新加载资源，由于AOSP原生主题机制通过主题属性切换资源，属性本身的ID是不变的，这导致 `setBackgroundResource()` 方法调用在第一个 `if` 语句就被Return了，后续逻辑均不会执行。
+
+"frameworks/base/core/java/android/view/View.java":
+
+```java
+public void setBackgroundResource(@DrawableRes int resid) {
+    if (resid != 0 && resid == mBackgroundResource) {
+        return;
+    }
+
+    // 此处已省略部分代码...
+}
+```
+
+### 解决方案
+`setBackgroundResource()` 是SDK的内置方法，相关逻辑无法修改。
+
+我们可以先根据资源ID获取当前环境下的最新Drawable对象，再调用View的 `setBackground()` 方法更新UI。
