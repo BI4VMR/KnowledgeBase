@@ -1397,3 +1397,70 @@ verify { mock["foo"].invoke("Hello!") }
 MockK还提供了一种简化语法： `<Mock对象>["<目标方法名称>"].invoke(<参数匹配器> ...)` ，它与完整语法是等价的。
 
 对于无法在代码中直接引用的类，我们可以通过字符串形式指明KClass，例如： `any<String>()` 等价于 `any(Class.forName("java.lang.String").kotlin)` 。
+
+
+# 疑难解答
+## 索引
+
+<div align="center">
+
+|       序号        |                        摘要                         |
+| :---------------: | :-------------------------------------------------: |
+| [案例一](#案例一) | 对可变全局变量判空后，IDE仍然提示无法安全地调用它。 |
+
+</div>
+
+## 案例一
+### 问题描述
+当我们对可变全局变量进行空值判断后，编译器仍然提示无法安全地调用它。
+
+
+"PropertiesTest.kt":
+
+```kotlin
+        // 尝试为 `getState()` 方法设置模拟返回值。
+        val mockObj = mockk<Properties>()
+
+        /*
+         * 执行失败，因为 `state` 属性生成了与 `getState()` 方法同名的Getter方法，JVM允许同名不同返回值的方法在字节码中共存，但MockK
+         * 无法指定目标方法，导致Mock失败。
+         */
+        every { mockObj.getState() } returns 1000
+```
+
+
+```text
+警告: Failed to set backing field (skipping)
+java.lang.IllegalArgumentException: Can not set final boolean field net.bi4vmr.study.troubleshooting.Properties.state to java.lang.Integer
+	at java.base/jdk.internal.reflect.UnsafeFieldAccessorImpl.throwSetIllegalArgumentException(UnsafeFieldAccessorImpl.java:167)
+	at java.base/jdk.internal.reflect.UnsafeFieldAccessorImpl.throwSetIllegalArgumentException(UnsafeFieldAccessorImpl.java:171)
+	at java.base/jdk.internal.reflect.UnsafeQualifiedBooleanFieldAccessorImpl.set(UnsafeQualifiedBooleanFieldAccessorImpl.java:88)
+	at java.base/java.lang.reflect.Field.set(Field.java:799)
+	at io.mockk.InternalPlatformDsl.dynamicSetField(InternalPlatformDsl.kt:182)
+```
+
+在上述示例代码中，我们首先对变量 `text` 进行空值判断，当其不为空值时，将它作为非空参数传递给 `show()` 方法。
+
+此时IDE将在 `show(text)` 处提示以下错误信息：
+
+```text
+Smart cast to 'String' is impossible, because 'text' is a mutable property that could have been changed by this time.
+```
+
+### 问题分析
+
+"Properties.kt":
+
+```kotlin
+class Properties {
+
+    // 定义名为 `state` 的属性。
+    val state: Boolean = true
+
+    // 定义名为 `getState` 的方法。
+    fun getState(): Int {
+        return 1
+    }
+}
+```
+

@@ -307,3 +307,21 @@ class AndroidVMKT(application: Application) : AndroidViewModel(application) {
     }
 }
 ```
+
+<!-- TODO
+
+
+
+# ViewModel ktx
+
+```kotlin
+# 获取当前容器指定类型的ViewModel实例
+val viewModel: VM by viewModels()
+
+# 获取当前容器宿主Activity指定类型的ViewModel实例
+val viewModel: VM by activityViewModels()
+```
+
+
+
+-->
