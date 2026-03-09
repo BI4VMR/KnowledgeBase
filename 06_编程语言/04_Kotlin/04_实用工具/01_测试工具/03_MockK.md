@@ -1404,30 +1404,27 @@ MockK还提供了一种简化语法： `<Mock对象>["<目标方法名称>"].inv
 
 <div align="center">
 
-|       序号        |                        摘要                         |
-| :---------------: | :-------------------------------------------------: |
-| [案例一](#案例一) | 对可变全局变量判空后，IDE仍然提示无法安全地调用它。 |
+|       序号        |               摘要               |
+| :---------------: | :------------------------------: |
+| [案例一](#案例一) | 模拟方法时，出现类型不匹配错误。 |
 
 </div>
 
 ## 案例一
 ### 问题描述
-当我们对可变全局变量进行空值判断后，编译器仍然提示无法安全地调用它。
-
+当我们为方法设置模拟行为时，出现类型不匹配错误：IllegalArgumentException。
 
 "PropertiesTest.kt":
 
 ```kotlin
-        // 尝试为 `getState()` 方法设置模拟返回值。
-        val mockObj = mockk<Properties>()
+// 创建模拟对象
+val mockObj: Properties= mockk<Properties>()
 
-        /*
-         * 执行失败，因为 `state` 属性生成了与 `getState()` 方法同名的Getter方法，JVM允许同名不同返回值的方法在字节码中共存，但MockK
-         * 无法指定目标方法，导致Mock失败。
-         */
-        every { mockObj.getState() } returns 1000
+// 尝试为 `getState()` 方法设置模拟返回值
+every { mockObj.getState() } returns 1000
 ```
 
+此处的 `every {}` 语句将会导致以下异常：
 
 ```text
 警告: Failed to set backing field (skipping)
@@ -1439,15 +1436,10 @@ java.lang.IllegalArgumentException: Can not set final boolean field net.bi4vmr.s
 	at io.mockk.InternalPlatformDsl.dynamicSetField(InternalPlatformDsl.kt:182)
 ```
 
-在上述示例代码中，我们首先对变量 `text` 进行空值判断，当其不为空值时，将它作为非空参数传递给 `show()` 方法。
-
-此时IDE将在 `show(text)` 处提示以下错误信息：
-
-```text
-Smart cast to 'String' is impossible, because 'text' is a mutable property that could have been changed by this time.
-```
-
 ### 问题分析
+根据异常信息可知，MockK试图设置 `state` 属性的值，而不是模拟 `getState()` 方法的返回值。
+
+我们进一步查看被测类中的相关属性与方法：
 
 "Properties.kt":
 
@@ -1464,3 +1456,11 @@ class Properties {
 }
 ```
 
+Kotlin代码编译时，公开属性 `state` 将会生成名为 `getState()` 的Getter方法，JVM允许同名但具有不同返回值的方法在字节码中共存，因此Properties类的字节码中存在 `getState() : Boolean` 和 `getState(): Int` 两个方法。
+
+从Koltin代码调用属性时，编译器能够自动映射到属性对应的Getter方法，因此业务代码没有出现异常；但MockK或Java基于字节码工作，无法识别Kotlin的专有特性，因此未能选择正确的方法，导致出现异常。
+
+### 解决方案
+在JVM平台上使用Kotlin时，我们也应当遵循Java的习惯，确保属性的Getter方法返回属性的值。
+
+在本案例中，我们应当修改 `state` 属性或 `getState(): Int` 方法的名称，确保二者没有歧义。
