@@ -186,6 +186,29 @@ SQLiteDatabase的 `insert()` 方法用于插入记录，我们需要传入目标
 >
 > SQLite中的RowID不一定等同于主键，我们在使用该数值前需要注意鉴别，此处省略具体描述，详见相关章节： [🧭 SQLite - RowID字段](../../../../04_软件技巧/04_数据存储/03_关系型数据库/01_SQLite/02_基础应用.md#rowid字段) 。
 
+SQLiteDatabase封装了三个方法用来插入数据，insert和insertOrThrow最终都会通过insertWithOnConflict方法来完成数据插入。Insert方法对插入错误做了异常捕获，插入正确会返回插入的行号，插入错误会返回-1。而insertOrThrow插入错误会直接抛出SQLException异常。insertWithOnConflict相比于前两个方法多了一个conflictAlgorithm参数，可以通过这个参数指定插入发生冲突时的处理策略。
+返回值类型 	函数声明
+long 	insert(String table, String nullColumnHack, ContentValues values)
+long 	insertOrThrow(String table, String nullColumnHack, ContentValues values)
+long 	insertWithOnConflict(String table, String nullColumnHack, ContentValues initialValues, int conflictAlgorithm)
+
+SQLiteDatabase提供的冲突处理策略及作用。
+	标志 	作用
+0 	CONFLICT_NONE 	未指定冲突解决方法
+1 	CONFLICT_ROLLBACK 	当冲突发生，立即执行回滚操作，结束当前事务，命令终止并返回错误码SQLITE_CONSTRAINT
+2 	CONFLICT_ABORT 	当冲突发生，不执行回滚，保留同一事务内先前命令的更改。默认冲突处理策略。
+3 	CONFLICT_FAIL 	当冲突发生，命令终止并返回错误码SQLITE_CONSTRAINT，但是错误发生前的改动被保存下来不会回退
+4 	CONFLICT_IGNORE 	当冲突发生，发生冲突这一行将不被改变，继续执行下一条命令，并且不会返回任何错误
+5 	CONFLICT_REPLACE 	当冲突发生，先前存在的那条数据将被替换然后继续执行下一条命令，并且不会返回任何错误
+
+
+
+替换数据
+
+SQLiteDatabase提供replace和replaceOrThrow方法来替换数据，用来替换数据库中的某行数据，如果这行数据不存在则作为新数据插入到数据库。从源码来看，其本质是通过insertWithOnConflict方法加CONFLICT_REPLACE冲突处理策略来实现的。
+返回值类型 	方法名称
+long 	replace(String table, String nullColumnHack, ContentValues initialValues)
+long 	replaceOrThrow(String table, String nullColumnHack, ContentValues initialValues)
 ## 更新数据
 下文示例展示了SQLite更新数据的相关接口及使用方法。
 
