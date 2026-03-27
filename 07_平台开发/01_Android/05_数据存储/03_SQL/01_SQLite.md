@@ -178,37 +178,76 @@ runCatching {
 }
 ```
 
-每个ContentValues实例对应一条二维表中的记录，它提供了一系列 `put` 方法，第一参数为列名，第二参数为数据值，此处我们根据学生信息表的结构依次传入ID、姓名与年龄。
+每个ContentValues实例对应二维表中的一条记录，它提供了一系列 `put` 方法，第一参数为列名，第二参数为数据值，此处我们根据学生信息表的结构依次传入ID、姓名与年龄。
+
+如果我们想要将某列设为空值，ContentValues提供了 `putNull(String key)` 方法可供选用。
 
 SQLiteDatabase的 `insert()` 方法用于插入记录，我们需要传入目标表名与前文创建的ContentValues实例，该方法的返回值为新记录在二维表中的RowID。
 
 > ⚠️ 警告
 >
-> SQLite中的RowID不一定等同于主键，我们在使用该数值前需要注意鉴别，此处省略具体描述，详见相关章节： [🧭 SQLite - RowID字段](../../../../04_软件技巧/04_数据存储/03_关系型数据库/01_SQLite/02_基础应用.md#rowid字段) 。
+> SQLite中的RowID不一定等同于主键，我们在使用该数值前需要注意鉴别，详见相关章节： [🧭 SQLite - RowID字段](../../../../04_软件技巧/04_数据存储/03_关系型数据库/01_SQLite/02_基础应用.md#rowid字段) 。
 
-SQLiteDatabase封装了三个方法用来插入数据，insert和insertOrThrow最终都会通过insertWithOnConflict方法来完成数据插入。Insert方法对插入错误做了异常捕获，插入正确会返回插入的行号，插入错误会返回-1。而insertOrThrow插入错误会直接抛出SQLException异常。insertWithOnConflict相比于前两个方法多了一个conflictAlgorithm参数，可以通过这个参数指定插入发生冲突时的处理策略。
-返回值类型 	函数声明
-long 	insert(String table, String nullColumnHack, ContentValues values)
-long 	insertOrThrow(String table, String nullColumnHack, ContentValues values)
-long 	insertWithOnConflict(String table, String nullColumnHack, ContentValues initialValues, int conflictAlgorithm)
+---
 
-SQLiteDatabase提供的冲突处理策略及作用。
-	标志 	作用
-0 	CONFLICT_NONE 	未指定冲突解决方法
-1 	CONFLICT_ROLLBACK 	当冲突发生，立即执行回滚操作，结束当前事务，命令终止并返回错误码SQLITE_CONSTRAINT
-2 	CONFLICT_ABORT 	当冲突发生，不执行回滚，保留同一事务内先前命令的更改。默认冲突处理策略。
-3 	CONFLICT_FAIL 	当冲突发生，命令终止并返回错误码SQLITE_CONSTRAINT，但是错误发生前的改动被保存下来不会回退
-4 	CONFLICT_IGNORE 	当冲突发生，发生冲突这一行将不被改变，继续执行下一条命令，并且不会返回任何错误
-5 	CONFLICT_REPLACE 	当冲突发生，先前存在的那条数据将被替换然后继续执行下一条命令，并且不会返回任何错误
+插入记录时，我们可以选择三个不同的方法，下文内容将对它们进行说明。
 
+🔷 `long insert(String table, String nullColumnHack, ContentValues values)`
 
+本方法将会返回记录的RowID，若遇到错误，则返回特殊值 `-1` ，不会抛出异常。
 
-替换数据
+第二参数 `nullColumnHack` 用于为特殊场景提供兜底机制，在前文示例中，ContentValues的列是确定的，该参数没有作用，我们传入空值即可。某些场景中列根据外部信息动态增减，如果ContentValues中没有任何列，SQL语句为： `INSERT INTO student_info() VALUES();` ，语法不正确；我们可以通过 `nullColumnHack` 指定可空列名，例如 `student_id` ，此时SQL语句为 `INSERT INTO student_info(student_id) VALUES(NULL);` ，可以配合自增ID等机制确保插入成功。
 
-SQLiteDatabase提供replace和replaceOrThrow方法来替换数据，用来替换数据库中的某行数据，如果这行数据不存在则作为新数据插入到数据库。从源码来看，其本质是通过insertWithOnConflict方法加CONFLICT_REPLACE冲突处理策略来实现的。
-返回值类型 	方法名称
-long 	replace(String table, String nullColumnHack, ContentValues initialValues)
-long 	replaceOrThrow(String table, String nullColumnHack, ContentValues initialValues)
+🔷 `long insertOrThrow(String table, String nullColumnHack, ContentValues values)`
+
+本方法将会返回记录的RowID，若遇到错误，将会抛出异常。
+
+🔷 `long insertWithOnConflict(String table, String nullColumnHack, ContentValues initialValues, int conflictAlgorithm)`
+
+本方法将会返回记录的RowID，若遇到错误，则返回特殊值 `-1` ，不会抛出异常。
+
+第四参数 `conflictAlgorithm` 用于指定遇到冲突时的处理策略，可选项及其含义详见下文列表：
+
+<div align="center">
+
+|       常量与数值        |                            行为                            |
+| :---------------------: | :--------------------------------------------------------: |
+|   `CONFLICT_NONE` (0)   |  未指定，如果二维表未配置策略，按 `CONFLICT_ABORT` 处理。  |
+| `CONFLICT_ROLLBACK` (1) |                  终止当前操作并回滚事务。                  |
+|  `CONFLICT_ABORT` (2)   | 终止当前操作，回滚当前操作先前的变更，保留事务的其他变更。 |
+|   `CONFLICT_FAIL` (3)   | 终止当前操作，保留当前操作先前的变更，保留事务的其他变更。 |
+|  `CONFLICT_IGNORE` (4)  |              忽略当前的指令，以先前指令为准。              |
+| `CONFLICT_REPLACE` (5)  |              忽略先前的指令，以当前指令为准。              |
+
+</div>
+
+`CONFLICT_ABORT` 与 `CONFLICT_FAIL` 在单条语句包含多个动作时行为不同。
+
+首先我们给出一个示例语句：
+
+```sql
+INSERT INTO student_info(student_id, student_name) VALUES(1, 'Alice');
+```
+
+该语句只插入单条记录，此时两种策略没有任何区别。
+
+我们也可以通过单条语句插入多条记录：
+
+```sql
+INSERT INTO student_info(student_id, student_name)
+VALUES
+(3, 'Charlie'),
+(2, 'Bob'),
+(1, 'Alice');
+```
+
+假设数据库中已存在ID为 `1` 的条目，记录 `(1, 'Alice')` 将插入失败，如果使用 `CONFLICT_ABORT` 策略，记录 `2` 和 `3` 的插入动作也会被同步撤销；如果使用 `CONFLICT_FAIL` 策略，记录 `2` 和 `3` 的插入动作将被保留。
+
+对于使用 `CONFLICT_REPLACE` 策略的场景，我们可以调用两个衍生方法：
+
+- `long replace(String table, String nullColumnHack, ContentValues initialValues)`
+- `long replaceOrThrow(String table, String nullColumnHack, ContentValues initialValues)`
+
 ## 更新数据
 下文示例展示了SQLite更新数据的相关接口及使用方法。
 

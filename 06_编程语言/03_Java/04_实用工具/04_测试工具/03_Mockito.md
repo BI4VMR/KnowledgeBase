@@ -623,31 +623,167 @@ inOrder.verify(mockListener).onEnd(anyLong());
 
 # 高级应用
 ## 参数捕获器
-参数捕获器 can help us obtain the parameter values when the mock method is called, for further verification or processing.
+参数捕获器可以帮助我们获取Mock方法被调用时的参数值，以便进一步验证或处理。
 
-🟤 示例十三：捕获参数。
+下文列表展示了一些典型的应用场景：
+
+- 模拟事件触发：被测对象通过回调接口监听依赖组件的事件，此时我们可以模拟依赖组件并使用参数捕获器获取回调实现，然后调用其中的方法模拟事件触发。
+- 复杂验证场景： `verify()` 方法只能验证单次方法调用，有时我们希望收集多次调用的参数并进行评估，例如：记录某异步操作执行5次的回调结果，并找出平均值与最大值。
+
+下文示例展示了参数捕获器的具体用法。
+
+🟤 示例二十一：捕获回调接口并模拟事件。
+
+在本示例中，我们捕获被测对象向依赖组件注册的监听器实例，并模拟事件触发。
+
+第一步，编写业务代码。
+
+我们定义LogConfigTool作为LogManager的依赖组件，LogManager通过回调接口监听日志配置变更事件，并同步更新自身的最小日志级别。
+
+"LogConfigTool.java":
+
+```java
+public class LogConfigTool {
+
+    private static ConfigListener mListener;
+
+    // 注册回调
+    public static void addConfigListener(ConfigListener l) {
+        mListener = l;
+    }
+
+    // 回调接口：日志配置变更
+    public interface ConfigListener {
+
+        // 回调方法：最小日志级别变更
+        void onLevelChange(Level level);
+    }
+}
+```
+
+当LogManager初始化时，其向LogConfigTool注册监听器，接收日志级别变更事件并更新自身的全局变量。
+
+"LogManager.java":
+
+```java
+public class LogManager {
+
+    private Level minLevel = Level.INFO;
+
+    public Level getMinLevel() {
+        return minLevel;
+    }
+
+    public LogManager() {
+        // 注册配置监听器
+        LogConfigTool.addConfigListener(newLevel -> {
+            minLevel = newLevel;
+        });
+    }
+}
+```
+
+第二步，编写测试代码。
 
 "CaptorTest.java":
 
 ```java
+// 创建LogConfigTool的静态Mock对象
+try (MockedStatic<LogConfigTool> toolMS = mockStatic(LogConfigTool.class)) {
+    // 创建被测类的实例
+    LogManager manager = new LogManager();
+    System.out.println("初始的日志级别：" + manager.getMinLevel());
+
+    // 创建ArgumentCaptor，捕获LogManager注册的监听器。
+    ArgumentCaptor<LogConfigTool.ConfigListener> captor = ArgumentCaptor.forClass(LogConfigTool.ConfigListener.class);
+    // 通过静态Mock对象验证回调方法，并捕获LogManager传入的实现。
+    toolMS.verify(() -> LogConfigTool.addConfigListener(captor.capture()));
+
+    // 调用捕获到的监听器方法，模拟事件回调。
+    captor.getValue().onLevelChange(Level.WARNING);
+    System.out.println("事件触发后的日志级别：" + manager.getMinLevel());
+
+    // 验证事件触发是否确实改变了被测对象的属性
+    assertEquals(Level.WARNING, manager.getMinLevel());
+}
+```
+
+`ArgumentCaptor.forClass()` 表示创建一个参数捕获容器，用于接收捕获到的参数引用；捕获操作可以在 `when()` 或 `verify()` 语句块中定义， `capture()` 表示捕获其所在位置的参数，当 `addConfigListener()` 方法被调用时，调用者传入的参数实例将会被存储到 `captor` 容器中。
+
+当被测对象注册回调后，该回调实现应当被捕获并存储在 `captor` 容器中，我们可以通过 `captor.getValue()` 访问捕获到的实例，并调用其中的方法模拟事件触发。
+
+此时运行示例程序，并查看控制台输出信息：
+
+```text
+初始的日志级别：INFO
+事件触发后的日志级别：WARNING
+```
+
+---
+
+ArgumentCaptor实例可以记录多个参数，我们每次调用 `capture()` 方法都会追加一条记录，记录完毕后我们可以通过 `getAllValues()` 方法读取当前实例的所有历史数值。
+
+🔴 示例二十二：捕获多次调用的参数。
+
+在本示例中，我们捕获被测对象向依赖组件注册的监听器实例，并计算平均耗时。
+
+第一步，对前文“示例一”中的 `saveLog()` 方法进行修改，每次回调 `onEnd()` 事件时采用随机时长，模拟真实的文件读写场景。
+
+"LogManager.kt":
+
+```kotlin
+public void saveLog(StateCallback callback) {
+    // 通知外部监听者操作开始
+    callback.onStart();
+
+    // 生成随机耗时以模拟实际操作
+    int time = new Random().nextInt(100, 500);
+    callback.onEnd(time);
+}
+```
+
+第二步，编写测试代码。
+
+我们调用5次 `saveLog()` 方法，收集每次 `onEnd()` 回调方法的参数值，最后计算平均耗时。
+
+"CaptorTest.java":
+
+```java
+// 创建ArgumentCaptor，捕获每次监听器返回的耗时数据。
+ArgumentCaptor<Long> captor = ArgumentCaptor.forClass(Long.class);
+
 // 创建监听器的Mock对象
 LogManager.StateCallback mockListener = mock(LogManager.StateCallback.class);
-
-// 创建ArgumentCaptor
-ArgumentCaptor<Long> captor = ArgumentCaptor.forClass(Long.class);
+// 定义行为：每当监听器的 `onEnd()` 方法被调用时，捕获其返回的参数。
+doNothing().when(mockListener).onEnd(captor.capture());
 
 // 创建被测类的实例
 LogManager manager = new LogManager();
-manager.saveLog(mockListener);
+// 调用5次保存日志的方法
+for (int i = 0; i < 5; i++) {
+    manager.saveLog(mockListener);
+}
 
-// 验证并捕获参数
-verify(mockListener).onEnd(captor.capture());
-
-System.out.println("捕获到的耗时：" + captor.getValue());
-assertEquals(150L, (long) captor.getValue());
+// 查看捕获到的参数
+for (int i = 0; i < captor.getAllValues().size(); i++) {
+    long time = captor.getAllValues().get(i);
+    System.out.println("第" + (i + 1) + "次调用，耗时：" + time + "ms。");
+}
+// 计算平均耗时
+double average = captor.getAllValues().stream().mapToLong(Long::longValue).average().orElse(0);
+System.out.println("平均耗时：" + average + "ms。");
 ```
 
-如果方法被多次调用，可以使用 `captor.getAllValues()` 获取所有捕获的值。
+此时运行示例程序，并查看控制台输出信息：
+
+```text
+第1次调用，耗时：450 ms。
+第2次调用，耗时：187 ms。
+第3次调用，耗时：162 ms。
+第4次调用，耗时：280 ms。
+第5次调用，耗时：373 ms。
+平均耗时：290.4 ms。
+```
 
 ## Spy模式
 Spy模式与Mock模式是相反的，Mock对象的所有方法均为模拟行为，而Spy对象的所有方法均为真实行为，我们可以按需定义模拟行为，适用于仅需要模拟少部分方法的场景。
