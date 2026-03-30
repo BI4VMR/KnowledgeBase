@@ -1055,7 +1055,7 @@ verify { mock setProperty ("age") value less(0) }
 ```
 
 
-# 高级应用
+# 高级特性
 ## 参数捕获器
 参数捕获器可以帮助我们获取Mock方法被调用时的参数值，以便进一步验证或处理。
 
