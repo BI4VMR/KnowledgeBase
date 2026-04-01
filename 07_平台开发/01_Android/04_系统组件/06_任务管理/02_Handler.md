@@ -16,25 +16,6 @@ Handler所涉及的组件及工作原理可参考下文图片：
 - `Looper` : 调度器，当消息队列中有消息时负责处理消息，无消息时则阻塞并等待新的消息。每个线程拥有唯一的Looper对象，这意味着如果某个消息处理耗时过长，将会导致其他消息被延后处理。
 - `Handler` : 该类是我们发送与接收消息的访问点。
 
-与绝大多数操作系统相同，为了避免多线程更新UI导致状态不一致、死锁等问题，Android也采用了单线程UI模型。各个组件通过Handler将更新指令发送到UI线程的消息队列中，Looper不断地从队列中检索待处理的指令，然后依次进行处理，确保指令的有序性。
-
-每当我们发起UI更新请求时，ViewRootImpl的 `checkThread()` 方法会检查创建View的线程与请求更新的线程是否一致，如果两者不一致，将会抛出以下异常：
-
-```text
-05:52:14.065 25317 25370 E AndroidRuntime: Process: net.bi4vmr.study.system.concurrent.handler, PID: 25317
-05:52:14.065 25317 25370 E AndroidRuntime: android.view.ViewRootImpl$CalledFromWrongThreadException: Only the original thread that created a view hierarchy can touch its views.
-05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.ViewRootImpl.checkThread(ViewRootImpl.java:9526)
-05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.ViewRootImpl.invalidateChildInParent(ViewRootImpl.java:1931)
-05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.ViewGroup.invalidateChild(ViewGroup.java:6147)
-05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.View.invalidateInternal(View.java:18857)
-05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.View.invalidate(View.java:18817)
-05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.View.invalidate(View.java:18799)
-05:52:14.065 25317 25370 E AndroidRuntime:        at net.bi4vmr.study.base.TestUIBase$onCreate$1.invoke(TestUIBaseKT.kt:62)
-05:52:14.065 25317 25370 E AndroidRuntime:        at kotlin.concurrent.ThreadsKt$thread$thread$1.run(Thread.kt:30)
-```
-
-应用程序的主线程通常就是创建View的线程，因此我们需要在主线程中进行UI更新操作；对于耗时较长的任务（例如：下载图片、统计数据等），我们应当开启子线程进行处理，并将结果通过Handler从子线程发送至主线程，才能成功地更新UI并避免前文的异常。
-
 本章的示例工程详见以下链接：
 
 - [🔗 示例工程：Handler](https://github.com/BI4VMR/Study-Android/tree/master/M04_System/C06_Concurrent/S02_Handler)
