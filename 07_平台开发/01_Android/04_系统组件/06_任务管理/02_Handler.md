@@ -370,15 +370,6 @@ Handler还提供了一些移除MessageQueue中回调方法的方法：
 - `removeCallbacks(Runnable r, Object token)` ：移除Runnable对象和 `token` 所关联的Message。我们可以使用Handler的 `postDelayed(Runnable r, Object token, long delayMillis)` 方法提交回调方法，并通过 `token` 标记该Message；当我们需要移除Message时，再传入 `token` 筛选指定的Message。
 - `removeCallbacksAndMessages(Object token)` ：移除 `token` 所关联的Message，包括普通的Message和回调方法的Message。如果 `token` 为空值，将会清空MessageQueue，我们通常会在界面退出时调用该方法以防止内存泄漏。
 
-# 更新UI的快捷方法
-当我们需要更新UI时，除了创建绑定主线程的Handler对象并提交回调方法之外，还可以使用以下快捷方法：
-
-- Activity的 `runOnUiThread(Runnable action)` 方法。
-- View的 `post(Runnable action)` 方法。
-- View的 `post(Runnable action, long delayMillis)` 方法。
-
-上述方法均为SDK对UI线程Handler的封装，第一参数 `action` 的 `run()` 方法即需要在主线程执行的更新操作；其中View的两个方法能够确保更新操作在布局测量、绘制完成之后再被执行，因此我们能够在此处获取到View的宽高等属性。
-
 # 创建子线程Handler
 有时我们需要通过消息队列处理一系列事件序列，这些事件都与UI无关，此时我们便可以使用子线程的Handler。
 
