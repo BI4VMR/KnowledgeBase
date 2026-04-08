@@ -153,12 +153,14 @@ public View inflate(int resource, @Nullable ViewGroup root) {
 
 <!-- TODO
 # 常用方法
-## 构建
+## 获取控件引用
+布局确定了初始状态，我们也可以根据需要在代码中动态改变属性。
+
+## 创建控件实例
+
+
 有些View需要跟随用户操作或特定条件出现，此时我们无法在布局文件中预先写入，就需要通过代码创建并动态添加到容器中。
 
-
-## 操作控件
-布局确定了初始状态，我们也可以根据需要在代码中动态改变属性。
 
 ## 坐标系统
 在android中，坐标系从屏幕左上角为原点，向右侧延伸X轴数值增大，向底部延伸Y轴数值增大
@@ -176,9 +178,17 @@ view.gettransx
 view.getlocationonscreen
 view.getlocationinwindow
 
-## 背景与前景
+## 前景与背景
+我们可以为控件设置前景与背景图像，这些图像会被自动拉伸与控件保持相同的尺寸，这在某些场合很有用
 
+- `setForeground(Drawable drawable)` : 将指定的Drawable作为前景。
+- `setBackgroundResource(@DrawableRes int resid)` : 将指定的资源文件解析为Drawable并作为前景，该方法不支持主题，详见相关章节： [🧭 疑难解答 - 案例一](#案例一) 。
+- `setForegroundColor(@ColorInt int color)` : 将指定的颜色作为前景。
+- `setBackground(@ColorInt int color)` : 将指定的Drawable作为背景。
+- `setBackgroundResource(@DrawableRes int resid)` : 将指定的资源文件解析为Drawable并作为背景，该方法不支持主题，详见相关章节： [🧭 疑难解答 - 案例一](#案例一) 。
+- `setBackgroundColor(@ColorInt int color)` : 将指定的颜色作为背景。
 
+在本实例中，我们为Image添加背景，避免用户上传透明图像导致异常，并且添加装饰圆环。
 
 # 事件监听器
 ## 简介
@@ -186,7 +196,7 @@ view.getlocationinwindow
 
 监听器通常是一个接口，我们需要在接口的实现类中书写逻辑代码，并通过控件的"setXXXListener"系列方法将监听器实例传递给控件。
 
-## 点击监听器
+## 点击事件
 点击监听器是所有控件通用的监听器，当用户使用手指触摸控件并抬起手指时触发。
 
 "TestUIBase.java":
@@ -218,6 +228,53 @@ btnTest.setOnClickListener {
 我们首先通过 `findViewById()` 方法获取了按钮 `btnTest` 实例，然后通过它的 `setOnClickListener()` 方法设置了点击事件监听器，其参数即监听器实例；我们在回调方法 `onClick()` 中实现了自己的逻辑。
 
 我们将上述代码放置在界面的初始化回调方法 `onCreate()` 中，当界面加载后，点击监听器即被设置；后续用户每点击一次按钮，此处的 `onClick()` 回调方法将被触发一次，控制台中也将显示相应的日志内容。
+
+## 长按事件
+长按一般用户触发菜单等低频操作，在Android系统中，用户按住屏幕0.5秒则被认为是一次长按事件。
+
+"TestUIEvent.java":
+
+```java
+btnClick.setOnLongClickListener(new View.OnLongClickListener() {
+
+    // 该方法将在控件被按住0.5秒后被回调
+    @Override
+    public boolean onLongClick(View v) {
+        // 长按触发后的业务逻辑
+        Log.i(TAG, "按钮被长按了！");
+
+        return true;
+    }
+});
+```
+
+上述内容也可以使用Kotlin语言编写：
+
+"TestUIEventKT.kt":
+
+```kotlin
+btnClick.setOnLongClickListener(object : View.OnLongClickListener {
+
+    // 该方法将在控件被按住0.5秒后被回调
+    override fun onLongClick(v: View): Boolean {
+        Log.i(TAG, "按钮被长按了！")
+        appendLog("按钮被长按了！\n")
+
+        return true
+    }
+})
+```
+
+
+长按事件回调与点击事件回调类似，但它可以指定返回值，用于控制用户按住控件0.5秒触发长按回调后，抬起手指时是否触发点击回调。
+
+返回 `true` 表示长按回调已经处理完毕触控流程，用户抬手时不会触发点击事件回调方法。
+返回 `false` 表示长按回调没有处理完毕触控流程，用户抬手时仍会触发点击事件回调方法。
+
+对于大部分场景都应当返回 `true` 。
+
+
+
 -->
 
 
@@ -264,51 +321,117 @@ btnTest.setOnClickListener {
 
 post()方法除了表示任务将在主线程执行，还有额外的作用：
 
-其中View的两个方法能够确保更新操作在布局测量、绘制完成之后再被执行，因此我们能够在此处获取到View的宽高等属性。
-
-经过前面的分析我们已经知道 AttachInfo 的赋值操作是在 View 绘制任务的开始阶段，而它的调用者是 ActivityThread 的 handleResumeActivity 方法，即 Activity 生命周期 onResume 方法之后。
+在Activity等组件中，oncreate阶段我们可以设置字字号，颜色等，但这些方法不会立刻执行，因为view树需要处理match wrap等属性，测量完成之后才能绘制， ActivityThread 的 handleResumeActivity 方法，此处对应的阶段是onresume， post方法确保更新操作在布局测量、绘制完成之后再被执行，因此我们能够在此处获取到View的宽高等属性。
 
 
-## 实用技巧
+# 实用技巧
+## 防止高频点击
 
-# 防止快速点击
 
-    private fun View.clickAntiJitter(interval: Long = 500L, action: (view: View) -> Unit) {
-        setOnClickListener {
-            val currentTS = SystemClock.uptimeMillis()
-            if (currentTS - lastClickTS < interval) {
-                Log.w(TAG, "Click too quickly, ignored!")
-                return@setOnClickListener
-            }
-            lastClickTS = currentTS
-            action(it)
-        }
+
+"TestUISkills.java":
+
+```java
+// 记录按钮上次被点击的时间点
+private long lastClickTS = 0L;
+
+// 设置点击事件监听器
+button.setOnClickListener(v -> {
+    // 当前时间点
+    long currentTS = SystemClock.uptimeMillis();
+    if (currentTS - lastClickTS < 1000L) {
+        // 如果当前时间与上次点击的时间差值小于1秒，则认为是连续点击，不执行业务操作。
+        Log.w(TAG, "连续点击过于频繁，忽略！");
+    } else {
+        // 如果当前时间与上次点击的时间差值达到1秒，更新时间记录，并执行业务操作。
+        lastClickTS = currentTS;
+        // 业务操作：打印日志。
+        Log.i(TAG, "点击间隔超过1秒，允许触发事件。");
     }
+});
+```
 
+上述内容也可以使用Kotlin语言编写：
 
-# 连续点击触发
-
+"TestUISkillsKT.kt":
 
 ```kotlin
-// 连续点击计数器，数组的大小即为需要设置的连点次数。
-private var clickTSRecords: LongArray = LongArray(10)
+// 记录按钮上次被点击的时间点
+var lastClickTS = 0L
 
-
-// 调试后门：5秒内连续点击10次用户名弹出云端环境选择窗口。
-tvNickName.setOnClickListener {
-    // 所有现有数据左移一位，舍弃最旧的一位数据。
-    System.arraycopy(clickTSRecords, 1, clickTSRecords, 0, clickTSRecords.size - 1)
-    // 将当前点击时间记录到数组末尾
-    clickTSRecords[clickTSRecords.size - 1] = SystemClock.uptimeMillis()
-    // 当前时间与最早一次的点击时间比较，如果差值小于5秒，则触发连点事件。
-    if (SystemClock.uptimeMillis() - clickTSRecords[0] <= 5000L) {
-        "Repeat click 10 times in 5 seconds, open environment switch dialog.".logi(TAG)
-        showEnvironmentDialog()
-        // 事件已经触发，重置记录器。
-        Arrays.fill(clickTSRecords, 0L)
+// 设置点击事件监听器
+button.setOnClickListener {
+    // 当前时间点
+    val currentTS = SystemClock.uptimeMillis()
+    if (currentTS - lastClickTS < 1000L) {
+        // 如果当前时间与上次点击的时间差值小于1秒，则认为是连续点击，不执行业务操作。
+        Log.w(TAG, "连续点击过于频繁，忽略！")
+        appendLog("连续点击过于频繁，忽略！")
+    } else {
+        // 如果当前时间与上次点击的时间差值达到1秒，更新时间记录，并执行业务操作。
+        lastClickTS = currentTS
+        // 业务操作：打印日志。
+        Log.i(TAG, "点击间隔超过1秒，允许触发事件。")
+        appendLog("点击间隔超过1秒，允许触发事件。")
     }
 }
 ```
+
+
+
+
+## 连续点击触发事件
+一般用于调试后门、彩蛋等。
+
+"TestUISkills.java":
+
+```java
+// 记录按钮被点击的时间点
+private final long[] clickRecords = new long[10];
+
+button.setOnClickListener(v -> {
+    // 现有元素全部左移一位，舍弃最旧的一条记录。
+    System.arraycopy(clickRecords, 1, clickRecords, 0, clickRecords.length - 1);
+    // 将当前点击时间记录到数组末尾
+    clickRecords[clickRecords.length - 1] = SystemClock.uptimeMillis();
+    // 当前时间与最早一次的点击时间比较，如果差值小于5秒，则触发连点事件。
+    if (SystemClock.uptimeMillis() - clickRecords[0] <= 5000L) {
+        // 重置记录器
+        Arrays.fill(clickRecords, 0L);
+
+        // 业务操作：打印日志。
+        Log.i(TAG, "5秒内已点击10次，允许触发事件。");
+        appendLog("5秒内已点击10次，允许触发事件。");
+    }
+});
+```
+
+上述内容也可以使用Kotlin语言编写：
+
+"TestUISkillsKT.kt":
+
+```kotlin
+// 记录按钮被点击的时间点
+val clickRecords = LongArray(10)
+
+// 设置点击事件监听器
+button.setOnClickListener {
+    // 现有元素全部左移一位，舍弃最旧的一条记录。
+    System.arraycopy(clickRecords, 1, clickRecords, 0, clickRecords.size - 1)
+    // 将当前点击时间记录到数组末尾
+    clickRecords[clickRecords.size - 1] = SystemClock.uptimeMillis()
+    // 当前时间与最早一次的点击时间比较，如果差值小于5秒，则触发连点事件。
+    if (SystemClock.uptimeMillis() - clickRecords[0] <= 5000L) {
+        // 重置记录器
+        clickRecords.fill(0L)
+
+        // 业务操作：打印日志。
+        Log.i(TAG, "5秒内已点击10次，允许触发事件。")
+        appendLog("5秒内已点击10次，允许触发事件。")
+    }
+}
+```
+
 
 
 -->
