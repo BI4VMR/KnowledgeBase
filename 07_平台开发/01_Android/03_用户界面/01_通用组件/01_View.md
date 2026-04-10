@@ -282,12 +282,14 @@ ViewGroup提供了以下方法用于添加子View：
 - `addView(View child, LayoutParams params)` : 布局属性由参数指定，序号为 `-1` 。
 - `addView(View child, int index, LayoutParams params)` : 布局属性和序号均由参数指定。
 
-我们可以在 `addView()` 时明确指定LayoutParams，也可以预先通过View的 `setLayoutParams()` 方法将LayoutParams写入View实例，并使用容器的 `addView(View child)` 方法添加该View，两种方式是等价的。如果我们没有配置LayoutParams，容器将会使用默认参数设置控件的宽高。
+我们可以在 `addView()` 时明确指定LayoutParams，也可以预先通过View的 `setLayoutParams()` 方法将LayoutParams写入View实例，并使用容器的 `addView(View child)` 方法添加该View，两种方式是等价的。如果我们没有配置LayoutParams，容器将会使用它的默认参数设置控件的宽高。
 
 `index` 参数表示控件在容器中的序号，容器中已有的控件序号从 `0` 开始顺次递增，首个被添加的控件序号为 `0` ，第二个被添加的控件序号为 `1` ，以此类推。默认值 `-1` 表示将新增控件放置在所有现存控件末尾，若我们希望将控件放置在现存控件之间，可以指定一个序号，使得原控件后移让出位置。
 
 ## 坐标系统
-在android中，坐标系从屏幕左上角为原点，向右侧延伸X轴数值增大，向底部延伸Y轴数值增大
+在Android系统中，坐标系以屏幕左上角为原点，向右侧延伸时X轴数值增大，向底部延伸时Y轴数值增大。
+
+控件在屏幕中的位置计算方法如下文图片所示：
 
 <div align="center">
 
@@ -297,49 +299,43 @@ ViewGroup提供了以下方法用于添加子View：
 
 以下方法用于获取控件四边与坐标轴的距离：
 
-`int getLeft()` :
-`int getTop()` :
-`int getRight()` :
-`int getBottom()` :
+- `int getLeft()` : 获取控件左侧的X轴坐标。
+- `int getTop()` : 获取控件顶部的Y轴坐标。
+- `int getRight()` : 获取控件右侧的X轴坐标。
+- `int getBottom()` : 获取控件底部的Y轴坐标。
 
+以下方法用于获取控件左上角顶点坐标：
 
+- `float getTranslationX()` : 控件在X轴上的偏移量，如果我们没有对View进行变换操作，则为 `0` 。
+- `float getTranslationY()` : 控件在Y轴上的偏移量，如果我们没有对View进行变换操作，则为 `0` 。
+- `float getX()` : 控件经过变换后的X轴坐标，等同于 `getLeft() + getTranslationX()` 。
+- `float getY()` : 控件经过变换后的Y轴坐标，等同于 `getTop() + getTranslationY()` 。
 
-以下方法用于获取控件四边与坐标轴的距离：
-
-`float getTranslationX()` : 控件在X轴上的偏移量。
-`float getTranslationY()` : 控件在Y轴上的偏移量。
-`float getX()`
-`float getY()`
-
-trans表示View进行变换后的偏移量，如果未进行变换则为0
-
-x/y表示VIew变换后的左上角顶点坐标，以X为例，数值为 left + tranx ，如果VIew未进行变换，tran为0，此时x等于left/y等于top
-
+上述方法均用于获取控件与父容器的相对位置，有时我们需要获取控件在窗口、屏幕中的绝对位置，可以使用以下方法：
 
 - `void getLocationInWindow(int[] outLocation)` : 获取控件在窗口中的左上角顶点坐标。
 - `void getLocationOnScreen(int[] outLocation)` : 获取控件在屏幕中的左上角顶点坐标。
 
-这些方法对于activity一般是相同的，因为activity的window就是全屏尺寸，如果我们使用分屏或小窗模式，或测量非全屏dialog中的控件，二者就会出现差异。
+我们需要传入一个长度为2的数组，方法执行后数组第一元素为X坐标值，第二元素为Y坐标值。对于Activity中的控件，两个方法返回值一般是相同的，因为Activity的Window默认全屏显示；如果我们使用分屏或小窗模式，二者就会出现差异。
 
 ## 前景与背景
-我们可以为控件设置前景与背景图像，背景图像会被自动拉伸与控件保持相同的尺寸，这在某些场合很有用
+我们可以为控件设置前景与背景图像，背景图像显示在控件内容底部，且自动拉伸与控件保持相同的尺寸，前景图像将叠加在控件内容顶部，它们在某些场合非常实用。
 
 - `setForeground(Drawable drawable)` : 将指定的Drawable作为前景。
 - `setForegroundResource(@DrawableRes int resid)` : 将指定的资源文件解析为Drawable并作为前景，该方法不支持主题，详见相关章节： [🧭 疑难解答 - 案例一](#案例一) 。
 - `setForegroundColor(@ColorInt int color)` : 将指定的颜色作为前景。
 - `setBackground(@ColorInt int color)` : 将指定的Drawable作为背景。
 
+<!-- TODO -->
 在本实例中，我们为Image添加背景，避免用户上传透明图像导致异常，并且添加装饰圆环。
 
 
 # 事件监听器
 ## 简介
-控件的监听器用于接收控件产生的各类事件，开发者可以通过注册监听器实现事件的处理逻辑，例如界面上有一个“新建文件”按钮，我们为其设置点击事件监听器，并在回调方法中预先配置相关逻辑；当用户点击按钮时，监听器的回调方法将会触发，执行新建文件的相关操作。
-
-监听器通常是一个接口，我们需要在接口的实现类中书写逻辑代码，并通过控件的"setXXXListener"系列方法将监听器实例传递给控件。
+监听器是一种接口，控件约定将在特定条件下回调这些接口中的方法，例如：控件被用户点击、控件被用户长按等，我们可以注册监听器，以便响应用户的UI交互动作，实现业务逻辑。
 
 ## 点击事件
-点击监听器是所有控件通用的监听器，当用户使用手指触摸控件并抬起手指时触发。
+点击事件是最常用的交互方式，当用户使用手指触摸控件并抬起手指时，点击事件监听器将被触发，所有控件都支持该监听器。
 
 "TestUIBase.java":
 
