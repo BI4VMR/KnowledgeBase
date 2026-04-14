@@ -319,23 +319,46 @@ ViewGroup提供了以下方法用于添加子View：
 我们需要传入一个长度为2的数组，方法执行后数组第一元素为X坐标值，第二元素为Y坐标值。对于Activity中的控件，两个方法返回值一般是相同的，因为Activity的Window默认全屏显示；如果我们使用分屏或小窗模式，二者就会出现差异。
 
 ## 前景与背景
-我们可以为控件设置前景与背景图像，背景图像显示在控件内容底部，且自动拉伸与控件保持相同的尺寸，前景图像将叠加在控件内容顶部，它们在某些场合非常实用。
+我们可以为控件设置前景与背景图像，前景图像将叠加在控件内容顶部，背景图像显示在控件内容底部，且自动拉伸与控件保持相同的尺寸，它们在某些场合非常实用。
 
-- `setForeground(Drawable drawable)` : 将指定的Drawable作为前景。
-- `setForegroundResource(@DrawableRes int resid)` : 将指定的资源文件解析为Drawable并作为前景，该方法不支持主题，详见相关章节： [🧭 疑难解答 - 案例一](#案例一) 。
-- `setForegroundColor(@ColorInt int color)` : 将指定的颜色作为前景。
-- `setBackground(@ColorInt int color)` : 将指定的Drawable作为背景。
+以下属性与方法用于控制View的前景与背景：
 
-<!-- TODO -->
-在本实例中，我们为Image添加背景，避免用户上传透明图像导致异常，并且添加装饰圆环。
+- XML - `android:background="< 色值 | 颜色资源 | 图像资源 >"` : 设置控件背景内容。
+- XML - `android:foreground="< 色值 | 颜色资源 | 图像资源 >"` : 设置控件前景内容。
+- Java - `setForeground(Drawable drawable)` : 将指定的Drawable作为前景。
+- Java - `setForegroundResource(@DrawableRes int resid)` : 将指定的资源文件解析为Drawable并作为前景，该方法不支持主题，详见相关章节： [🧭 疑难解答 - 案例一](#案例一) 。
+- Java - `setForegroundColor(@ColorInt int color)` : 将指定的色值作为前景。
+- Java - `setBackground(@ColorInt int color)` : 将指定的Drawable作为背景。
+
+界面中有一个ImageView用于显示用户头像，我们利用上述属性为头像设置深色背景，并叠加圆环作为装饰。
+
+```xml
+<ImageView
+    android:id="@+id/iv_fg_bg"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="#000"
+    android:foreground="@drawable/shape_icon_fg"
+    android:src="@drawable/ic_funny_256" />
+```
+
+此时运行示例程序，并查看界面外观：
+
+<div align="center">
+
+![前景与背景示例效果](./Assets_View/常用方法_前景与背景示例效果.jpg)
+
+</div>
 
 
 # 事件监听器
 ## 简介
-监听器是一种接口，控件约定将在特定条件下回调这些接口中的方法，例如：控件被用户点击、控件被用户长按等，我们可以注册监听器，以便响应用户的UI交互动作，实现业务逻辑。
+监听器是一种回调接口，控件约定将在某些条件下调用接口中的方法，例如：控件被用户点击、控件被用户长按等。开发者可以注册监听器，预先设置这些情景下的动作，以便响应用户的交互动作。
 
 ## 点击事件
-点击事件是最常用的交互方式，当用户使用手指触摸控件并抬起手指时，点击事件监听器将被触发，所有控件都支持该监听器。
+点击事件是最常用的交互动作，当手指触摸到控件并离开屏幕时，点击事件监听器将被触发，所有控件都支持该监听器。
+
+点击监听器的使用方法如下文代码块所示：
 
 "TestUIBase.java":
 
@@ -363,12 +386,12 @@ btnTest.setOnClickListener {
 }
 ```
 
-我们首先通过 `findViewById()` 方法获取了按钮 `btnTest` 实例，然后通过它的 `setOnClickListener()` 方法设置了点击事件监听器，其参数即监听器实例；我们在回调方法 `onClick()` 中实现了自己的逻辑。
-
-我们将上述代码放置在界面的初始化回调方法 `onCreate()` 中，当界面加载后，点击监听器即被设置；后续用户每点击一次按钮，此处的 `onClick()` 回调方法将被触发一次，控制台中也将显示相应的日志内容。
+我们通过按钮 `btnTest` 的 `setOnClickListener(@Nullable OnClickListener l)` 方法为其设置点击事件监听器，唯一参数 `l` 即监听器接口实现对象。每当该按钮被用户点击一次，监听器的 `onClick(View v)` 方法将被回调一次，我们可以在此处编写对应的业务逻辑。
 
 ## 长按事件
-长按一般用户触发菜单等低频操作，在Android系统中，用户按住屏幕0.5秒则被认为是一次长按事件。
+长按事件也是所有控件都支持的事件，一般用于触发上下文菜单等。在Android系统中，用户按住控件长达0.5秒则触发一次长按事件。
+
+长按监听器的使用方法如下文代码块所示：
 
 "TestUIEvent.java":
 
@@ -380,7 +403,6 @@ btnClick.setOnLongClickListener(new View.OnLongClickListener() {
     public boolean onLongClick(View v) {
         // 长按触发后的业务逻辑
         Log.i(TAG, "按钮被长按了！");
-
         return true;
     }
 });
@@ -395,28 +417,18 @@ btnClick.setOnLongClickListener(object : View.OnLongClickListener {
 
     // 该方法将在控件被按住0.5秒后被回调
     override fun onLongClick(v: View): Boolean {
+        // 长按触发后的业务逻辑
         Log.i(TAG, "按钮被长按了！")
-        appendLog("按钮被长按了！\n")
-
         return true
     }
 })
 ```
 
-
-长按事件回调与点击事件回调类似，但它可以指定返回值，用于控制用户按住控件0.5秒触发长按回调后，抬起手指时是否触发点击回调。
-
-返回 `true` 表示长按回调已经处理完毕触控流程，用户抬手时不会触发点击事件回调方法。
-返回 `false` 表示长按回调没有处理完毕触控流程，用户抬手时仍会触发点击事件回调方法。
-
-对于大部分场景都应当返回 `true` 。
-
-
-
+长按事件回调方法 `onLongClick()` 需要返回值，返回 `true` 表示触控流程已经处理完毕，用户抬起手指时不会再触发点击事件回调方法；返回 `false` 表示触控流程没有处理完毕，用户抬手时仍会触发点击事件回调方法。对于绝大多数场景都应当返回 `true` 。
 
 
 # 更新界面
-图形界面由大量的控件组成，且控件之间存在复杂的状态依赖关系，若多个线程都能更新控件状态，需要引入极其复杂的同步机制，并且难以避免死锁、状态不一致等问题，因此绝大多数GUI系统都采用了单线程模型，通过队列组织更新请求，由单个UI线程依次处理请求实现界面更新，以及响应用户交互事件，确保线程安全。其他线程不能直接操作控件更新状态，必须将修改提交到UI线程的队列中，等待UI线程调度。
+图形界面由大量的控件组成，且控件之间存在复杂的状态依赖关系，若多个线程都能更新控件状态，需要引入极其复杂的同步机制，并且难以避免死锁、状态不一致等问题。绝大多数GUI系统都采用了单线程模型，通过队列组织更新请求，由单个UI线程依次处理请求实现界面更新，以及响应用户交互事件，确保线程安全。其他线程不能直接操作控件更新状态，必须将修改提交到UI线程的队列中，等待UI线程调度。
 
 在Android系统中，应用程序的主线程通常就是UI线程，主线程的MessageQueue用于存放待处理的界面更新指令，主线程空闲时不断地检索队列中的指令，然后依次进行处理，确保界面更新的有序性。
 
@@ -427,13 +439,13 @@ btnClick.setOnLongClickListener(object : View.OnLongClickListener {
 每当我们调用控件的相关方法时，ViewRootImpl的 `checkThread()` 方法会检查创建View的线程与请求更新的线程是否一致，如果两者不一致，则抛出以下异常：
 
 ```text
-05:52:14.065 25317 25370 E AndroidRuntime: Process: net.bi4vmr.study, PID: 25317
-05:52:14.065 25317 25370 E AndroidRuntime: android.view.ViewRootImpl$CalledFromWrongThreadException: Only the original thread that created a view hierarchy can touch its views.
-05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.ViewRootImpl.checkThread(ViewRootImpl.java:9526)
-05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.ViewRootImpl.invalidateChildInParent(ViewRootImpl.java:1931)
-05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.ViewGroup.invalidateChild(ViewGroup.java:6147)
-05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.View.invalidateInternal(View.java:18857)
-05:52:14.065 25317 25370 E AndroidRuntime:        at android.view.View.invalidate(View.java:18817)
+05:52:14.065 5317 5370 E AndroidRuntime: Process: net.bi4vmr.study, PID: 25317
+05:52:14.065 5317 5370 E AndroidRuntime: android.view.ViewRootImpl$CalledFromWrongThreadException: Only the original thread that created a view hierarchy can touch its views.
+05:52:14.065 5317 5370 E AndroidRuntime:        at android.view.ViewRootImpl.checkThread(ViewRootImpl.java:9526)
+05:52:14.065 5317 5370 E AndroidRuntime:        at android.view.ViewRootImpl.invalidateChildInParent(ViewRootImpl.java:1931)
+05:52:14.065 5317 5370 E AndroidRuntime:        at android.view.ViewGroup.invalidateChild(ViewGroup.java:6147)
+05:52:14.065 5317 5370 E AndroidRuntime:        at android.view.View.invalidateInternal(View.java:18857)
+05:52:14.065 5317 5370 E AndroidRuntime:        at android.view.View.invalidate(View.java:18817)
 ```
 
 如果我们想要从子线程更新界面，应当通过Handler将相关指令提交到主线程的MessageQueue中，由主线程进行调用。
@@ -452,19 +464,18 @@ btnClick.setOnLongClickListener(object : View.OnLongClickListener {
 - View的 `post(Runnable action)` 方法。
 - View的 `post(Runnable action, long delayMillis)` 方法。
 
+View的 `post()` 方法除了将任务提交到主线程，还具有额外功能：
 
+在Activity等组件中，我们无法在 `onCreate()` 阶段获取控件的宽度和高度，因为控件属性可能包含 `match_parent` 等相对值，系统需要对每个控件进行测量之后才能绘制，这些操作在ActivityThread的 `handleResumeActivity()` 方法中执行，该方法被调用的阶段是 `onResume()` 。
 
-<!-- TODO
-
-post()方法除了表示任务将在主线程执行，还有额外的作用：
-
-在Activity等组件中，oncreate阶段我们可以设置字字号，颜色等，但这些方法不会立刻执行，因为view树需要处理match wrap等属性，测量完成之后才能绘制， ActivityThread 的 handleResumeActivity 方法，此处对应的阶段是onresume， post方法确保更新操作在布局测量、绘制完成之后再被执行，因此我们能够在此处获取到View的宽高等属性。
+我们通过 `post()` 方法提交的回调任务，将在布局测量全部完成之后再被执行，此时可以正常获取控件的宽度、高度等属性。
 
 
 # 实用技巧
 ## 防止高频点击
+部分操作被频繁触发时会增加系统负载，我们可以在UI层面限制按钮点击逻辑的触发频率，例如：1秒钟之内最多触发一次点击逻辑。
 
-
+上述逻辑可以通过下文代码块实现：
 
 "TestUISkills.java":
 
@@ -503,22 +514,29 @@ button.setOnClickListener {
     if (currentTS - lastClickTS < 1000L) {
         // 如果当前时间与上次点击的时间差值小于1秒，则认为是连续点击，不执行业务操作。
         Log.w(TAG, "连续点击过于频繁，忽略！")
-        appendLog("连续点击过于频繁，忽略！")
     } else {
         // 如果当前时间与上次点击的时间差值达到1秒，更新时间记录，并执行业务操作。
         lastClickTS = currentTS
         // 业务操作：打印日志。
         Log.i(TAG, "点击间隔超过1秒，允许触发事件。")
-        appendLog("点击间隔超过1秒，允许触发事件。")
     }
 }
 ```
 
+每当按钮被点击时，我们将当前时间和上次触发的时间做比较，如果二者差值大于1秒，允许触发点击逻辑，否则忽略本次点击动作。
 
-
+> ⚠️ 警告
+>
+> 不能使用 `System.currentTimeMillis()` 等方法获取当前时间。
+>
+> 部分设备没有RTC，无法保证系统时间准确，如果设备休眠再唤醒，系统时间可能会初始化为1970年1月1日，此时时间差值是负数，必然小于1秒，点击逻辑就再也无法触发了。
+> 
+> 此工具仅需判断两次点击的时间差值，不关心具体的时刻，因此我们使用线性递增的 `SystemClock.uptimeMillis()` 即可，避免受到系统时间跳变的影响。
 
 ## 连续点击触发事件
-一般用于调试后门、彩蛋等。
+有些功能仅用于调试，我们不希望普通用户轻易触发，例如：连续点击7次“系统设置”界面中的“版本号”进入开发者模式。
+
+上述逻辑可以通过下文代码块实现：
 
 "TestUISkills.java":
 
@@ -538,7 +556,6 @@ button.setOnClickListener(v -> {
 
         // 业务操作：打印日志。
         Log.i(TAG, "5秒内已点击10次，允许触发事件。");
-        appendLog("5秒内已点击10次，允许触发事件。");
     }
 });
 ```
@@ -564,14 +581,9 @@ button.setOnClickListener {
 
         // 业务操作：打印日志。
         Log.i(TAG, "5秒内已点击10次，允许触发事件。")
-        appendLog("5秒内已点击10次，允许触发事件。")
     }
 }
 ```
-
-
-
--->
 
 
 # 疑难解答
