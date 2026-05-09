@@ -325,6 +325,38 @@ recyclerView.adapter = adapter
 - Java - 获取是否显示水平滚动条 : `boolean getHorizontalScrollBarEnabled()`
 
 
+<!-- TODO
+
+
+## 禁止滑动
+
+LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this){
+
+    // 该回调方法每次接收到触摸事件时被触发，返回false表示不能在该方向上滚动。
+    @Override
+    public boolean canScrollVertically() {
+        Log.i(TAG,"canScrollVertically: ");
+        return false;
+    }
+
+    @Override
+    public boolean canScrollHorizontally() {
+        return super.canScrollHorizontally();
+    }
+};
+
+
+## 表项动画
+
+// 禁止
+rvContent.setItemAnimator(null);
+
+// 恢复默认
+rvContent.setItemAnimator(new DefaultItemAnimator());
+
+-->
+
+
 # 点击事件
 RecyclerView本身没有实现表项的点击事件，这是因为RecyclerView可以支持多种布局复杂的表项，调用者可能希望为表项中不同的子控件设置各异的点击行为，由调用者自行控制事件更为灵活。
 
@@ -1610,8 +1642,27 @@ class MyAdapterKT : RecyclerView.Adapter<MyAdapterKT.MyViewHolder>() {
 
 由于AsyncListDiffer内置数据源，因此我们将Adapter中的全局变量 `dataSource` 移除了，所有获取数据源的语句需要替换成 `differ.getCurrentList()` ；所有修改数据源的语句需要替换成 `differ.submitList()` 。
 
+# 布局管理器
+## Linear
 
-# 缓存与复用机制
+
+<!-- TODO
+
+预取
+
+除了setItemPrefetchEnabled之外，还有三个方法与Prefetch有关，分别是collectAdjacentPrefetchPositions、collectInitialPrefetchPositions、setInitialPrefetchItemCount。
+
+    setInitialPrefetchItemCount：设置预取数量
+    collectAdjacentPrefetchPositions：更新布局状态，并根据布局状态设置预取位置
+    collectPrefetchPositionsForLayoutState：根据布局状态设置预取位置
+    collectInitialPrefetchPositions：计算预取位置
+
+当重写LayoutManager时，如果开启了Prefetch，这四个方法需要重写。至于怎么重写等以后再补充吧。
+
+-->
+
+
+# 缓存与复用
 ## 简介
 对于ListView等控件，每个表项的View实例移出屏幕时被销毁，移入屏幕时再重新创建，这会消耗大量的性能。RecyclerView设计了多层缓存与复用机制，能够缓存部分移出屏幕的View实例，并在满足条件时进行复用，因此拥有较好的性能。
 
@@ -1777,6 +1828,60 @@ public void handleMessage(Message msg) {
 ```
 
 
+## 自定义缓存
+
+<!-- TODO
+ViewCacheExtension 设计初衷是直接返回一个无需重新绑定的 View。
+
+例如列表头部有固定的项，即使移出屏幕也不希望被回收再重建，可以放入ViewCacheExtension
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_demo_rv);
+        recyclerView = findViewById(R.id.rv_view);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
+        adapter = new DemoAdapter();
+        recyclerView.setAdapter(adapter);
+
+        //viewType类型为TYPE_SPECIAL时，设置四级缓存池RecyclerPool不存储对应类型的数据 因为需要开发者自行缓存
+        recyclerView.getRecycledViewPool().setMaxRecycledViews(DemoAdapter.TYPE_SPECIAL, 0);
+        //设置ViewCacheExtension缓存
+        recyclerView.setViewCacheExtension(new MyViewCacheExtension());
+    }
+
+    //实现自定义缓存ViewCacheExtension
+    class MyViewCacheExtension extends RecyclerView.ViewCacheExtension {
+        @Nullable
+        @Override
+        public View getViewForPositionAndType(@NonNull RecyclerView.Recycler recycler, int position, int viewType) {
+            //如果viewType为TYPE_SPECIAL,使用自己缓存的View去构建ViewHolder
+            // 否则返回null，会使用系统RecyclerPool缓存或者从新通过onCreateViewHolder构建View及ViewHolder
+            return viewType == DemoAdapter.TYPE_SPECIAL ? adapter.caches.get(position) : null;
+        }
+    }
+
+
+# 跨列表复用
+
+界面上有两个列表，它们具有相同的ViewType，为了更高效的利用内存，可以使用
+
+setRecycledViewPool
+
+// 在 Activity/Fragment 或单例中初始化
+    val sharedPool = RecyclerView.RecycledViewPool()
+
+    为每个 RecyclerView 设置相同的池：
+
+Kotlin
+
+    recyclerView1.setRecycledViewPool(sharedPool)
+    recyclerView2.setRecycledViewPool(sharedPool)
+-->
+
+
+
 # 疑难解答
 ## 索引
 
@@ -1786,7 +1891,7 @@ public void handleMessage(Message msg) {
 | :---------------: | :-------------------------------------------: |
 | [案例一](#案例一) |   更新数据源后，滚动列表至指定位置无效果。    |
 | [案例二](#案例二) | 更新数据源时发生异常：IllegalStateException。 |
-| [案例三](#案例三) |      设置需要显示滚动条后，实际未显示。       |
+| [案例三](#案例三) |        设置滚动条样式后，实际未显示。         |
 
 </div>
 
@@ -1893,4 +1998,5 @@ recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
 画面不显示内容？
 
 原因是忘记设置LayoutManager。
+
 -->
