@@ -771,6 +771,20 @@ fun insertStudents(monitor: StudentKT, students: List<StudentKT>)
 > 由 `@Insert` 等Room注解生成的插入、修改与删除方法支持事务，我们无需担心操作多条数据时被其他线程干扰。
 
 
+# 异步查询
+
+<!-- TODO
+
+返回Flow：本质上是在SQLite注册了一个触发器，数据变化时，触发器动作，Room通知Flow变更。
+
+
+
+# 原始查询
+
+
+-->
+
+
 # 事务支持
 ## 事务注解
 Room提供了 `@Transaction` 注解，我们可以将其添加到DAO类的方法上，该注解等价于 `beginTransaction()` 等方法的组合调用，能够使目标方法以事务的方式运行。
