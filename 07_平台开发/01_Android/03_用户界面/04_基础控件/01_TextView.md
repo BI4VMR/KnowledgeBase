@@ -1,6 +1,7 @@
 # 简介
 TextView是最常见的控件，它是一种文本框，用于向用户展示文本类信息。
 
+
 # 基本应用
 TextView在布局文件中的典型配置如下文代码块所示：
 
@@ -20,6 +21,7 @@ TextView在布局文件中的典型配置如下文代码块所示：
 ![默认样式](./Assets_TextView/基本应用_默认样式.jpg)
 
 </div>
+
 
 # 外观定制
 ## 基本样式
@@ -49,6 +51,8 @@ TextView在布局文件中的典型配置如下文代码块所示：
 - Java - 设置文本颜色 : `void setTextColor(int color)`
 
 
+该属性用于控制文本的颜色，可以引用 `res/values/colors.xml` 中定义的值，也可以使用十六进制RGB格式表示，例如"#XXX"中的X分别表示8位精度的RGB颜色，"#XYXYXY"中的每组XY分别表示16位精度的RGB颜色。
+
 ### 文本样式
 
 
@@ -62,12 +66,8 @@ TextView在布局文件中的典型配置如下文代码块所示：
 
 
 
-
-
 ### 对齐方式
 
-
-该属性用于控制文本的颜色，可以引用 `res/values/colors.xml` 中定义的值，也可以使用十六进制RGB格式表示，例如"#XXX"中的X分别表示8位精度的RGB颜色，"#XYXYXY"中的每组XY分别表示16位精度的RGB颜色。
 
 🔷 `android:gravity="< left | right | start | end | top | bottom | center >"`
 
@@ -158,6 +158,23 @@ tvMarquee.isSelected = true
 </div>
 
 默认情况下滚动效果将在几个周期后停止，如果我们希望滚动效果无限循环，可以在XML配置中添加属性 `android:marqueeRepeatLimit="marquee_forever"` ，或者在逻辑代码中调用TextView的 `setMarqueeRepeatLimit(-1)` 方法。
+
+# 纵向滚动
+
+//开启滚动支持
+mTxtShowTest.setMovementMethod(ScrollingMovementMethod.getInstance());
+
+
+mTxtShowTest.post(() -> {
+    // 滚动到底部
+    Layout layout = mTxtShowTest.getLayout();
+    int padding = mTxtShowTest.getTotalPaddingTop() +
+            mTxtShowTest.getTotalPaddingBottom();
+    int line = mTxtShowTest.getLineCount() - 1;
+    mTxtShowTest.scrollTo(0, layout.getLineTop(line + 1) -
+            (mTxtShowTest.getHeight() - padding));
+});
+
 
 # 自动文本尺寸
 自从Android 8.0开始，系统提供了自动调整文本尺寸的能力，以便用户浏览较长的文本内容。
