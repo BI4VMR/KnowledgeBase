@@ -1,28 +1,3 @@
-# 简介
-Compose Multiplatform (CMP) 是 JetBrains 维护的开源 UI 框架，旨在将 Android 平台上的 Jetpack Compose 移植到 Desktop、iOS、Web 等多种平台，实现风格统一的用户界面，并降低维护成本。
-
-Compose Multiplatform 可与其他框架自由组合，以适配多种业务场景：
-
-- `Compose Desktop` : Compose Multiplatform 的子模块之一，仅提供 Desktop 平台支持。
-- `Compose Multiplatform` : 提供完整的 Desktop、Web、Android、iOS 平台支持。
-- `Kotlin Multiplatform` : 一种在服务端与客户端共享逻辑代码的框架，若与 Compose Multiplatform 相结合，即可完全基于 Kotlin 技术栈实现服务端与多平台客户端，达到最大程度的代码复用。
-
-JetBrains 推荐的开发工具是 IntelliJ IDEA 或 Android Studio ，我们可以安装 Kotlin Multiplatform 插件，实现界面组件预览等功能，提高开发体验。
-
-<div align="center">
-
-![KMP插件](./Assets_概述/简介_KMP插件.jpg)
-
-</div>
-
-本章的前置知识详见以下链接：
-
-- [🧭 Jetpack Compose](../../../../07_平台开发/01_Android/03_用户界面/10_Compose/01_概述.md)
-
-本章的相关知识详见以下链接：
-
-- [🔗 Kotlin Multiplatform 官方文档](https://kotlinlang.org/docs/multiplatform/get-started.html)
-
 
 # Compose Desktop
 ## 简介
@@ -163,21 +138,91 @@ Compose Desktop 支持热重载，运行程序后修改代码可以实时预览�
 
 
 
-<!-- TODO
+# 应用资源目录
+资源是指直接带入安装目录的文件，例如应用需要调用的ffmpeg等可执行文件，不包括应用内部使用的图片素材等资源。
 
-# Compose Multiplatform
-## 简介
+在nativeDistributions小节配置：
+appResourcesRootDir.set(rootProject.layout.projectDirectory.dir("resources"))
 
-Kotlin多平台框架，可以在服务端、客户端共享逻辑代码，如果我们希望逻辑和界面都进行复用，可以选择Kotlin Multiplatform + Compose Multiplatform组合，如果我们只希望多平台共享逻辑，各平台使用独立的界面，也可以仅使用Kotlin Multiplatform
-配合KMP使用，不仅包括Desktop，还支持同一套Compose代码编译为Web和Andori ios应用，实现全平台复用
+目录结构
+ resources/
+ ├── common/        ← 所有平台共用
+ ├── linux/         ← Linux 专用
+ ├── linux-x64/     ← Linux x64 专用
+ ├── windows/       ← Windows 专用
+ └── macos/         ← macOS 专用
 
 
-我们可以通过该地址
-https://kmp.jetbrains.com/
+程序中获取：
+
+
+System.getProperty("compose.application.resources.dir")
+
+安装后应当是这个目录：<软件根目录>/lib/app/resources
+
+gradle:run执行的目录是：<模块根目录>/build/compose/tmp/prepareAppResources
+
+
+# 打包
+
+./gradlew packageDistributionForCurrentOS
+./gradlew packageReleaseDistributionForCurrentOS 打当前系统环境的包：不支持交叉编译，因此如果当前是linux，且配置了`targetFormats(TargetFormat.Exe, TargetFormat.Msi, TargetFormat.Deb)` ，也只会打出 exe和msi包。
+./gradlew packageExe 打指定类型的包 `main/exe`
+
+./gradlew createDistributable 生成完整的应用目录（含 JVM runtime + app），可直接运行  `main/app`
+./gradlew packageUberJarForCurrentOS 打包为单个可执行 JAR
+
+
+默认是debug，带有release的命令可以打出release包，产物目录为 main-release ，可以进行资源压缩与代码混淆，体积更小。
 
 
 
-## 项目结构
+# 改变产物目录
 
--->
+
+默认目录
+<模块>/build/compose/binaries/main/
+
+outputBaseDir.set(rootProject.layout.projectDirectory.dir("distribution"))
+
+
+
+
+## IDEA执行出错
+
+IDEA的运行环境不支持compose multiplatform，需要创建gradle配置运行，或直接使用gradlew :<模块>:run 命令运行。
+
+
+
+## 打包后执行出错
+
+gradle run可以执行，但打包后执行出现缺失模块。
+
+Exception in thread "main" java.lang.NoClassDefFoundError: java/sql/DriverManager                                    
+        at app.cash.sqldelight.driver.jdbc.sqlite.ThreadedConnectionManager.getConnection(JdbcSqliteDriver.kt:128)   
+        at app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver.getConnection(JdbcSqliteDriver.kt)                
+        at app.cash.sqldelight.driver.jdbc.JdbcDriver.newTransaction(JdbcDriver.kt:169)                                                                   
+        ... 13 more
+
+默认打包工具使用精简版jdk，不包含sql等扩展模块。
+
+我们可以指定添加这些模块：
+
+modules("java.sql")
+
+或添加所有模块，这会导致打包体积变大
+
+includeAllModules = true
+
+如果不想使用gradle提供的jre,可以自行指定
+javaHome = "/path/to/your/jdk"
+
+
+
+
+查看建议的模块
+
+jdeps --print-module-deps --ignore-missing-deps your-app.jar
+
+./gradlew suggestRuntimeModules
 
