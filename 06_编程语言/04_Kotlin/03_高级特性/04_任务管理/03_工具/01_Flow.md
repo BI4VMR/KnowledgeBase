@@ -169,36 +169,41 @@ sharedFlow.emit("【文件二】下载完成！")
 
 在观察者注册监听后，测试线程所发出的消息，都能被监听协程接收到，二者是对应的。
 
-<!-- TODO
 ## 类型
-MutableSharedFlow 拥有.emit("正在初始化...")等提交新数据值的接口，可以用于更新数据，而 SharedFlow 是 不可变类型，它们没有数据更新接口，是只读的。
+SharedFlow 是只读的、不可变的，未提供数据更新接口，只提供了注册数据变化回调的接口。前文示例中的 MutableSharedFlow 扩展自 SharedFlow 接口，提供了 `emit()` 等数据更新接口，我们可以调用这些接口更新 Flow 中存储的数据值。
 
-在实际应用中，我们习惯声明私有可变变量，在内部使用，然后声明公开的不可变变量，关联到私有变量 ，外部只能进行监听，修改必须通过业务方法，可以配合日志监控所有修改行为，避免非预期的修改导致逻辑错误。
+在实际应用中，我们习惯声明私有可变 Flow 变量，仅在类的内部使用，同时声明一个公开不可变 Flow 变量，将其指向私有变量，供外部组件注册监听。
 
 ```kotlin
-// 内部可变变量，使用带有_前缀的变量名
-private val _sharedFlow: MutableSharedFlow<String> = MutableSharedFlow()
+// 私有的可变 Flow ，通常使用带有下划线前缀的变量名。
+private val _messageFlow: MutableSharedFlow<String> = MutableSharedFlow()
 
-// 公开不可变变量，只能监听。
-val sharedFlow: SharedFlow<String> = _sharedFlow
-
+// 公开的不可变 Flow ，只允许外部注册监听。
+val messageFlow: SharedFlow<String> = _messageFlow
 ```
 
-## 缓存
+外部组件若要更新 Flow 中存储的值，必须通过类的业务方法，这种方式便于配合日志输出监控所有更新记录，避免外部组件随意更新 Flow 导致逻辑错误。
 
+<!-- TODO
+## 缓冲区
+当我们创建 SharedFlow 实例时，可以通过以下参数配置缓冲区容量、是否重放消息、溢出策略等行为。
 
 可以配置 replay 缓存，让新的收集者可以收到最近的N个历史数据。如果 replay = 0 (默认)，则不缓存，新收集者不会收到任何历史数据。
 
+- `replay` : 重放消息数量，默认为 `0` 。若 SFlow 已经被提交了一些更新，会缓存，，当新的观察者注册订阅后，这些消息将会依次回调给观察者。
+- `extraBufferCapacity` : 额外缓存容量，默认为 `0` 。这部分数据也会缓存，但不会被回放给订阅者。
+- `onBufferOverflow` 
 
-replay：重新发射给新的订阅者的值的数量，可以将旧的数据回播给新的订阅者。不能为负数，默认为0。
-extraBufferCapacity：在replay基础上的缓冲池的数量，当有剩余缓冲区空间时，调用emit发射数据不会被挂起，同样的不能为负数，默认值为0。
+配置一个emit在缓冲区溢出时的触发操作。默认为BufferOverflow.SUSPEND，缓存溢出时挂起。另外还有BufferOverflow.DROP_OLDEST在溢出时删除缓冲区中最旧的值，将新值添加到缓冲区，不会进行挂起。BufferOverflow.DROP_LATEST在缓冲区溢出时删除当前添加到缓冲区的最新值来保持缓冲区内容不变，不会进行挂起。
 
 
-## 背压
-onBufferOverflow：配置一个emit在缓冲区溢出时的触发操作。默认为BufferOverflow.SUSPEND，缓存溢出时挂起。另外还有BufferOverflow.DROP_OLDEST在溢出时删除缓冲区中最旧的值，将新值添加到缓冲区，不会进行挂起。BufferOverflow.DROP_LATEST在缓冲区溢出时删除当前添加到缓冲区的最新值来保持缓冲区内容不变，不会进行挂起。
+两个缓存数量之和即flow的总缓存容量，当新的数据被提交后，flow将数据传递给所有观察者，并执行它们的 函数，直到所有观察者的函数被执行完毕后，当前数据被标记为消费完毕，此时如有新的数据到达可继续上述过程。如果新数据到达时，首先需要检查前一次数据提交是否执行了所有观察者的回调，若还在执行则进入缓存，若缓存已满则按照 `onBufferOverflow` 策略挂起调用者协程或丢弃一些数据。
 
-tryEmit() :Boolean 同步发送数据，如果缓冲满将发送失败并返回false，因此缓冲为0时总是失败，不可用。
-emit() 发送数据，挂起函数，如果缓冲区满可能阻塞当前协程（该行为可由溢出策略控制。）
+
+`tryEmit(): Boolean` : 同步提交数据的方法，如果缓冲区满 不会阻塞线程， 立刻返回false并放弃本次提交。如果flow为SUSPEND模式且总缓冲区为0，此时不可用，该方法总是返回false。
+`suspend emit()` : 发送数据，挂起函数，如果缓冲区满可能阻塞当前协程（该行为可由溢出策略控制。）
+
+
 
 -->
 
@@ -274,7 +279,6 @@ StateFlow 具有粘性事件，观察者调用 `collect()` 方法注册状态监
 `StateFlow.kt` :
 
 ```kotlin
-// 连续变化测试
 println("测试线程发送状态：`true`")
 stateFlow.value = true
 println("测试线程发送状态：`false`")
@@ -325,7 +329,8 @@ student是data class，我们更新状态时调用copy方法创建新对象并�
 
 新代码都应当使用data class与不可变属性构建对象，并通过copy新建对象并赋值属性的方式修改，对于已有的使用了var class的系统，应当手动实现新建对象并copy属性的操作，或将其封装为dataclass，不能直接赋值。
 
-
+如果只是增加/删除/重排序
+只需要生成新列表，未改变的对象无需复制，直接引用即可。
 
 # 操作符
 
