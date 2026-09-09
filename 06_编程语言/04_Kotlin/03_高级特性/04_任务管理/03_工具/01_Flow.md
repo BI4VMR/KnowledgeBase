@@ -182,26 +182,84 @@ private val _messageFlow: MutableSharedFlow<String> = MutableSharedFlow()
 val messageFlow: SharedFlow<String> = _messageFlow
 ```
 
-外部组件若要更新 Flow 中存储的值，必须通过类的业务方法，这种方式便于配合日志输出监控所有更新记录，避免外部组件随意更新 Flow 导致逻辑错误。
+外部组件若要更新 Flow 中存储的值，必须调用类的业务方法，这种方式便于配合日志输出监控所有更新记录，避免外部组件随意更新 Flow 导致逻辑错误。
 
 <!-- TODO
-## 缓冲区
-当我们创建 SharedFlow 实例时，可以通过以下参数配置缓冲区容量、是否重放消息、溢出策略等行为。
+## 缓冲与重放
+当我们创建 SharedFlow 实例时，可以通过以下参数配置重放消息数量、缓冲区容量、缓冲区溢出策略等。
 
-可以配置 replay 缓存，让新的收集者可以收到最近的N个历史数据。如果 replay = 0 (默认)，则不缓存，新收集者不会收到任何历史数据。
+- `replay` : 重放消息数量，默认为 `0` 。当 SharedFlow 收到新的数据时，会将指定数量的数据放入缓冲区；此后若有新的观察者注册回调， SharedFlow 将会立刻分发这些历史数据给新观察者。
+- `extraBufferCapacity` : 额外缓存容量，默认为 `0` 。该参数所指定数量的历史数据也会被缓存，但不会重放给新注册的观察者。
+- `onBufferOverflow` : 缓冲区溢出策略。 `replay` 和 `extraBufferCapacity` 数值之和即总缓冲区容量，当缓冲区已满时，若外部组件发出新的数据提交请求，则挂起调用者或丢弃一些数值。s
 
-- `replay` : 重放消息数量，默认为 `0` 。若 SFlow 已经被提交了一些更新，会缓存，，当新的观察者注册订阅后，这些消息将会依次回调给观察者。
-- `extraBufferCapacity` : 额外缓存容量，默认为 `0` 。这部分数据也会缓存，但不会被回放给订阅者。
-- `onBufferOverflow` 
+每当外部组件提交数据时，SharedFlow 会回调所有观察者的数据监听方法，每个观察者处理当前数据变化事件的耗时可能不同，直到所有观察者的回调方法被执行完毕后，当前数据被标记为消费完毕。
 
-配置一个emit在缓冲区溢出时的触发操作。默认为BufferOverflow.SUSPEND，缓存溢出时挂起。另外还有BufferOverflow.DROP_OLDEST在溢出时删除缓冲区中最旧的值，将新值添加到缓冲区，不会进行挂起。BufferOverflow.DROP_LATEST在缓冲区溢出时删除当前添加到缓冲区的最新值来保持缓冲区内容不变，不会进行挂起。
+若前一条数据，仍有观察者的数据变化回调未执行完毕，此时新提交的数据就会被放入缓冲区；若缓冲区已满，又有新的数据到达，则会根据按该策略实施
 
 
-两个缓存数量之和即flow的总缓存容量，当新的数据被提交后，flow将数据传递给所有观察者，并执行它们的 函数，直到所有观察者的函数被执行完毕后，当前数据被标记为消费完毕，此时如有新的数据到达可继续上述过程。如果新数据到达时，首先需要检查前一次数据提交是否执行了所有观察者的回调，若还在执行则进入缓存，若缓存已满则按照 `onBufferOverflow` 策略挂起调用者协程或丢弃一些数据。
+BufferOverflow.SUSPEND  挂起新数据的投送协程。
+BufferOverflow.DROP_OLDEST 删除最早进入缓冲区的值，将新值追加到缓冲区末尾。
+BufferOverflow.DROP_LATEST 删除最晚进入缓冲区的值，将新值追加到缓冲区末尾。
+
 
 
 `tryEmit(): Boolean` : 同步提交数据的方法，如果缓冲区满 不会阻塞线程， 立刻返回false并放弃本次提交。如果flow为SUSPEND模式且总缓冲区为0，此时不可用，该方法总是返回false。
 `suspend emit()` : 发送数据，挂起函数，如果缓冲区满可能阻塞当前协程（该行为可由溢出策略控制。）
+
+
+
+示例三： SharedFlow 的缓存控制。
+
+
+```kotlin
+// 定义 SharedFlow ，用于通告事件消息。
+val sharedFlow: MutableSharedFlow<Int> = MutableSharedFlow(
+    replay = 1,
+    extraBufferCapacity = 1,
+    onBufferOverflow = BufferOverflow.SUSPEND
+)
+
+
+// 发送一些消息
+runBlocking {
+    println("测试线程发送消息： [1]")
+    sharedFlow.emit(1)
+    println("测试线程发送消息： [2]")
+    sharedFlow.emit(2)
+}
+
+
+// 创建协程监听 SharedFlow 中的消息
+val scope = CoroutineScope(Dispatchers.IO)
+val listenJob = scope.launch {
+    println("监听协程注册回调")
+    sharedFlow.collect { value ->
+        println("监听协程收到消息： [$value]")
+        delay(1000.milliseconds)
+        println("监听协程处理消息： [$value] 完毕！")
+    }
+}
+```
+
+
+
+```text
+测试线程发送消息： [1]
+测试线程发送消息： [2]
+监听协程注册回调
+监听协程收到消息： [2]
+```
+
+
+
+```kotlin
+sharedFlow.emit(3)
+println("测试线程发送消息： [3] 完毕，当前时间：[${getTime()}]")
+sharedFlow.emit(4)
+println("测试线程发送消息： [4] 完毕，当前时间：[${getTime()}]")
+sharedFlow.emit(5)
+println("测试线程发送消息： [5] 完毕，当前时间：[${getTime()}]")
+```
 
 
 
