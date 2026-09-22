@@ -1,91 +1,166 @@
-<!-- TODO
+<!-- TODO -->
+# 简介
 
 
-aaos导航栏颜色设为透明，仍有灰色遮罩 navigationBarBackground
+# 沉浸式界面
+## 旧版本
+自行配置
 
-<item name="android:enforceNavigationBarContrast">false</item>
+修改状态栏的背景色：
 
-配置后可变透明
+window.statusBarColor = ContextCompat.getColor(this, R.color.purple_200)
 
-api 29新增
+修改导航栏的背景色：
+
+window.navigationBarColor = ContextCompat.getColor(this, R.color.purple_200)
+
+## Edge-to-Edge
+
+该模式是系统推荐的方式
+
+https://developer.android.com/develop/ui/views/layout/insets
+
+此时应用程序的 Activity 内容将会延伸至状态栏和导航栏底部，并强制状态栏与导航栏透明、然后在导航栏区域添加一个对比度增强遮罩。
+
+```java
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+
+    // 启用 Edge-to-Edge 模式
+    EdgeToEdge.enable(this);
+
+    setContentView(R.layout.main_activity);
+}
+```
+
+WindowCompat.enableEdgeToEdge(getWindow());
+
+
+```kotlin
+override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+
+    // 启用 Edge-to-Edge 模式
+    enableEdgeToEdge()
+
+    setContentView(R.layout.main_activity)
+}
+```
+
+java的方法依赖 `androidx.activity:activity:1.8.0` ,kotlin 依赖 androidx.activity:activity-ktx:1.8.0，它们本质上是调用了WindowCompat.setDecorFitsSystemWindows(false)使应用内容可以绘制到状态栏导航栏底部， 并将状态栏与导航栏背景设为透明。
 
 
 
 
-## 版本变更
-记录该主题在不同版本之间的变化。
 
-<!-- Hide
+# 系统栏前景色
+
+控制状态栏内容（例如时间、电池图标、通知图标）的外观：
+
+val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
+windowInsetsController.isAppearanceLightStatusBars = true
+//windowInsetsController.isAppearanceLightStatusBars = false
+
+控制导航栏内容（例如返回、主页、最近应用按钮）的外观：
+
+val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
+windowInsetsController.isAppearanceLightNavigationBars = true
+//windowInsetsController.isAppearanceLightNavigationBars = false
+
+
 
 # 版本变更
 ## 索引
 
 <div align="center">
 
-|       序号        |       版本       |       摘要       |
-| :---------------: | :--------------: | :--------------: |
-| [变更一](#变更一) | 此处填写【版本】 | 此处填写【摘要】 |
+|       序号        |    版本    |             摘要             |
+| :---------------: | :--------: | :--------------------------: |
+| [变更一](#变更一) | Android 15 | 强制启用 Edge-to-Edge 模式。 |
 
 </div>
 
 ## 变更一
 ### 摘要
-此处填写【摘要】。
-
-
-
-# Android 15 状态栏
-
-在强制Edge-to-Edge（targetSdk 35+）下，无法再通过 statusBarColor 为状态栏着色。
-
-旧行为（targetSdk ≤ 34，Android 14 及更低）
-- 默认 不 是 edge-to-edge。窗口内容被限制在系统栏（状态栏/导航栏）下方的安全区域内。
-- 状态栏默认使用主题里设置的 android:statusBarColor（你的 Theme.Default 设为 ?attr/colorPrimaryVariant，即紫色），并由系统填色。所以状态栏看起来有颜色、不平透明。
-- 如果你不主动调用 enableEdgeToEdge() 或 WindowCompat.setDecorFitsSystemWindows(false)，内容不会画到系统栏下面。
-新行为（targetSdk ≥ 35）
-- 系统强制 edge-to-edge：
-- statusBarColor → 强制透明（透明化，透明背景）
-- android:windowTranslucentStatus → 强制为 true，如果为 adaptive（默认），则强制忽略
-- 内容延伸绘制到状态栏和导航栏之下，所谓的 insets（内边距）需要应用自己处理。
-- 你设置的 android:statusBarColor = ?attr/colorPrimaryVariant 被忽略了，因为系统已经把它强制为透明。
-所以： 同一主题下，targetSdk 34 时状态栏是紫色；targetSdk 35+ 时它是透明的紫，也就是你看到"状态栏透明"——真正原因是你主界面的根布局没有画出背景色，透明的是状态栏，露出的背景是窗口的默认背景（往往是深色）。
-
-
-
+自从 Android 15 开始，若应用程序的 TargetSDK ≥ 35 ，系统将强制启用 Edge-to-Edge 模式。
 
 ### 详情
-此处填写【详情】。
+Edge-to-Edge 模式使状态栏和导航栏背景变为透明，由于该版本无法关闭 Edge-to-Edge 模式，以下属性或方法已被弃用，即使我们设置它们也没有效果：
+
+- XML 属性 : `android:statusBarColor` 。
+- XML 属性 : `android:navigationBarColor` 。
+- XML 属性 : `android:windowTranslucentStatus` 。
+- XML 属性 : `android:windowTranslucentNavigation` 。
+- Window Flag : `WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS` 。
+- Window Flag : `WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION` 。
+- Window Flag : `WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS` 。
 
 ### 兼容方案
-此处填写【兼容方案】。
+应用程序应当通过 Insets 监听系统栏高度变化，并控制界面内容的显示位置。
 
--->
+若要模拟旧式带有颜色的状态栏与导航栏，我们可以通过 Insets 监听系统栏高度，添加一些同等高度的控件并设置颜色。
 
-## 疑难解答
-记录该主题在实际运用过程中遇到的问题，提供解决问题的思路与经验。
-
-<!-- Hide
 
 # 疑难解答
 ## 索引
 
 <div align="center">
 
-|       序号        |         摘要         |
-| :---------------: | :------------------: |
-| [案例一](#案例一) | 此处填写【问题描述】 |
+|       序号        |                      摘要                      |
+| :---------------: | :--------------------------------------------: |
+| [案例一](#案例一) | 启用 Edge-to-Edge 模式后，导航栏出现浅色遮罩。 |
 
 </div>
 
 ## 案例一
 ### 问题描述
-此处填写【问题描述】。
+启用 Edge-to-Edge 模式后，导航栏出现浅色遮罩，设置 `android:navigationBarColor` 等属性也无法清除该遮罩层。
 
 ### 问题分析
-此处填写【问题分析】。
+在本案例中， Activity 背景为黑色，并且已启用 Edge-to-Edge 模式，导航栏出现白色的遮罩层：
+
+<div align="center">
+
+![Edge To Edge 模式下导航栏无法实现透明](./Assets_SystemUI/疑难解答_EdgeToEdge模式下导航栏无法实现透明.jpg)
+
+</div>
+
+通过 Layout Inspector 分析页面组件树，我们观察到根布局被系统添加了一个名为 `navigationBarBackground` 的遮罩层。
+
+<div align="center">
+
+![Edge To Edge 模式下系统强制添加遮罩](./Assets_SystemUI/疑难解答_EdgeToEdge模式下系统强制添加遮罩.jpg)
+
+</div>
+
+该特性是 API 29 中新增的，目的在于增强导航栏对比度，防止应用显示某些内容时用户难以辨认导航栏按钮。
 
 ### 解决方案
-此处填写【解决方案】。
+若希望应用程序在 Edge-to-Edge 模式下使导航栏完全透明，我们可以在主题中将 `enforceNavigationBarContrast` 属性设为 `false` ：
 
+`themes.xml` :
 
--->
+```xml
+<style name="Theme.Default" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <item name="android:enforceNavigationBarContrast">false</item>
+</style>
+```
+
+此时应用该主题的 Activity 不会被系统添加遮罩层。
+
+我们也可以在 Activity 的逻辑代码中动态设置 Window 属性屏蔽遮罩层：
+
+```java
+if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+    getWindow().setNavigationBarContrastEnforced(false);
+}
+```
+
+上述内容也可以使用 Kotlin 语言编写：
+
+```kotlin
+if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+    window.isNavigationBarContrastEnforced = false
+}
+```
