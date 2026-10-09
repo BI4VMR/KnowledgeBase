@@ -128,6 +128,13 @@ emulator-5554   device
 >
 > 命令语句中的 `-s <设备标识符>` 选项必须紧接着 `adb` 命令书写，如果书写在其他位置会出现错误。
 
+目标设备不存在时，执行其他命令立刻失败退出，我们可以使用 `adb wait-for-device` ，该命令会持续等待直到设备就绪，再发送后续命令，这在刷写系统等场景中非常有用。
+
+```text
+# 等待设备就绪，再执行 `adb root` 。
+adb wait-for-device; adb root;
+```
+
 ## ADB Shell
 Android设备的Shell与PC的Shell是类似的，可以通过命令查看信息或操纵设备。我们在ADB Shell中只能访问Android设备的文件，如果需要访问PC中的文件（例如：传输文件、安装APK等），可以在PC的Shell中通过 `adb` 命令进行操作。
 
