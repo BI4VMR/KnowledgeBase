@@ -177,6 +177,52 @@ gradle:run执行的目录是：<模块根目录>/build/compose/tmp/prepareAppRes
 
 
 
+
+将可执行包自动压缩：
+
+/* 注册任务：构建软件并打包 */
+val outDir = project.layout.buildDirectory.dir("compose/binaries/main/app/xxx")
+val distDir = rootProject.layout.projectDirectory.dir("distribution")
+
+val archName = when (SystemUtil.getOSType()) {
+    OSType.WINDOWS -> "windows"
+    OSType.LINUX -> "linux"
+    // Compose不支持x86架构，因此默认名称为ARM架构。
+    OSType.MACOS -> "macos-AppleSilicon"
+    else -> throw IllegalStateException("Unsupported OS: ${SystemUtil.getOSType()}!")
+}
+val archiveName = "APP-v${version}-${archName}"
+
+if (SystemUtil.isWindows()) {
+    tasks.register<Zip>("packageArchive") {
+        group = "compose desktop"
+        description = "将编译产物打包为ZIP文件"
+        dependsOn("createDistributable")
+        from(outDir) {
+            // 修改归档根目录名称
+            into("APP")
+        }
+        archiveFileName.set("${archiveName}.zip")
+        destinationDirectory.set(distDir)
+    }
+} else {
+    tasks.register<Tar>("packageArchive") {
+        group = "compose desktop"
+        description = "将编译产物打包为Tar-GZIP文件"
+        dependsOn("createDistributable")
+        from(outDir) {
+            // 修改归档根目录名称
+            into("APP")
+        }
+        compression = Compression.GZIP
+        archiveFileName.set("${archiveName}.tar.gz")
+        destinationDirectory.set(distDir)
+    }
+}
+
+
+
+
 # 改变产物目录
 
 
