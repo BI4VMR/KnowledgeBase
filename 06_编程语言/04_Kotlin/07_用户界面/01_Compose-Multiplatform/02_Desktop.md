@@ -272,3 +272,99 @@ jdeps --print-module-deps --ignore-missing-deps your-app.jar
 
 ./gradlew suggestRuntimeModules
 
+
+
+
+### Window
+独立窗口。
+
+
+Window(
+    title = "窗口标题",
+    icon = painterResource(Res.drawable.icon),
+    // 窗口状态，包括：尺寸，位置。
+    state = windowState,
+    // 用户点击关闭时的回调
+    onCloseRequest = ::exitApplication
+) {
+    // 内容...
+}
+
+
+// 窗口状态
+val windowState = rememberWindowState(
+    width = 1600.dp,
+    height = 900.dp,
+    // 最大化
+    placement = WindowPlacement.Maximized,
+    position = WindowPosition.Aligned(Alignment.Center)
+)
+
+
+窗口尺寸跟随内容：
+val state = rememberWindowState(
+    size = DpSize(Dp.Unspecified, Dp.Unspecified)
+)
+
+禁止拖拽改变大小
+resizable = false on the Window.
+
+
+去掉标题栏
+
+fun main() = application {
+    Window(
+        onCloseRequest = ::exitApplication,
+        title = ""
+    ) {
+        Box(Modifier.fillMaxSize().background(Color.Red))
+        LaunchedEffect(window.rootPane) {
+            with(window.rootPane) {
+                putClientProperty("apple.awt.transparentTitleBar", true)
+                putClientProperty("apple.awt.fullWindowContent", true)
+            }
+        }
+    }
+}
+
+
+弹出至前台
+
+Desktop.getDesktop().requestForeground(true)
+
+
+
+### DialogWindow
+模态弹窗，但为window形式，独立于主界面。
+
+    DialogWindow(
+        onCloseRequest = onDismiss,
+        title = "提示"
+    ) {
+        Surface {
+            Column {
+                Text("这是一个模态弹窗")
+                Button(onClick = {  }) {
+                    Text("关闭")
+                }
+            }
+        }
+    }
+
+不响应Esc键
+
+
+## Tray
+
+系统托盘组件，在linux上图标周围不透明，且显示名称与设置不同，这是linux jdk awt实现的问题，需要更换 
+
+https://github.com/kdroidFilter/ComposeNativeTray
+
+库解决。
+
+
+该lib也支持系统托盘，不仅为compose设计，其他ui框架也支持。
+
+https://github.com/dorkbox/SystemTray
+
+
