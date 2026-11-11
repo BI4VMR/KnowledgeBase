@@ -636,6 +636,10 @@ filterNot/filterIsInstance/filterNotNull
 
 zip: a.zip(b) 组合a与b之后发送给下游。
 
+combine a.combine(b) a变化时与b的最新值组合，然后发送，常用于组合两个数据源。
+
+flatmap/flatmaplatest 订阅另一个flow，针对每个值进行映射后发给下游，常用于级联列表。
+
 take(N) 只取0至N个结果，忽略后续结果。
 
 takeWhile：首个false返回时，丢弃该结果与后续结果。
