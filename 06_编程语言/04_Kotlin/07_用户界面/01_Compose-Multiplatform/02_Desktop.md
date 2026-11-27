@@ -300,6 +300,9 @@ val windowState = rememberWindowState(
     position = WindowPosition.Aligned(Alignment.Center)
 )
 
+默认尺寸为：
+DpSize(800.dp, 600.dp)
+
 
 窗口尺寸跟随内容：
 val state = rememberWindowState(
@@ -308,6 +311,15 @@ val state = rememberWindowState(
 
 禁止拖拽改变大小
 resizable = false on the Window.
+
+
+限制拖拽最小尺寸：
+
+    Window() {
+        LaunchedEffect(Unit) {
+            window.minimumSize = Dimension(680, 400)
+        }
+    }
 
 
 去掉标题栏
