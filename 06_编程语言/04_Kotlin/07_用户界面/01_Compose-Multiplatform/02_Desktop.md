@@ -321,6 +321,8 @@ resizable = false on the Window.
         }
     }
 
+    注意这里Dimension是像素，dp需要*density进行换算。
+
 
 去掉标题栏
 
